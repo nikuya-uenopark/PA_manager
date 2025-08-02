@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="バイト・パートスタッフのスキル評価と進捗管理を行うWebアプリケーション">
+    <meta name="keywords" content="バイト,パート,評価,管理,スキル,進捗">
+    <meta name="author" content="PA Manager">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nikuya-uenopark.github.io/PA_manager/">
+    <meta property="og:title" content="PA評価管理システム">
+    <meta property="og:description" content="バイト・パートスタッフのスキル評価と進捗管理を行うWebアプリケーション">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://nikuya-uenopark.github.io/PA_manager/">
+    <meta property="twitter:title" content="PA評価管理システム">
+    <meta property="twitter:description" content="バイト・パートスタッフのスキル評価と進捗管理を行うWebアプリケーション">
+    
+    <title>PA評価管理システム</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="github-corner.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- PWAマニフェスト（将来の拡張用） -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#74b9ff">
+</head>
+<body>
+    <!-- GitHub Corner -->
+    <a href="https://github.com/nikuya-uenopark/PA_manager" class="github-corner" aria-label="View source on GitHub">
+        <svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true">
+            <path d="m0,0 0,250 250,0 0,-250z"/>
+            <path d="m128.3,109.0 c113.8,99.7 119.0,89.6 119.0,89.6 0,0 12.9,17.6 12.9,34.7 0,39.5-22.2,54.9-53.2,54.9 -77.7,0-87.8-17.8-119.8-27.4 -68.4-20.6-114.7-43.1-121.3-69.7 -3.3-13.2 4.7-26.2 18.1-33.8 50.4-28.6 142.9-14.4 142.9-14.4 s-71.3,9.8-84.8,9.8 c-8.5,0-11.3-4.5-11.3-11.5 11.7-5.1 44.9-1.1 63.7-1.1 2.3,11.7 5.5,17.4 5.5,17.4 z"/>
+            <path d="m115,115 0,0 c-1.1,23.2 6.2,43.2 16.4,51.4 5.8,4.6 12.8,7.0 20.2,7.0 z" style="fill:#fff"/>
+            <path class="octo-arm" d="m128.3,109.0 c113.8,99.7 119.0,89.6 119.0,89.6 0,0 12.9,17.6 12.9,34.7 0,39.5-22.2,54.9-53.2,54.9 -77.7,0-87.8-17.8-119.8-27.4 z" style="fill:#fff"/>
+            <path class="octo-body" d="m115,115 c0,0 15,15 23,19 3,1 6,1 9,1 0,0 18,0 18,-25 z" style="fill:#fff"/>
+        </svg>
+    </a>
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-clipboard-check"></i> PA評価管理システム</h1>
+            <p>バイトのスキルと進捗を管理しましょう</p>
+        </header>
+
+        <div class="main-content">
+            <!-- スタッフ管理セクション -->
+            <section class="staff-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-users"></i> スタッフ管理</h2>
+                    <button class="btn btn-primary" onclick="showAddStaffModal()">
+                        <i class="fas fa-plus"></i> スタッフ追加
+                    </button>
+                </div>
+                <div id="staffList" class="staff-grid"></div>
+            </section>
+
+            <!-- 評価項目管理セクション -->
+            <section class="criteria-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-list-check"></i> 評価項目管理</h2>
+                    <button class="btn btn-secondary" onclick="showAddCriteriaModal()">
+                        <i class="fas fa-plus"></i> 項目追加
+                    </button>
+                </div>
+                <div id="criteriaList" class="criteria-grid"></div>
+            </section>
+            
+            <!-- データ管理セクション -->
+            <section class="data-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-database"></i> データ管理</h2>
+                    <div class="data-actions">
+                        <button class="btn btn-success" onclick="exportData()">
+                            <i class="fas fa-download"></i> エクスポート
+                        </button>
+                        <label for="importFile" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> インポート
+                            <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importData(event)">
+                        </label>
+                        <button class="btn btn-danger" onclick="resetAllData()">
+                            <i class="fas fa-trash-alt"></i> データリセット
+                        </button>
+                    </div>
+                </div>
+                <div class="data-info">
+                    <div class="info-card">
+                        <i class="fas fa-users"></i>
+                        <div>
+                            <h4>スタッフ数</h4>
+                            <span id="staffCount">0</span>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <i class="fas fa-list"></i>
+                        <div>
+                            <h4>評価項目数</h4>
+                            <span id="criteriaCount">0</span>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <i class="fas fa-chart-line"></i>
+                        <div>
+                            <h4>全体進捗</h4>
+                            <span id="overallProgress">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- スタッフ追加モーダル -->
+    <div id="addStaffModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新しいスタッフを追加</h3>
+                <span class="close" onclick="closeModal('addStaffModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addStaffForm">
+                    <div class="form-group">
+                        <label for="staffName">名前</label>
+                        <input type="text" id="staffName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="staffPosition">役職/ポジション</label>
+                        <input type="text" id="staffPosition" placeholder="例: キッチン、ホール、レジ">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">追加</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('addStaffModal')">キャンセル</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 評価項目追加モーダル -->
+    <div id="addCriteriaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新しい評価項目を追加</h3>
+                <span class="close" onclick="closeModal('addCriteriaModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addCriteriaForm">
+                    <div class="form-group">
+                        <label for="criteriaName">項目名</label>
+                        <input type="text" id="criteriaName" required placeholder="例: 接客スキル、レジ操作">
+                    </div>
+                    <div class="form-group">
+                        <label for="criteriaCategory">カテゴリー</label>
+                        <select id="criteriaCategory">
+                            <option value="基本スキル">基本スキル</option>
+                            <option value="接客">接客</option>
+                            <option value="調理">調理</option>
+                            <option value="事務">事務</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="criteriaDescription">説明</label>
+                        <textarea id="criteriaDescription" rows="3" placeholder="この項目の詳細説明"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">追加</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('addCriteriaModal')">キャンセル</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- スタッフ詳細モーダル -->
+    <div id="staffDetailModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3 id="staffDetailName"></h3>
+                <span class="close" onclick="closeModal('staffDetailModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="staffEvaluations" class="evaluations-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
