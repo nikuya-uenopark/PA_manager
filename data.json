@@ -1,0 +1,100 @@
+{
+  "staff": [
+    {
+      "id": 1,
+      "name": "サンプル太郎",
+      "position": "アルバイト",
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "criteria": [
+    {
+      "id": 1,
+      "name": "基本的な挨拶",
+      "category": "基本スキル",
+      "description": "お客様への適切な挨拶ができる",
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "レジ操作",
+      "category": "基本スキル",
+      "description": "レジでの基本的な会計処理ができる",
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "name": "商品の場所案内",
+      "category": "接客",
+      "description": "お客様への商品案内が適切にできる",
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "name": "クレーム対応",
+      "category": "接客",
+      "description": "基本的なクレーム対応ができる",
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 5,
+      "name": "清掃作業",
+      "category": "基本スキル",
+      "description": "店舗の清掃作業を適切に行える",
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "evaluations": [
+    {
+      "id": 1,
+      "staff_id": 1,
+      "criteria_id": 1,
+      "status": "learning",
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "staff_id": 1,
+      "criteria_id": 2,
+      "status": "learning",
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "staff_id": 1,
+      "criteria_id": 3,
+      "status": "learning",
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "staff_id": 1,
+      "criteria_id": 4,
+      "status": "cannot-do",
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 5,
+      "staff_id": 1,
+      "criteria_id": 5,
+      "status": "learning",
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "nextId": {
+    "staff": 3,
+    "criteria": 6,
+    "evaluations": 12
+  }
+}
