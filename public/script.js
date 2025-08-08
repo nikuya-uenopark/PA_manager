@@ -322,14 +322,14 @@ class PAManager {
             document.getElementById('staffDetailName').innerHTML = `
                 <div style="margin-bottom:8px; font-size:1.3rem; font-weight:600;">${staff.name}</div>
                 ${staff.position ? `<div class='staff-position' style='margin-bottom:12px; font-size:1.05rem;'>${staff.position}</div>` : ''}
-                <div style="margin-bottom:12px;">
-                    <div class="progress-label" style="color:#666; margin-bottom:4px;">進捗: ${staff.progress_percentage || 0}%</div>
-                    <div class="progress-bar" style="height:18px; background:#e2e8f0; border-radius:9px; overflow:hidden;">
-                        <div class="progress-fill" style="width: ${staff.progress_percentage || 0}%; height:100%; background:#74b9ff;"></div>
+                <div style=\"width:100%; margin-bottom:12px;\">
+                    <div class=\"progress-label\" style=\"color:#666; margin-bottom:4px;\">進捗: ${staff.progress_percentage || 0}%</div>
+                    <div class=\"progress-bar\" style=\"height:18px; background:#e2e8f0; border-radius:9px; overflow:hidden; width:100%;\">
+                        <div class=\"progress-fill\" style=\"width: ${staff.progress_percentage || 0}%; height:100%; background:#74b9ff;\"></div>
                     </div>
                 </div>
-                <div style="text-align:right; margin-top:10px;">
-                    <button class="btn btn-danger" onclick="app.deleteStaff(${staff.id})">スタッフ削除</button>
+                <div style=\"width:100%; text-align:right; margin-bottom:10px;\">
+                    <button class=\"btn btn-danger\" style=\"width:100%; max-width:320px;\" onclick=\"app.deleteStaff(${staff.id})\">スタッフ削除</button>
                 </div>
             `;
             const container = document.getElementById('staffEvaluations');
