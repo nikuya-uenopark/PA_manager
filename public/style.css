@@ -1,3 +1,45 @@
+/* ローディング画面 */
+#loadingScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+}
+
+.loading-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.modern-loader {
+    width: 48px;
+    height: 48px;
+    border: 6px solid #fff;
+    border-top: 6px solid #74b9ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: #fff;
+    font-size: 1.2rem;
+    letter-spacing: 0.1em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
 /* リセットCSS */
 * {
     margin: 0;
