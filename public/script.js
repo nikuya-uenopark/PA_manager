@@ -318,12 +318,19 @@ class PAManager {
             const staff = this.staff.find(s => s.id === staffId);
             if (!staff) return;
 
-            // 詳細モーダルのヘッダーに名前・役職・削除ボタン・進捗を表示
+            // 詳細モーダルのヘッダーを大きく・1行ずつ・進捗バーも表示・削除ボタンは下に
             document.getElementById('staffDetailName').innerHTML = `
-                <span>${staff.name}</span>
-                ${staff.position ? `<span class='staff-position' style='margin-left:1em;'>${staff.position}</span>` : ''}
-                <button class="btn btn-icon btn-danger" style="float:right; margin-left:1em;" onclick="app.deleteStaff(${staff.id})"><i class="fas fa-trash"></i></button>
-                <span class="progress-label" style="float:right; color:#666; margin-right:1em;">進捗: ${staff.progress_percentage || 0}%</span>
+                <div style="margin-bottom:8px; font-size:1.3rem; font-weight:600;">${staff.name}</div>
+                ${staff.position ? `<div class='staff-position' style='margin-bottom:12px; font-size:1.05rem;'>${staff.position}</div>` : ''}
+                <div style="margin-bottom:12px;">
+                    <div class="progress-label" style="color:#666; margin-bottom:4px;">進捗: ${staff.progress_percentage || 0}%</div>
+                    <div class="progress-bar" style="height:18px; background:#e2e8f0; border-radius:9px; overflow:hidden;">
+                        <div class="progress-fill" style="width: ${staff.progress_percentage || 0}%; height:100%; background:#74b9ff;"></div>
+                    </div>
+                </div>
+                <div style="text-align:right; margin-top:10px;">
+                    <button class="btn btn-danger" onclick="app.deleteStaff(${staff.id})">スタッフ削除</button>
+                </div>
             `;
             const container = document.getElementById('staffEvaluations');
             // criteriaごとに評価データを突き合わせ
