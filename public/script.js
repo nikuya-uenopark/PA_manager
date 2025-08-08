@@ -181,16 +181,17 @@ class PAManager {
         }
         container.innerHTML = this.criteria.map((criteria, idx) => `
             <div class="criteria-card${this.criteriaEditMode ? ' edit-mode' : ''}" data-index="${idx}" data-id="${criteria.id}">
+                ${this.criteriaEditMode ? `<span class='drag-handle' title='並び替え'>&#9776;</span>` : ''}
                 <div class="criteria-header">
                     <div class="criteria-name">${criteria.name}</div>
                     <div class="criteria-category">${criteria.category}</div>
                 </div>
                 ${criteria.description ? `<div class="criteria-description">${criteria.description}</div>` : ''}
-                <div class="criteria-actions">
+                ${!this.criteriaEditMode ? `<div class="criteria-actions">
                     <button class="btn btn-danger btn-icon" onclick="app.deleteCriteria(${criteria.id})" title="削除">
                         <i class="fas fa-trash"></i>
                     </button>
-                </div>
+                </div>` : ''}
             </div>
         `).join('');
 
@@ -224,8 +225,10 @@ class PAManager {
             if (window.Sortable) {
                 if (this._sortable) this._sortable.destroy();
                 this._sortable = new window.Sortable(container, {
-                    animation: 150,
-                    handle: '.criteria-card',
+                    animation: 180,
+                    handle: '.drag-handle',
+                    ghostClass: 'drag-ghost',
+                    chosenClass: 'drag-chosen',
                     onEnd: async (evt) => {
                         // 並び替え後の順序をthis.criteriaに反映
                         const newOrder = Array.from(container.children).map((el, i) => Number(el.dataset.id));

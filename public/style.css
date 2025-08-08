@@ -1,3 +1,47 @@
+/* iOS風 並び替えハンドル */
+.drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #b0b0b0;
+    margin-right: 14px;
+    cursor: grab;
+    user-select: none;
+    width: 32px;
+    height: 100%;
+    vertical-align: middle;
+    transition: color 0.2s;
+}
+.edit-mode .drag-handle:hover {
+    color: #667eea;
+}
+
+/* 並び替え中の浮き上がり・影 */
+.drag-chosen {
+    box-shadow: 0 8px 24px rgba(102,126,234,0.18), 0 1.5px 6px rgba(0,0,0,0.08);
+    z-index: 10;
+    background: #f8faff;
+    opacity: 0.98;
+    transform: scale(1.03);
+}
+.drag-ghost {
+    opacity: 0.5;
+}
+.criteria-card.edit-mode {
+    cursor: grab;
+    border: 2px dashed #667eea;
+    background: #f0f4ff;
+    opacity: 0.97;
+    transition: border 0.2s, background 0.2s;
+    position: relative;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+}
+.criteria-card.edit-mode .criteria-header {
+    flex: 1;
+}
 /* iPad横持ち基準の全体レイアウト */
 body {
         min-height: 100vh;
