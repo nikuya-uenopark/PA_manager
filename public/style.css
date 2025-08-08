@@ -1,3 +1,66 @@
+/* criteriaカードをスタッフカード風に */
+.criteria-card {
+    background: white;
+    padding: 14px 16px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.10);
+    border: 2px solid transparent;
+    transition: box-shadow 0.2s, border 0.2s, transform 0.2s;
+    position: relative;
+    margin-bottom: 0;
+    min-height: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.criteria-card:not(.edit-mode):hover {
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.13);
+    border-color: #667eea;
+}
+
+/* ぷるぷるアニメーション */
+@keyframes wiggle {
+  0% { transform: rotate(-2deg); }
+  20% { transform: rotate(2deg); }
+  40% { transform: rotate(-2deg); }
+  60% { transform: rotate(2deg); }
+  80% { transform: rotate(-2deg); }
+  100% { transform: rotate(-2deg); }
+}
+.criteria-card.edit-mode {
+    animation: wiggle 0.4s infinite;
+    border: 2px dashed #667eea;
+    background: #f0f4ff;
+    opacity: 0.97;
+    cursor: grab;
+}
+.criteria-card.edit-mode .criteria-header {
+    flex: 1;
+}
+
+/* 編集モード時のみ右上に削除ボタン */
+.criteria-card .criteria-delete-btn {
+    display: none;
+}
+.criteria-card.edit-mode .criteria-delete-btn {
+    display: block;
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 2;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    padding: 4px 6px;
+    border: none;
+    color: #e53e3e;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.criteria-card.edit-mode .criteria-delete-btn:hover {
+    background: #ffeaea;
+}
 /* iOS風 並び替えハンドル */
 .drag-handle {
     display: inline-flex;

@@ -187,11 +187,7 @@ class PAManager {
                     <div class="criteria-category">${criteria.category}</div>
                 </div>
                 ${criteria.description ? `<div class="criteria-description">${criteria.description}</div>` : ''}
-                ${!this.criteriaEditMode ? `<div class="criteria-actions">
-                    <button class="btn btn-danger btn-icon" onclick="app.deleteCriteria(${criteria.id})" title="削除">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>` : ''}
+                ${this.criteriaEditMode ? `<button class='criteria-delete-btn' onclick='app.deleteCriteria(${criteria.id}); event.stopPropagation();' title='削除'><i class="fas fa-minus-circle"></i></button>` : ''}
             </div>
         `).join('');
 
