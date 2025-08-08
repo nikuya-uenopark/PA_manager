@@ -561,7 +561,10 @@ section {
     padding: 15px 20px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: none;
+.notification.show {
     display: flex;
+}
     align-items: center;
     gap: 10px;
     z-index: 2000;
