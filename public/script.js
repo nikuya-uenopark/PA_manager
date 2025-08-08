@@ -144,7 +144,7 @@ class PAManager {
     }
 
     renderStaff() {
-        const container = document.getElementById('staffGrid');
+        const container = document.getElementById('staffList');
         
         if (this.staff.length === 0) {
             container.innerHTML = `
