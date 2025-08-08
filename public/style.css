@@ -19,20 +19,8 @@
 }
 
 /* ぷるぷるアニメーション */
-@keyframes wiggle-smooth {
-    0% { transform: rotate(-1deg); }
-    50% { transform: rotate(1deg); }
-    100% { transform: rotate(-1deg); }
-}
 .criteria-card.edit-mode {
-        animation: wiggle-smooth 0.9s infinite linear;
-        border: 2px dashed #667eea;
-        background: #f0f4ff;
-        opacity: 0.97;
-        cursor: grab;
-}
-.criteria-card.edit-mode .criteria-header {
-    flex: 1;
+    /* デザイン変化なし。削除ボタンのみ表示 */
 }
 
 /* 編集モード時のみ右上に削除ボタン */
