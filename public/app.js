@@ -68,8 +68,9 @@ class PAManager {
     }
 
     async loadAllData() {
+        // スタッフ進捗はPATCHで取得
         const [staffData, criteriaData, statsData] = await Promise.all([
-            this.apiRequest('/staff-progress'),
+            this.apiRequest('/staff', { method: 'PATCH' }),
             this.apiRequest('/criteria'),
             this.apiRequest('/stats')
         ]);
@@ -227,7 +228,7 @@ class PAManager {
         }
 
         try {
-            await this.apiRequest('/staff_add', {
+            await this.apiRequest('/staff', {
                 method: 'POST',
                 body: JSON.stringify({ name, position })
             });
@@ -249,7 +250,7 @@ class PAManager {
         }
 
         try {
-            await this.apiRequest(`/staff_delete?id=${staffId}`, {
+            await this.apiRequest(`/staff?id=${staffId}`, {
                 method: 'DELETE'
             });
 
@@ -305,7 +306,7 @@ class PAManager {
 
     async updateEvaluation(staffId, criteriaId, status) {
         try {
-            await this.apiRequest(`/evaluation_update`, {
+            await this.apiRequest(`/evaluations`, {
                 method: 'PUT',
                 body: JSON.stringify({ staffId, criteriaId, status })
             });
@@ -338,7 +339,7 @@ class PAManager {
         }
 
         try {
-            await this.apiRequest('/criteria_add', {
+            await this.apiRequest('/criteria', {
                 method: 'POST',
                 body: JSON.stringify({ name, category, description })
             });
@@ -360,7 +361,7 @@ class PAManager {
         }
 
         try {
-            await this.apiRequest(`/criteria_delete?id=${criteriaId}`, {
+            await this.apiRequest(`/criteria?id=${criteriaId}`, {
                 method: 'DELETE'
             });
 

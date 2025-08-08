@@ -37,6 +37,10 @@ export default async function handler(req, res) {
         [status, staffId, criteriaId]
       );
       res.status(200).json({ message: '評価が更新されました' });
+    } else if (req.method === 'DELETE') {
+      const { id } = req.query;
+      await pool.query('DELETE FROM evaluations WHERE id = $1', [id]);
+      res.status(200).json({ message: '評価データが削除されました' });
     } else {
       res.status(405).json({ error: 'Method Not Allowed' });
     }
