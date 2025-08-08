@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/**/*.js": {
-      "runtime": "now-node@22"
+      "runtime": "@vercel/node@22"
     }
   }
 }
