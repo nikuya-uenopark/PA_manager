@@ -1,43 +1,39 @@
 // Vercel Serverless Function: GET/POST /api/evaluations
-import mysql from 'mysql2/promise';
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 export default async function handler(req, res) {
-  const dbConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-  };
-  let connection;
   try {
-    connection = await mysql.createConnection(dbConfig);
     if (req.method === 'GET') {
       const { staffId } = req.query;
       if (staffId) {
-        const [rows] = await connection.execute(
+        const result = await pool.query(
           `SELECT e.*, c.name, c.category, c.description 
            FROM evaluations e 
            JOIN criteria c ON e.criteria_id = c.id 
-           WHERE e.staff_id = ? 
+           WHERE e.staff_id = $1 
            ORDER BY c.category, c.name`,
           [staffId]
         );
-        res.status(200).json(rows);
+        res.status(200).json(result.rows);
       } else {
-        const [rows] = await connection.execute('SELECT * FROM evaluations ORDER BY created_at DESC');
-        res.status(200).json(rows);
+        const result = await pool.query('SELECT * FROM evaluations ORDER BY created_at DESC');
+        res.status(200).json(result.rows);
       }
     } else if (req.method === 'POST') {
       const { staff_id, criteria_id, status } = req.body;
-      const [result] = await connection.execute(
-        'INSERT INTO evaluations (staff_id, criteria_id, status) VALUES (?, ?, ?)',
+      const insertResult = await pool.query(
+        'INSERT INTO evaluations (staff_id, criteria_id, status) VALUES ($1, $2, $3) RETURNING id',
         [staff_id, criteria_id, status || 'learning']
       );
-      res.status(200).json({ id: result.insertId, message: '評価データが追加されました' });
+      res.status(200).json({ id: insertResult.rows[0].id, message: '評価データが追加されました' });
     } else if (req.method === 'PUT') {
       const { staffId, criteriaId, status } = req.body;
-      await connection.execute(
-        'UPDATE evaluations SET status = ? WHERE staff_id = ? AND criteria_id = ?',
+      await pool.query(
+        'UPDATE evaluations SET status = $1 WHERE staff_id = $2 AND criteria_id = $3',
         [status, staffId, criteriaId]
       );
       res.status(200).json({ message: '評価が更新されました' });
@@ -46,7 +42,5 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     res.status(500).json({ error: 'evaluations API error', detail: error.message });
-  } finally {
-    if (connection) await connection.end();
   }
 }
