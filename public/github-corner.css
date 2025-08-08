@@ -634,3 +634,20 @@ section {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* --- index.html内のstyle属性を移植 --- */
+.github-corner svg {
+    fill: #151513;
+    color: #fff;
+    position: absolute;
+    top: 0;
+    border: 0;
+    right: 0;
+}
+.github-corner .octo-arm,
+.github-corner .octo-body {
+    fill: #fff;
+}
+#importFile {
+    display: none;
+}

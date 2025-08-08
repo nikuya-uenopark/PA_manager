@@ -183,7 +183,6 @@ class PAManager {
 
     renderCriteria() {
         const container = document.getElementById('criteriaGrid');
-        
         if (this.criteria.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
@@ -194,9 +193,8 @@ class PAManager {
             `;
             return;
         }
-
-        container.innerHTML = this.criteria.map(criteria => `
-            <div class="criteria-card">
+        container.innerHTML = this.criteria.map((criteria, idx) => `
+            <div class="criteria-card" draggable="true" data-index="${idx}" data-id="${criteria.id}">
                 <div class="criteria-header">
                     <div class="criteria-name">${criteria.name}</div>
                     <div class="criteria-category">${criteria.category}</div>
@@ -209,6 +207,38 @@ class PAManager {
                 </div>
             </div>
         `).join('');
+
+        // ドラッグ＆ドロップイベント設定
+        const cards = container.querySelectorAll('.criteria-card');
+        let dragSrcIdx = null;
+        cards.forEach(card => {
+            card.addEventListener('dragstart', (e) => {
+                dragSrcIdx = Number(card.dataset.index);
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            card.addEventListener('dragend', (e) => {
+                card.classList.remove('dragging');
+            });
+            card.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                card.classList.add('drag-over');
+            });
+            card.addEventListener('dragleave', (e) => {
+                card.classList.remove('drag-over');
+            });
+            card.addEventListener('drop', (e) => {
+                e.preventDefault();
+                card.classList.remove('drag-over');
+                const dropIdx = Number(card.dataset.index);
+                if (dragSrcIdx !== null && dragSrcIdx !== dropIdx) {
+                    // 並び替え
+                    const moved = this.criteria.splice(dragSrcIdx, 1)[0];
+                    this.criteria.splice(dropIdx, 0, moved);
+                    this.renderCriteria();
+                }
+            });
+        });
     }
 
     renderStats() {
