@@ -61,6 +61,7 @@ input, textarea, .criteria-description, .staff-position, .staff-name {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    touch-action: pan-y;
 }
 .criteria-card:not(.edit-mode):hover {
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.13);
