@@ -181,7 +181,6 @@ class PAManager {
         }
         container.innerHTML = this.criteria.map((criteria, idx) => `
             <div class="criteria-card${this.criteriaEditMode ? ' edit-mode' : ''}" data-index="${idx}" data-id="${criteria.id}">
-                ${this.criteriaEditMode ? `<span class='drag-handle' title='並び替え'>&#9776;</span>` : ''}
                 <div class="criteria-header">
                     <div class="criteria-name">${criteria.name}</div>
                     <div class="criteria-category">${criteria.category}</div>
@@ -222,7 +221,7 @@ class PAManager {
                 if (this._sortable) this._sortable.destroy();
                 this._sortable = new window.Sortable(container, {
                     animation: 180,
-                    handle: '.drag-handle',
+                    handle: '.criteria-card',
                     ghostClass: 'drag-ghost',
                     chosenClass: 'drag-chosen',
                     onEnd: async (evt) => {
@@ -232,9 +231,8 @@ class PAManager {
                     }
                 });
             }
-            // 編集モード解除（タップ）
-            container.addEventListener('click', async (e) => {
-                if (!e.target.classList.contains('criteria-card') && !e.target.closest('.criteria-card')) return;
+            // 編集モード解除（画面全体タップ）
+            const endEdit = async (e) => {
                 this.criteriaEditMode = false;
                 if (this._sortable) this._sortable.destroy();
                 // 並び順をAPIで保存
@@ -249,7 +247,13 @@ class PAManager {
                     this.showNotification('並び順の保存に失敗しました', 'error');
                 }
                 this.renderCriteria();
-            }, { once: true });
+                document.removeEventListener('touchstart', endEdit, true);
+                document.removeEventListener('mousedown', endEdit, true);
+            };
+            setTimeout(() => {
+                document.addEventListener('touchstart', endEdit, true);
+                document.addEventListener('mousedown', endEdit, true);
+            }, 300);
         } else {
             if (this._sortable) this._sortable.destroy();
         }
