@@ -1,3 +1,24 @@
+@keyframes wiggle-ios {
+    0% { transform: rotate(-1.2deg); }
+    50% { transform: rotate(1.2deg); }
+    100% { transform: rotate(-1.2deg); }
+}
+.criteria-card.edit-mode {
+    animation: wiggle-ios 0.7s infinite linear;
+    background: white;
+    padding: 14px 16px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.10);
+    border: 2px solid transparent;
+    transition: box-shadow 0.2s, border 0.2s, transform 0.2s;
+    position: relative;
+    margin-bottom: 0;
+    min-height: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
 /* criteriaカードをスタッフカード風に */
 .criteria-card {
     background: white;
