@@ -306,15 +306,30 @@ class PAManager {
 
     async showStaffDetail(staffId) {
         try {
-            const evaluations = await this.apiRequest(`/evaluations?staffId=${staffId}`);
+            // 全criteriaと評価済みデータを取得
+            const [criteriaList, evaluations] = await Promise.all([
+                this.apiRequest('/criteria'),
+                this.apiRequest(`/evaluations?staffId=${staffId}`)
+            ]);
             const staff = this.staff.find(s => s.id === staffId);
-            
             if (!staff) return;
 
             document.getElementById('staffDetailName').textContent = `${staff.name} の評価詳細`;
-            
             const container = document.getElementById('staffEvaluations');
-            container.innerHTML = evaluations.map(evaluation => `
+
+            // criteriaごとに評価データを突き合わせ
+            const evaluationMap = {};
+            evaluations.forEach(ev => { evaluationMap[ev.criteria_id] = ev; });
+
+            container.innerHTML = criteriaList.map(criteria => {
+                const evaluation = evaluationMap[criteria.id] || {
+                        criteria_id: criteria.id,
+                        name: criteria.name,
+                        category: criteria.category,
+                        description: criteria.description,
+                        status: 'cannot-do' // デフォルト
+                    };
+                return `
                 <div class="evaluation-item">
                     <div class="evaluation-header">
                         <div class="evaluation-name">${evaluation.name}</div>
@@ -323,23 +338,23 @@ class PAManager {
                     ${evaluation.description ? `<div class="evaluation-description">${evaluation.description}</div>` : ''}
                     <div class="evaluation-status">
                         <button class="status-btn can-do ${evaluation.status === 'can-do' ? 'active' : ''}" 
-                                onclick="app.updateEvaluation(${staffId}, ${evaluation.criteria_id}, 'can-do')">
+                                onclick="app.updateEvaluation(${staffId}, ${criteria.id}, 'can-do')">
                             <i class="fas fa-check"></i> できる
                         </button>
                         <button class="status-btn learning ${evaluation.status === 'learning' ? 'active' : ''}" 
-                                onclick="app.updateEvaluation(${staffId}, ${evaluation.criteria_id}, 'learning')">
+                                onclick="app.updateEvaluation(${staffId}, ${criteria.id}, 'learning')">
                             <i class="fas fa-clock"></i> 学習中
                         </button>
                         <button class="status-btn cannot-do ${evaluation.status === 'cannot-do' ? 'active' : ''}" 
-                                onclick="app.updateEvaluation(${staffId}, ${evaluation.criteria_id}, 'cannot-do')">
+                                onclick="app.updateEvaluation(${staffId}, ${criteria.id}, 'cannot-do')">
                             <i class="fas fa-times"></i> できない
                         </button>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
 
             this.showModal('staffDetailModal');
-
         } catch (error) {
             this.showNotification('評価データの読み込みに失敗しました', 'error');
         }
