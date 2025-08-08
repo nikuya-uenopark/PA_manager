@@ -181,5 +181,19 @@
     <div id="notification" class="notification"></div>
     <script src="sortable.min.js"></script>
     <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const criteriaList = document.getElementById('criteriaList');
+            if (criteriaList) {
+                new Sortable(criteriaList, {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: function (evt) {
+                        console.log('Moved item from', evt.oldIndex, 'to', evt.newIndex);
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
