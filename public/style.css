@@ -1,3 +1,18 @@
+/* 全体のテキスト選択を無効化 */
+body, .container, .staff-card, .criteria-card {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* 入力欄やテキストエリア、説明文などは選択可 */
+input, textarea, .criteria-description, .staff-position, .staff-name {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
 @keyframes wiggle-ios {
     0% { transform: rotate(-1.2deg); }
     50% { transform: rotate(1.2deg); }
