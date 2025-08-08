@@ -454,9 +454,10 @@ class PAManager {
 
     // UI管理
     showModal(modalId) {
-        const modal = document.getElementById(modalId);
-        modal.classList.add('show');
-        modal.style.display = 'flex';
+    const modal = document.getElementById(modalId);
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
     }
 
     closeModal(modalId) {
@@ -464,6 +465,11 @@ class PAManager {
         modal.classList.remove('show');
         setTimeout(() => {
             modal.style.display = 'none';
+            // 他に開いているモーダルがなければmodal-openを外す
+            const anyOpen = document.querySelector('.modal.show');
+            if (!anyOpen) {
+                document.body.classList.remove('modal-open');
+            }
         }, 300);
     }
 

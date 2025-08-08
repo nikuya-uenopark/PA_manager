@@ -323,6 +323,8 @@ section {
 
 .modal-content.large {
     max-width: 800px;
+    max-height: 80vh;
+    overflow: hidden;
 }
 
 @keyframes modalSlideIn {
@@ -366,6 +368,8 @@ section {
 
 .modal-body {
     padding: 25px;
+    max-height: 60vh;
+    overflow-y: auto;
 }
 
 /* フォーム */
@@ -410,6 +414,12 @@ section {
 .evaluations-grid {
     display: grid;
     gap: 15px;
+    /* 枠内でスクロール */
+/* モーダル表示時に背景のスクロールを防止 */
+.modal-open {
+    overflow: hidden !important;
+    height: 100vh !important;
+}
 }
 
 .evaluation-item {
