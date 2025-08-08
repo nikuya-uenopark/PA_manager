@@ -191,7 +191,6 @@ class PAManager {
         `).join('');
 
         let longPressTimer = null;
-        let pressStartTime = 0;
         container.querySelectorAll('.criteria-card').forEach(card => {
             // 編集モード前: 1秒長押しで編集モード
             card.addEventListener('touchstart', (e) => {
@@ -214,34 +213,17 @@ class PAManager {
             card.addEventListener('mouseup', (e) => {
                 clearTimeout(longPressTimer);
             });
-            // 編集モード中: 0.2秒以上長押しでドラッグ、0.2秒未満はタップで解除
+            // 編集モード中: タップで解除（ドラッグはSortableJSに任せる）
             if (this.criteriaEditMode) {
-                let dragPressTimer = null;
-                let dragStart = false;
-                card.addEventListener('touchstart', (e) => {
-                    dragStart = false;
-                    dragPressTimer = setTimeout(() => {
-                        dragStart = true;
-                        // SortableJSが自動でドラッグ開始
-                    }, 200);
-                });
                 card.addEventListener('touchend', (e) => {
-                    clearTimeout(dragPressTimer);
-                    if (!dragStart) {
-                        // 0.2秒未満のタップで編集モード解除
+                    // ドラッグ操作でなければ編集モード解除
+                    if (!e.changedTouches || e.changedTouches.length === 0 || e.target === card) {
                         this.criteriaEditMode = false;
                         this.renderCriteria();
                     }
                 });
-                card.addEventListener('mousedown', (e) => {
-                    dragStart = false;
-                    dragPressTimer = setTimeout(() => {
-                        dragStart = true;
-                    }, 200);
-                });
                 card.addEventListener('mouseup', (e) => {
-                    clearTimeout(dragPressTimer);
-                    if (!dragStart) {
+                    if (e.button === 0) { // 左クリックのみ
                         this.criteriaEditMode = false;
                         this.renderCriteria();
                     }
