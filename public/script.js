@@ -217,8 +217,9 @@ class PAManager {
             </div>
         `).join('');
 
-    // クリックや長押しによる編集モード切替は廃止
-    // 何も追加しない
+    // 編集モードは廃止
+    // 並べ替え・編集モードUI・JSロジックは全て削除済み
+    // 必要ならここでSortableJSを常時有効化するなどの処理を追加可能
 
         // 編集モード時のみSortable有効
         if (this.criteriaEditMode) {
