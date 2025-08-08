@@ -181,25 +181,33 @@ section {
 /* グリッドレイアウト */
 .staff-grid, .criteria-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
 }
 
 /* スタッフカード */
 .staff-card {
     background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border: 2px solid transparent;
-    transition: all 0.3s ease;
+    padding: 10px 12px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.07);
+    border: 1.5px solid #e2e8f0;
+    transition: all 0.2s ease;
     cursor: pointer;
+    min-height: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .staff-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.10);
     border-color: #667eea;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
 }
 
 .staff-card h3 {
@@ -210,8 +218,11 @@ section {
 
 .staff-position {
     color: #718096;
-    font-size: 0.9rem;
-    margin-bottom: 15px;
+    font-size: 0.85rem;
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .staff-progress {

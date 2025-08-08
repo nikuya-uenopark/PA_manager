@@ -159,24 +159,8 @@ class PAManager {
 
         container.innerHTML = this.staff.map(member => `
             <div class="staff-card" onclick="app.showStaffDetail(${member.id})" data-staff-id="${member.id}">
-                <div class="staff-header">
-                    <div>
-                        <div class="staff-name">${member.name}</div>
-                        ${member.position ? `<div class="staff-position">${member.position}</div>` : ''}
-                    </div>
-                    <button class="btn btn-icon btn-danger" onclick="event.stopPropagation(); app.deleteStaff(${member.id})" title="削除">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-                <div class="staff-progress">
-                    <div class="progress-label">
-                        <span>進捗状況</span>
-                        <span>${member.progress_percentage || 0}%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${member.progress_percentage || 0}%"></div>
-                    </div>
-                </div>
+                <div class="staff-name">${member.name}</div>
+                ${member.position ? `<div class="staff-position">${member.position}</div>` : ''}
             </div>
         `).join('');
     }
@@ -314,21 +298,25 @@ class PAManager {
             const staff = this.staff.find(s => s.id === staffId);
             if (!staff) return;
 
-            document.getElementById('staffDetailName').textContent = `${staff.name} の評価詳細`;
+            // 詳細モーダルのヘッダーに名前・役職・削除ボタン・進捗を表示
+            document.getElementById('staffDetailName').innerHTML = `
+                <span>${staff.name}</span>
+                ${staff.position ? `<span class='staff-position' style='margin-left:1em;'>${staff.position}</span>` : ''}
+                <button class="btn btn-icon btn-danger" style="float:right; margin-left:1em;" onclick="app.deleteStaff(${staff.id})"><i class="fas fa-trash"></i></button>
+                <span class="progress-label" style="float:right; color:#666; margin-right:1em;">進捗: ${staff.progress_percentage || 0}%</span>
+            `;
             const container = document.getElementById('staffEvaluations');
-
             // criteriaごとに評価データを突き合わせ
             const evaluationMap = {};
             evaluations.forEach(ev => { evaluationMap[ev.criteria_id] = ev; });
-
             container.innerHTML = criteriaList.map(criteria => {
                 const evaluation = evaluationMap[criteria.id] || {
-                        criteria_id: criteria.id,
-                        name: criteria.name,
-                        category: criteria.category,
-                        description: criteria.description,
-                        status: 'cannot-do' // デフォルト
-                    };
+                    criteria_id: criteria.id,
+                    name: criteria.name,
+                    category: criteria.category,
+                    description: criteria.description,
+                    status: 'cannot-do' // デフォルト
+                };
                 return `
                 <div class="evaluation-item">
                     <div class="evaluation-header">
@@ -353,7 +341,6 @@ class PAManager {
                 </div>
                 `;
             }).join('');
-
             this.showModal('staffDetailModal');
         } catch (error) {
             this.showNotification('評価データの読み込みに失敗しました', 'error');
