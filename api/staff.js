@@ -1,4 +1,10 @@
-// Test staff API without database
+// Vercel Serverless Function: GET /api/staff
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
 module.exports = async function handler(req, res) {
   // CORS設定
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -10,35 +16,39 @@ module.exports = async function handler(req, res) {
     return;
   }
   
-  try {
-    if (req.method === 'GET') {
-      // Mock data for testing
-      const mockStaff = [
-        {
-          id: 1,
-          name: "テストユーザー1",
-          position: "バイト",
-          joined: "2024-01-01",
-          created_at: new Date().toISOString()
-        },
-        {
-          id: 2, 
-          name: "テストユーザー2",
-          position: "パート",
-          joined: "2024-02-01",
-          created_at: new Date().toISOString()
-        }
-      ];
-      
-      res.status(200).json(mockStaff);
-    } else {
-      res.status(405).json({ error: 'Method not allowed in test mode' });
+  if (req.method === 'GET') {
+    // スタッフ一覧取得
+    try {
+      const result = await pool.query('SELECT * FROM staff ORDER BY created_at DESC');
+      res.status(200).json(result.rows);
+    } catch (error) {
+      console.error('Staff GET error:', error);
+      res.status(500).json({ error: 'スタッフデータの取得に失敗しました', detail: error.message });
     }
-  } catch (error) {
-    res.status(500).json({ 
-      error: 'Test staff API error', 
-      detail: error.message,
-      stack: error.stack
-    });
+  } else if (req.method === 'POST') {
+    // スタッフ追加
+    try {
+      const { name, position, email, phone } = req.body;
+      const result = await pool.query(
+        'INSERT INTO staff (name, position, email, phone) VALUES ($1, $2, $3, $4) RETURNING id',
+        [name, position, email, phone]
+      );
+      res.status(200).json({ id: result.rows[0].id, message: 'スタッフが追加されました' });
+    } catch (error) {
+      console.error('Staff POST error:', error);
+      res.status(500).json({ error: 'スタッフの追加に失敗しました', detail: error.message });
+    }
+  } else if (req.method === 'DELETE') {
+    // スタッフ削除
+    try {
+      const { id } = req.query;
+      await pool.query('DELETE FROM staff WHERE id = $1', [id]);
+      res.status(200).json({ message: 'スタッフが削除されました' });
+    } catch (error) {
+      console.error('Staff DELETE error:', error);
+      res.status(500).json({ error: 'スタッフの削除に失敗しました', detail: error.message });
+    }
+  } else {
+    res.status(405).json({ error: 'Method Not Allowed' });
   }
 };
