@@ -182,7 +182,7 @@ class PAManager {
     }
 
     renderCriteria() {
-        const container = document.getElementById('criteriaGrid');
+    const container = document.getElementById('criteriaList');
         if (this.criteria.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
