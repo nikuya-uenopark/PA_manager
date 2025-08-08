@@ -59,9 +59,14 @@
             <section class="criteria-section">
                 <div class="section-header">
                     <h2><i class="fas fa-list-check"></i> 評価項目管理</h2>
-                    <button class="btn btn-secondary" onclick="showAddCriteriaModal()">
-                        <i class="fas fa-plus"></i> 項目追加
-                    </button>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn btn-secondary" onclick="showAddCriteriaModal()">
+                            <i class="fas fa-plus"></i> 項目追加
+                        </button>
+                        <button id="criteriaEditToggle" class="btn btn-warning" onclick="app.toggleCriteriaEditMode(); return false;">
+                            <i class="fas fa-arrows-alt"></i> 並べ替え
+                        </button>
+                    </div>
                 </div>
                 <div id="criteriaList" class="criteria-grid"></div>
             </section>

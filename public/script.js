@@ -1,6 +1,24 @@
 // PA Manager - iPad最適化版 JavaScript
 
 class PAManager {
+    // 評価項目編集モードのトグル
+    toggleCriteriaEditMode() {
+        this.criteriaEditMode = !this.criteriaEditMode;
+        // OFF時のみ順番保存
+        if (!this.criteriaEditMode) {
+            // 並び順をAPIで保存
+            const order = this.criteria.map((c, i) => ({ id: c.id, sort_order: i + 1 }));
+            this.apiRequest('/criteria', {
+                method: 'PUT',
+                body: JSON.stringify({ order })
+            }).then(() => {
+                this.showNotification('並び順を保存しました', 'success');
+            }).catch(() => {
+                this.showNotification('並び順の保存に失敗しました', 'error');
+            });
+        }
+        this.renderCriteria();
+    }
     constructor() {
         this.apiBase = '/api';
         this.currentTab = 'staff';
@@ -190,46 +208,8 @@ class PAManager {
             </div>
         `).join('');
 
-        let longPressTimer = null;
-        container.querySelectorAll('.criteria-card').forEach(card => {
-            // 編集モード前: 1秒長押しで編集モード
-            card.addEventListener('touchstart', (e) => {
-                if (this.criteriaEditMode) return;
-                longPressTimer = setTimeout(() => {
-                    this.criteriaEditMode = true;
-                    this.renderCriteria();
-                }, 1000);
-            });
-            card.addEventListener('touchend', (e) => {
-                clearTimeout(longPressTimer);
-            });
-            card.addEventListener('mousedown', (e) => {
-                if (this.criteriaEditMode) return;
-                longPressTimer = setTimeout(() => {
-                    this.criteriaEditMode = true;
-                    this.renderCriteria();
-                }, 1000);
-            });
-            card.addEventListener('mouseup', (e) => {
-                clearTimeout(longPressTimer);
-            });
-            // 編集モード中: タップで解除（ドラッグはSortableJSに任せる）
-            if (this.criteriaEditMode) {
-                card.addEventListener('touchend', (e) => {
-                    // ドラッグ操作でなければ編集モード解除
-                    if (!e.changedTouches || e.changedTouches.length === 0 || e.target === card) {
-                        this.criteriaEditMode = false;
-                        this.renderCriteria();
-                    }
-                });
-                card.addEventListener('mouseup', (e) => {
-                    if (e.button === 0) { // 左クリックのみ
-                        this.criteriaEditMode = false;
-                        this.renderCriteria();
-                    }
-                });
-            }
-        });
+    // クリックや長押しによる編集モード切替は廃止
+    // 何も追加しない
 
         // 編集モード時のみSortable有効
         if (this.criteriaEditMode) {
