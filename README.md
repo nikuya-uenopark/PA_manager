@@ -1,20 +1,28 @@
-# PA Manager v2.1 - Vercel + Neon(Postgres)対応/iPad最適化
+# PA評価管理システム v3.0 - プロフェッショナル版
 
-バイト・パートスタッフのスキル評価と進捗管理を行うWebアプリケーション（iPad最適化・Vercelサーバレス/Neon DB対応）
+横向きiPad最適化のモダンなスキル管理・評価システム
 
-## 主な特徴
+## ✨ 主な特徴
 
-- iPad/タッチデバイス最適化UI
-- スタッフ・評価項目・進捗の一元管理
-- VercelサーバレスAPI + Neon(Postgres)でデータ永続化
-- 無料枠でのクラウド運用が可能
+### 🎨 モダンなデザイン
+- **iPad横向き完全最適化** - 1024px以上の画面に特化
+- **美しいグラデーション** - 洗練されたビジュアルデザイン
+- **スムーズアニメーション** - 直感的な操作体験
+- **レスポンシブレイアウト** - あらゆるデバイスに対応
 
-## 技術構成
+### 📊 高度な機能
+- **タブ切り替えシステム** - スタッフ管理・評価項目・分析を一元化
+- **ドラッグ&ドロップ** - 評価項目の直感的並び替え
+- **リアルタイム統計** - 進捗状況の可視化
+- **評価ログ機能** - 変更履歴の完全記録
+- **プロフィール管理** - 詳細なスタッフ情報
 
-- **フロントエンド**: HTML5, CSS3, JavaScript (ES6+)
-- **バックエンド**: Vercel Serverless Functions (Node.js)
-- **データベース**: Neon (Postgres)
-- **API設計**: RESTful (staff, criteria, evaluations, stats, export)
+### 🚀 技術仕様
+- **フロントエンド**: モダンHTML5, CSS3 Grid/Flexbox, ES6+ JavaScript
+- **バックエンド**: Vercel Serverless Functions
+- **データベース**: Neon PostgreSQL（クラウドネイティブ）
+- **デザインシステム**: カスタムCSS変数、Inter フォント
+- **外部ライブラリ**: Chart.js, Sortable.js, Font Awesome
 
 ## セットアップ手順
 
