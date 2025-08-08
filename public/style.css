@@ -1,3 +1,30 @@
+/* 修正済みモダンデザイン */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+header {
+    background-color: #74b9ff;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid #0984e3;
+}
+
+header h1 {
+    font-size: 1.8em;
+    margin: 0;
+}
+
+header p {
+    font-size: 1em;
+    margin: 5px 0 0;
+}
+
 /* 全体で長押しによる選択・コピー・ドラッグ・画像保存を無効化 */
 html, body, * {
     -webkit-user-select: none !important;
@@ -9,7 +36,6 @@ html, body, * {
     -khtml-user-drag: none !important;
     -moz-user-drag: none !important;
     -o-user-drag: none !important;
-    user-drag: none !important;
 }
 /* 全体のテキスト選択を無効化 */
 body, .container, .staff-card, .criteria-card {
@@ -68,11 +94,6 @@ input, textarea, .criteria-description, .staff-position, .staff-name {
     border-color: #667eea;
 }
 
-/* ぷるぷるアニメーション */
-.criteria-card.edit-mode {
-    /* デザイン変化なし。削除ボタンのみ表示 */
-}
-
 /* 編集モード時のみ右上に削除ボタン */
 .criteria-card .criteria-delete-btn {
     display: none;
@@ -108,7 +129,6 @@ html, body, * {
     -khtml-user-drag: none !important;
     -moz-user-drag: none !important;
     -o-user-drag: none !important;
-    user-drag: none !important;
 }
 
 body, .container, .staff-card, .criteria-card {
@@ -159,37 +179,33 @@ input, textarea, .criteria-description, .staff-position, .staff-name {
 
 /* ボタン */
 .btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
+    display: inline-block;
+    padding: 10px 15px;
+    font-size: 0.9em;
+    border-radius: 5px;
+    text-align: center;
     cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
+    transition: background-color 0.3s ease;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-color: #0984e3;
     color: white;
+    border: none;
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    background-color: #74b9ff;
 }
 
 .btn-secondary {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
+    background-color: #dfe6e9;
+    color: #2d3436;
+    border: none;
 }
 
 .btn-secondary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
+    background-color: #b2bec3;
 }
 
 .btn-success {
@@ -300,14 +316,6 @@ input, textarea, .criteria-description, .staff-position, .staff-name {
 
 /* 評価項目カード */
 .criteria-card {
-}
-.criteria-card.edit-mode {
-    border: 2px dashed #667eea;
-    background: #f0f4ff;
-    cursor: grab;
-    opacity: 0.92;
-    transition: border 0.2s, background 0.2s;
-}
     background: white;
     padding: 20px;
     border-radius: 12px;

@@ -63,6 +63,9 @@
                         <button class="btn btn-secondary" onclick="showAddCriteriaModal()">
                             <i class="fas fa-plus"></i> 項目追加
                         </button>
+                        <button class="btn btn-secondary" onclick="sortCriteriaByCategory()">
+                            <i class="fas fa-sort"></i> カテゴリー順で並べ替え
+                        </button>
                     </div>
                 </div>
                 <div id="criteriaList" class="criteria-grid"></div>
@@ -194,6 +197,30 @@
                 });
             }
         });
+
+        async function sortCriteriaByCategory() {
+            const response = await fetch('/api/criteria');
+            const criteria = await response.json();
+            criteria.sort((a, b) => a.category.localeCompare(b.category));
+
+            const criteriaList = document.getElementById('criteriaList');
+            criteriaList.innerHTML = '';
+            criteria.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'criteria-item';
+                div.textContent = `${item.name} (${item.category})`;
+                criteriaList.appendChild(div);
+            });
+
+            // データベースと同期
+            const order = criteria.map((item, index) => ({ id: item.id, sort_order: index + 1 }));
+            await fetch('/api/criteria', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ order })
+            });
+            alert('カテゴリー順で並べ替えました！');
+        }
     </script>
 </body>
 </html>
