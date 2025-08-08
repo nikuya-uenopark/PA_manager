@@ -73,7 +73,6 @@ class PAManager {
             this.apiRequest('/criteria'),
             this.apiRequest('/stats')
         ]);
-
         this.staff = staffData;
         this.criteria = criteriaData;
         this.stats = statsData;
@@ -228,7 +227,7 @@ class PAManager {
         }
 
         try {
-            await this.apiRequest('/staff', {
+            await this.apiRequest('/staff_add', {
                 method: 'POST',
                 body: JSON.stringify({ name, position })
             });
@@ -250,7 +249,7 @@ class PAManager {
         }
 
         try {
-            await this.apiRequest(`/staff/${staffId}`, {
+            await this.apiRequest(`/staff_delete?id=${staffId}`, {
                 method: 'DELETE'
             });
 
@@ -265,7 +264,7 @@ class PAManager {
 
     async showStaffDetail(staffId) {
         try {
-            const evaluations = await this.apiRequest(`/evaluations/${staffId}`);
+            const evaluations = await this.apiRequest(`/evaluations?staffId=${staffId}`);
             const staff = this.staff.find(s => s.id === staffId);
             
             if (!staff) return;
@@ -306,9 +305,9 @@ class PAManager {
 
     async updateEvaluation(staffId, criteriaId, status) {
         try {
-            await this.apiRequest(`/evaluations/${staffId}/${criteriaId}`, {
+            await this.apiRequest(`/evaluation_update`, {
                 method: 'PUT',
-                body: JSON.stringify({ status })
+                body: JSON.stringify({ staffId, criteriaId, status })
             });
 
             // UIを即座に更新
@@ -339,7 +338,7 @@ class PAManager {
         }
 
         try {
-            await this.apiRequest('/criteria', {
+            await this.apiRequest('/criteria_add', {
                 method: 'POST',
                 body: JSON.stringify({ name, category, description })
             });
@@ -361,7 +360,7 @@ class PAManager {
         }
 
         try {
-            await this.apiRequest(`/criteria/${criteriaId}`, {
+            await this.apiRequest(`/criteria_delete?id=${criteriaId}`, {
                 method: 'DELETE'
             });
 
