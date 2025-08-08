@@ -190,28 +190,40 @@ class PAManager {
             </div>
         `).join('');
 
-        // タッチ長押しで編集モード
+        // タッチ・マウス長押しで編集モード
         let longPressTimer = null;
+        let pressStartTime = 0;
         container.querySelectorAll('.criteria-card').forEach(card => {
             card.addEventListener('touchstart', (e) => {
                 if (this.criteriaEditMode) return;
+                pressStartTime = Date.now();
                 longPressTimer = setTimeout(() => {
                     this.criteriaEditMode = true;
                     this.renderCriteria();
-                }, 800); // 0.8秒長押し
+                }, 200); // 0.2秒長押し
             });
             card.addEventListener('touchend', (e) => {
                 clearTimeout(longPressTimer);
+                if (!this.criteriaEditMode && Date.now() - pressStartTime < 200) {
+                    // タップ判定で編集モード解除
+                    this.criteriaEditMode = false;
+                    this.renderCriteria();
+                }
             });
             card.addEventListener('mousedown', (e) => {
                 if (this.criteriaEditMode) return;
+                pressStartTime = Date.now();
                 longPressTimer = setTimeout(() => {
                     this.criteriaEditMode = true;
                     this.renderCriteria();
-                }, 800);
+                }, 200);
             });
             card.addEventListener('mouseup', (e) => {
                 clearTimeout(longPressTimer);
+                if (!this.criteriaEditMode && Date.now() - pressStartTime < 200) {
+                    this.criteriaEditMode = false;
+                    this.renderCriteria();
+                }
             });
         });
 
