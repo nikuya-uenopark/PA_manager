@@ -43,6 +43,17 @@ class PAManager {
         });
     }
 
+    showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.style.display = 'block';
+        
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+    }
+
     async loadData() {
         try {
             await Promise.all([
@@ -58,25 +69,31 @@ class PAManager {
     async loadStaff() {
         try {
             const response = await fetch('/api/staff');
-            if (response.ok) {
-                this.currentStaff = await response.json();
-                this.renderStaff();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+            this.currentStaff = await response.json();
+            this.renderStaff();
         } catch (error) {
             console.error('スタッフデータ読み込みエラー:', error);
+            // ユーザーに通知
+            this.showNotification('スタッフデータの読み込みに失敗しました', 'error');
         }
     }
 
     async loadCriteria() {
         try {
             const response = await fetch('/api/criteria');
-            if (response.ok) {
-                this.currentCriteria = await response.json();
-                this.renderCriteria();
-                this.setupSortable();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+            this.currentCriteria = await response.json();
+            this.renderCriteria();
+            this.setupSortable();
         } catch (error) {
             console.error('評価項目データ読み込みエラー:', error);
+            // ユーザーに通知
+            this.showNotification('評価項目データの読み込みに失敗しました', 'error');
         }
     }
 
