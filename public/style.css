@@ -32,10 +32,6 @@ html, body, * {
     -ms-user-select: none !important;
     user-select: none !important;
     -webkit-touch-callout: none !important;
-    -webkit-user-drag: none !important;
-    -khtml-user-drag: none !important;
-    -moz-user-drag: none !important;
-    -o-user-drag: none !important;
 }
 /* 全体のテキスト選択を無効化 */
 body, .container, .staff-card, .criteria-card {
@@ -125,10 +121,6 @@ html, body, * {
     -ms-user-select: none !important;
     user-select: none !important;
     -webkit-touch-callout: none !important;
-    -webkit-user-drag: none !important;
-    -khtml-user-drag: none !important;
-    -moz-user-drag: none !important;
-    -o-user-drag: none !important;
 }
 
 body, .container, .staff-card, .criteria-card {
@@ -159,7 +151,6 @@ input, textarea, .criteria-description, .staff-position, .staff-name {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    touch-action: pan-y;
 }
 
 /* 並び替え中の浮き上がり・影 */
