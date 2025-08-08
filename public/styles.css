@@ -499,6 +499,12 @@ body {
 
 .modal-body {
     padding: var(--spacing-md);
+    max-height: 60vh;
+    overflow-y: auto;
+}
+.evaluations-grid {
+    max-height: 48vh;
+    overflow-y: auto;
 }
 
 /* フォーム */
