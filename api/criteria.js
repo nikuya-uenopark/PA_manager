@@ -5,8 +5,53 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+// データベース初期化（テーブル拡張）
+async function initializeDatabase() {
+  const client = await pool.connect();
+  try {
+    // スタッフテーブル拡張
+    await client.query(`
+      ALTER TABLE staff 
+      ADD COLUMN IF NOT EXISTS avatar_url TEXT,
+      ADD COLUMN IF NOT EXISTS phone VARCHAR(20),
+      ADD COLUMN IF NOT EXISTS email VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS notes TEXT,
+      ADD COLUMN IF NOT EXISTS hire_date DATE,
+      ADD COLUMN IF NOT EXISTS birth_date DATE
+    `);
+    
+    // 評価ログテーブル作成
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS evaluation_logs (
+        id SERIAL PRIMARY KEY,
+        staff_id INTEGER REFERENCES staff(id) ON DELETE CASCADE,
+        criteria_id INTEGER REFERENCES criteria(id) ON DELETE CASCADE,
+        old_score INTEGER,
+        new_score INTEGER,
+        old_status VARCHAR(50),
+        new_status VARCHAR(50),
+        comment TEXT,
+        changed_by VARCHAR(255),
+        changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    // カテゴリーテーブル拡張
+    await client.query(`
+      ALTER TABLE criteria 
+      ADD COLUMN IF NOT EXISTS category VARCHAR(100) DEFAULT '共通',
+      ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0
+    `);
+  } finally {
+    client.release();
+  }
+}
+
 export default async function handler(req, res) {
   try {
+    // 初回アクセス時にデータベース初期化
+    await initializeDatabase();
+    
     if (req.method === 'GET') {
       const result = await pool.query('SELECT * FROM criteria ORDER BY sort_order ASC NULLS LAST, id ASC');
       res.status(200).json(result.rows);

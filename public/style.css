@@ -1,28 +1,38 @@
-/* 修正済みモダンデザイン */
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f9f9f9;
+/* ========================
+   iPad横向き最適化CSS
+   ======================== */
+
+/* 基本設定 */
+* {
     margin: 0;
     padding: 0;
-    color: #333;
+    box-sizing: border-box;
 }
 
-header {
-    background-color: #74b9ff;
-    color: white;
-    padding: 20px;
-    text-align: center;
-    border-bottom: 2px solid #0984e3;
+:root {
+    --primary-color: #667eea;
+    --primary-dark: #764ba2;
+    --secondary-color: #f093fb;
+    --accent-color: #4facfe;
+    --success-color: #00d4aa;
+    --warning-color: #ff9f43;
+    --danger-color: #ff6b6b;
+    --dark-color: #2f3542;
+    --light-color: #f1f2f6;
+    --white: #ffffff;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
+    --border-radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-header h1 {
-    font-size: 1.8em;
-    margin: 0;
-}
-
-header p {
-    font-size: 1em;
-    margin: 5px 0 0;
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: var(--dark-color);
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
 /* 全体で長押しによる選択・コピー・ドラッグ・画像保存を無効化 */
