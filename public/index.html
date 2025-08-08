@@ -1,23 +1,53 @@
-<div id="staffDetailModal" class="modal modal-large">
-    <div class="modal-content">
-        <div class="modal-header">...</div>
-        <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
-            <div id="staffEvaluations" class="evaluations-grid"></div>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PA Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../github-corner.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <div id="loadingScreen" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#fff;z-index:2000;align-items:center;justify-content:center;">
+        <div>読み込み中...</div>
+    </div>
+    <div id="app">
+        <header class="app-header">
+            <h1>PA Manager</h1>
+        </header>
+        <main>
+            <div id="staffGrid" class="staff-grid"></div>
+            <div id="criteriaTab" class="tab-content">
+                <div class="tab-header">評価項目</div>
+                <button id="sortCriteriaBtn" class="btn btn-secondary" style="margin-bottom:8px;">評価項目を50音順で並び替え</button>
+                <div id="criteriaGrid" class="criteria-grid"></div>
+            </div>
+            <div id="statsTab" class="tab-content">
+                <div class="tab-header">統計</div>
+                <div id="statsGrid" class="stats-grid"></div>
+            </div>
+        </main>
+        <div id="notification" class="notification"></div>
+    </div>
+    <!-- スタッフ詳細モーダル -->
+    <div id="staffDetailModal" class="modal modal-large">
+        <div class="modal-content">
+            <div class="modal-header"><span id="staffDetailName"></span><button class="modal-close" onclick="app.closeModal('staffDetailModal')">×</button></div>
+            <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
+                <div id="staffEvaluations" class="evaluations-grid"></div>
+            </div>
         </div>
     </div>
-</div>
-
-<div id="criteriaTab" class="tab-content">
-    <div class="tab-header">...</div>
-    <button id="sortCriteriaBtn" class="btn btn-secondary" style="margin-bottom:8px;">評価項目を50音順で並び替え</button>
-    <div id="criteriaGrid" class="criteria-grid"></div>
-</div>
-
-<script>
-    document.getElementById('sortCriteriaBtn')?.addEventListener('click', function() {
-        const grid = document.getElementById('criteriaGrid');
-        let items = Array.from(grid.children);
-        items.sort((a,b) => a.textContent.localeCompare(b.textContent, 'ja'));
-        items.forEach(item => grid.appendChild(item));
-    });
-</script>
+    <!-- 評価項目追加モーダル等も必要に応じて追加 -->
+    <script src="app.js"></script>
+    <script>
+        document.getElementById('sortCriteriaBtn')?.addEventListener('click', function() {
+            const grid = document.getElementById('criteriaGrid');
+            let items = Array.from(grid.children);
+            items.sort((a,b) => a.textContent.localeCompare(b.textContent, 'ja'));
+            items.forEach(item => grid.appendChild(item));
+        });
+    </script>
+</body>
+</html>
