@@ -253,8 +253,8 @@ class PAManager {
     }
 
     renderStats() {
-        document.getElementById('totalStaff').textContent = this.stats.staffCount || 0;
-        document.getElementById('totalCriteria').textContent = this.stats.criteriaCount || 0;
+    document.getElementById('staffCount').textContent = this.stats.staffCount || 0;
+    document.getElementById('criteriaCount').textContent = this.stats.criteriaCount || 0;
         document.getElementById('overallProgress').textContent = `${this.stats.overallProgress || 0}%`;
     }
 
