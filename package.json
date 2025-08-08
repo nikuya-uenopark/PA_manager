@@ -2,6 +2,7 @@
   "name": "pa-manager",
   "version": "1.0.0",
   "description": "iPad向け人事評価管理システム",
+  "type": "module",
   "main": "public/index.html",
   "scripts": {
     "dev": "vercel dev",
