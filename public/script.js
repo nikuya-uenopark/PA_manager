@@ -4,8 +4,17 @@ class PAManager {
     // 評価項目編集モードのトグル
     toggleCriteriaEditMode() {
         this.criteriaEditMode = !this.criteriaEditMode;
-        // OFF時のみ順番保存
-        if (!this.criteriaEditMode) {
+        // ボタン表示切り替え
+        const btn = document.getElementById('criteriaEditToggle');
+        const btnText = document.getElementById('criteriaEditToggleText');
+        if (this.criteriaEditMode) {
+            btn.classList.remove('btn-warning');
+            btn.classList.add('btn-success');
+            btnText.innerHTML = '<i class="fas fa-check"></i> 完了';
+        } else {
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-warning');
+            btnText.innerHTML = '<i class="fas fa-arrows-alt"></i> 並べ替え';
             // 並び順をAPIで保存
             const order = this.criteria.map((c, i) => ({ id: c.id, sort_order: i + 1 }));
             this.apiRequest('/criteria', {
