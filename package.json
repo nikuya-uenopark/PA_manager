@@ -1,0 +1,30 @@
+{
+  "name": "pa-manager",
+  "version": "1.0.0",
+  "description": "iPad向け人事評価管理システム",
+  "main": "public/index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site - no build needed'",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "pg": "^8.11.0"
+  },
+  "devDependencies": {
+    "@vercel/node": "^3.0.0",
+    "@vercel/static": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "人事評価",
+    "スタッフ管理",
+    "iPad",
+    "タブレット",
+    "評価システム"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
