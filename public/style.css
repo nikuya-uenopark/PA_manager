@@ -261,6 +261,14 @@ section {
 
 /* 評価項目カード */
 .criteria-card {
+}
+.criteria-card.edit-mode {
+    border: 2px dashed #667eea;
+    background: #f0f4ff;
+    cursor: grab;
+    opacity: 0.92;
+    transition: border 0.2s, background 0.2s;
+}
     background: white;
     padding: 20px;
     border-radius: 12px;

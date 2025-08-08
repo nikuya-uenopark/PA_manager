@@ -167,6 +167,8 @@ class PAManager {
 
     renderCriteria() {
     const container = document.getElementById('criteriaList');
+    // 編集モードフラグ
+    if (this.criteriaEditMode === undefined) this.criteriaEditMode = false;
         if (this.criteria.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
@@ -178,7 +180,7 @@ class PAManager {
             return;
         }
         container.innerHTML = this.criteria.map((criteria, idx) => `
-            <div class="criteria-card" draggable="true" data-index="${idx}" data-id="${criteria.id}">
+            <div class="criteria-card${this.criteriaEditMode ? ' edit-mode' : ''}" data-index="${idx}" data-id="${criteria.id}">
                 <div class="criteria-header">
                     <div class="criteria-name">${criteria.name}</div>
                     <div class="criteria-category">${criteria.category}</div>
@@ -192,48 +194,66 @@ class PAManager {
             </div>
         `).join('');
 
-        // ドラッグ＆ドロップイベント設定
-        const cards = container.querySelectorAll('.criteria-card');
-        let dragSrcIdx = null;
-        cards.forEach(card => {
-            card.addEventListener('dragstart', (e) => {
-                dragSrcIdx = Number(card.dataset.index);
-                card.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-            });
-            card.addEventListener('dragend', (e) => {
-                card.classList.remove('dragging');
-            });
-            card.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                card.classList.add('drag-over');
-            });
-            card.addEventListener('dragleave', (e) => {
-                card.classList.remove('drag-over');
-            });
-            card.addEventListener('drop', async (e) => {
-                e.preventDefault();
-                card.classList.remove('drag-over');
-                const dropIdx = Number(card.dataset.index);
-                if (dragSrcIdx !== null && dragSrcIdx !== dropIdx) {
-                    // 並び替え
-                    const moved = this.criteria.splice(dragSrcIdx, 1)[0];
-                    this.criteria.splice(dropIdx, 0, moved);
-                    // 並び順をAPIで保存
-                    const order = this.criteria.map((c, i) => ({ id: c.id, sort_order: i + 1 }));
-                    try {
-                        await this.apiRequest('/criteria', {
-                            method: 'PUT',
-                            body: JSON.stringify({ order })
-                        });
-                        this.showNotification('並び順を保存しました', 'success');
-                    } catch (e) {
-                        this.showNotification('並び順の保存に失敗しました', 'error');
-                    }
+        // タッチ長押しで編集モード
+        let longPressTimer = null;
+        container.querySelectorAll('.criteria-card').forEach(card => {
+            card.addEventListener('touchstart', (e) => {
+                if (this.criteriaEditMode) return;
+                longPressTimer = setTimeout(() => {
+                    this.criteriaEditMode = true;
                     this.renderCriteria();
-                }
+                }, 800); // 0.8秒長押し
+            });
+            card.addEventListener('touchend', (e) => {
+                clearTimeout(longPressTimer);
+            });
+            card.addEventListener('mousedown', (e) => {
+                if (this.criteriaEditMode) return;
+                longPressTimer = setTimeout(() => {
+                    this.criteriaEditMode = true;
+                    this.renderCriteria();
+                }, 800);
+            });
+            card.addEventListener('mouseup', (e) => {
+                clearTimeout(longPressTimer);
             });
         });
+
+        // 編集モード時のみSortable有効
+        if (this.criteriaEditMode) {
+            if (window.Sortable) {
+                if (this._sortable) this._sortable.destroy();
+                this._sortable = new window.Sortable(container, {
+                    animation: 150,
+                    handle: '.criteria-card',
+                    onEnd: async (evt) => {
+                        // 並び替え後の順序をthis.criteriaに反映
+                        const newOrder = Array.from(container.children).map((el, i) => Number(el.dataset.id));
+                        this.criteria.sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
+                    }
+                });
+            }
+            // 編集モード解除（タップ）
+            container.addEventListener('click', async (e) => {
+                if (!e.target.classList.contains('criteria-card') && !e.target.closest('.criteria-card')) return;
+                this.criteriaEditMode = false;
+                if (this._sortable) this._sortable.destroy();
+                // 並び順をAPIで保存
+                const order = this.criteria.map((c, i) => ({ id: c.id, sort_order: i + 1 }));
+                try {
+                    await this.apiRequest('/criteria', {
+                        method: 'PUT',
+                        body: JSON.stringify({ order })
+                    });
+                    this.showNotification('並び順を保存しました', 'success');
+                } catch (e) {
+                    this.showNotification('並び順の保存に失敗しました', 'error');
+                }
+                this.renderCriteria();
+            }, { once: true });
+        } else {
+            if (this._sortable) this._sortable.destroy();
+        }
     }
 
     renderStats() {
