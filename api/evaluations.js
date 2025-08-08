@@ -1,11 +1,11 @@
-// Vercel Serverless Function: GET/POST /api/evaluations
-import { Pool } from 'pg';
+// Vercel Serverless Function: 評価管理 API
+const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // CORS設定
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
