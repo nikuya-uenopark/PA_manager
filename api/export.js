@@ -29,6 +29,10 @@ module.exports = async function handler(req, res) {
     };
     res.status(200).json(exportData);
   } catch (error) {
-    res.status(500).json({ error: 'データのエクスポートに失敗しました', detail: error.message });
+    console.error('Export API error:', error);
+    res.status(500).json({ 
+      error: 'エクスポートAPI エラー', 
+      detail: error.message 
+    });
   }
 }

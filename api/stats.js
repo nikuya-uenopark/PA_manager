@@ -26,6 +26,10 @@ module.exports = async function handler(req, res) {
       overallProgress: Math.round(progressData.rows[0].overall_progress || 0)
     });
   } catch (error) {
-    res.status(500).json({ error: '統計情報の取得に失敗しました', detail: error.message });
+    console.error('Stats API error:', error);
+    res.status(500).json({ 
+      error: '統計API エラー', 
+      detail: error.message 
+    });
   }
 }

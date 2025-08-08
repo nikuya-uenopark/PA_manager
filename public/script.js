@@ -263,18 +263,6 @@ class PAManager {
         if (avgProgressElement) avgProgressElement.textContent = Math.floor(Math.random() * 100) + '%';
     }
 
-    showNotification(message, type = 'success') {
-        const notification = document.getElementById('notification');
-        if (notification) {
-            notification.textContent = message;
-            notification.className = 'notification ' + type + ' show';
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
-    }
-
     async sortCriteriaByCategory() {
         const sortedCriteria = [...this.currentCriteria].sort((a, b) => 
             (a.category || '').localeCompare(b.category || '')
@@ -295,6 +283,8 @@ class PAManager {
             if (response.ok) {
                 this.showNotification('カテゴリー順で並び替えました');
                 await this.loadCriteria();
+            } else {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
         } catch (error) {
             console.error('並び替えエラー:', error);

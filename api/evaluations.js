@@ -55,6 +55,10 @@ module.exports = async function handler(req, res) {
       res.status(405).json({ error: 'Method Not Allowed' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'evaluations API error', detail: error.message });
+    console.error('Evaluations API error:', error);
+    res.status(500).json({ 
+      error: '評価API エラー', 
+      detail: error.message 
+    });
   }
 }
