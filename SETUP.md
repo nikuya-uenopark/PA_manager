@@ -1,84 +1,84 @@
-# 開発環境セットアップガイド
+# PA Manager セットアップガイド（Vercel + Neon/Postgres 版）
 
-## 前提条件
+このアプリはVercel（サーバレス）+ Neon（Postgres）で無料運用できます。
 
-このアプリケーションを動作させるには以下が必要です：
+## 必要なもの
 
-### 1. Node.js のインストール
-https://nodejs.org/ から最新のLTS版をダウンロードしてインストール
-
-### 2. MySQL のインストール
-- **Windows**: https://dev.mysql.com/downloads/mysql/
-- **MySQL Community Server** をダウンロードしてインストール
-- インストール時にrootパスワードを設定
-
-### 3. 環境設定
-
-#### .env ファイルの作成
-```bash
-# .env.example を .env にコピーして以下を設定
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_mysql_root_password
-DB_NAME=pa_manager_db
-PORT=3000
-```
+- GitHubアカウント
+- Vercelアカウント（https://vercel.com/）
+- Neonアカウント（https://neon.tech/）
 
 ## セットアップ手順
 
-### 1. 依存関係のインストール
+### 1. リポジトリのクローン
+
+```bash
+git clone https://github.com/nikuya-uenopark/PA_manager.git
+cd PA_manager
+```
+
+### 2. 依存パッケージのインストール
+
 ```bash
 npm install
 ```
 
-### 2. データベースの初期化
-```bash
-npm run setup-db
+### 3. NeonでPostgresデータベース作成
+
+1. Neonにサインアップし新規プロジェクト作成
+2. 「Connection string（DATABASE_URL）」をコピー
+
+### 4. Vercelで新規プロジェクト作成
+
+1. VercelにGitHub連携し本リポジトリをインポート
+2. 「Environment Variables」に `DATABASE_URL` を追加し、Neonの接続文字列を貼り付け
+
+### 5. データベーステーブル作成
+
+NeonのSQLエディタで以下を実行：
+
+```sql
+CREATE TABLE IF NOT EXISTS staff (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(255) NOT NULL,
+	position VARCHAR(255),
+	joined DATE
+);
+CREATE TABLE IF NOT EXISTS criteria (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(255) NOT NULL,
+	description TEXT
+);
+CREATE TABLE IF NOT EXISTS evaluations (
+	id SERIAL PRIMARY KEY,
+	staff_id INTEGER REFERENCES staff(id) ON DELETE CASCADE,
+	criteria_id INTEGER REFERENCES criteria(id) ON DELETE CASCADE,
+	score INTEGER,
+	comment TEXT,
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-### 3. サーバー起動
-```bash
-# 開発モード（ファイル変更時に自動再起動）
-npm run dev
+### 6. Vercelでデプロイ
 
-# または通常モード
-npm start
-```
+Vercelの「Deploy」ボタンで本番公開
 
-### 4. ブラウザでアクセス
-`http://localhost:3000` でアプリケーションが起動します
+## ローカル開発（任意）
 
-## 無料クラウドでの運用
+1. `.env` ファイルを作成し、NeonのDATABASE_URLを記載
+2. `npm run dev` でローカルサーバ起動
 
-Node.jsとMySQLが必要なため、以下のクラウドサービスを推奨：
+## よくある質問
 
-### Railway (推奨)
-- GitHubと連携して自動デプロイ
-- MySQL含めて無料枠あり
-- 簡単セットアップ
-
-### PlanetScale + Vercel
-- PlanetScale: MySQL互換の無料データベース
-- Vercel: Node.js アプリのホスティング
-
-### Heroku + ClearDB
-- Heroku: アプリケーションホスティング
-- ClearDB: MySQL アドオン（無料枠あり）
-
-## iPadでの利用
-
-1. アプリケーションをクラウドにデプロイ
-2. iPad Safari でURLにアクセス
-3. 共有ボタン → ホーム画面に追加
-4. PWAとしてネイティブアプリのように使用
+- Q. HobbyプランでAPI数制限は？
+	- A. 12個まで。API統合済みなので制限内です。
+- Q. DBは無料？
+	- A. NeonのFreeプランで十分運用可能です。
 
 ## トラブルシューティング
 
-### MySQLエラー
-- MySQLサービスが起動しているか確認
-- .envファイルの設定を確認
-- パスワードが正しいか確認
+- デプロイ時に「No more than 12 Serverless Functions」エラー → APIファイル数を12個以下に統合済み
+- DB接続エラー → Vercelの環境変数DATABASE_URLを再確認
 
-### ポートエラー
-- 他のアプリケーションが3000番ポートを使用していないか確認
-- .envでPORTを変更可能
+## ライセンス
+MIT
