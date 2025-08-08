@@ -227,7 +227,7 @@ class PAManager {
             card.addEventListener('dragleave', (e) => {
                 card.classList.remove('drag-over');
             });
-            card.addEventListener('drop', (e) => {
+            card.addEventListener('drop', async (e) => {
                 e.preventDefault();
                 card.classList.remove('drag-over');
                 const dropIdx = Number(card.dataset.index);
@@ -235,6 +235,17 @@ class PAManager {
                     // 並び替え
                     const moved = this.criteria.splice(dragSrcIdx, 1)[0];
                     this.criteria.splice(dropIdx, 0, moved);
+                    // 並び順をAPIで保存
+                    const order = this.criteria.map((c, i) => ({ id: c.id, sort_order: i + 1 }));
+                    try {
+                        await this.apiRequest('/criteria', {
+                            method: 'PUT',
+                            body: JSON.stringify({ order })
+                        });
+                        this.showNotification('並び順を保存しました', 'success');
+                    } catch (e) {
+                        this.showNotification('並び順の保存に失敗しました', 'error');
+                    }
                     this.renderCriteria();
                 }
             });
@@ -414,27 +425,7 @@ class PAManager {
         }
     }
 
-    // データ管理
-    async exportData() {
-        try {
-            const data = await this.apiRequest('/export');
-            
-            const dataStr = JSON.stringify(data, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(dataBlob);
-            link.download = `pa_manager_backup_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            this.showNotification('データがエクスポートされました', 'success');
 
-        } catch (error) {
-            this.showNotification('データのエクスポートに失敗しました', 'error');
-        }
-    }
 
     async refreshData() {
         try {
