@@ -1,9 +1,5 @@
-// Vercel Serverless Function: エクスポート API
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+// Vercel Serverless Function: エクスポート API (Prisma 版)
+const prisma = require('./_prisma');
 
 module.exports = async function handler(req, res) {
   // CORS設定
@@ -17,15 +13,17 @@ module.exports = async function handler(req, res) {
   }
   
   try {
-    const staff = await pool.query('SELECT * FROM staff');
-    const criteria = await pool.query('SELECT * FROM criteria');
-    const evaluations = await pool.query('SELECT * FROM evaluations');
+    const [staff, criteria, evaluations] = await Promise.all([
+      prisma.staff.findMany({ orderBy: { id: 'asc' } }),
+      prisma.criteria.findMany({ orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }] }),
+      prisma.evaluation.findMany({ orderBy: { id: 'asc' } }),
+    ]);
     const exportData = {
-      staff: staff.rows,
-      criteria: criteria.rows,
-      evaluations: evaluations.rows,
+      staff,
+      criteria,
+      evaluations,
       exportDate: new Date().toISOString(),
-      version: "2.0"
+      version: '2.1'
     };
     res.status(200).json(exportData);
   } catch (error) {

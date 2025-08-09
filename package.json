@@ -5,17 +5,16 @@
   "main": "public/index.html",
   "scripts": {
     "dev": "vercel dev",
-  "build": "echo 'Static site - no build needed'",
-  "vercel-build": "prisma generate",
+    "build": "echo 'Static site - no build needed'",
+    "vercel-build": "prisma generate",
     "deploy": "vercel --prod",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-  "prisma:deploy": "prisma migrate deploy",
-  "postinstall": "prisma generate || true"
+    "prisma:deploy": "prisma migrate deploy",
+    "postinstall": "prisma generate || true"
   },
   "dependencies": {
-    "@prisma/client": "^5.15.0",
-    "pg": "^8.16.3"
+    "@prisma/client": "^5.15.0"
   },
   "devDependencies": {
     "prisma": "^5.15.0"
