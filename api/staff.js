@@ -17,7 +17,6 @@ module.exports = async function handler(req, res) {
     try {
       const result = await prisma.staff.findMany({
         orderBy: [
-          { createdAt: 'desc' },
           { id: 'desc' }
         ]
       });
