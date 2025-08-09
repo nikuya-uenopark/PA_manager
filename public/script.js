@@ -41,6 +41,71 @@ class PAManager {
                 this.closeModal(e.target.id);
             }
         });
+
+        // スタッフ追加フォーム送信
+        const staffForm = document.getElementById('staffForm');
+        if (staffForm) {
+            staffForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('staffName')?.value?.trim();
+                const position = document.getElementById('staffPosition')?.value || null;
+                const email = document.getElementById('staffEmail')?.value || null;
+                const phone = document.getElementById('staffPhone')?.value || null;
+                if (!name) {
+                    this.showNotification('名前は必須です', 'error');
+                    return;
+                }
+                try {
+                    const res = await fetch('/api/staff', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, position, email, phone })
+                    });
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    this.showNotification('スタッフを追加しました');
+                    this.closeModal('staffModal');
+                    // フォームをリセット
+                    staffForm.reset();
+                    // 再読込
+                    await this.loadStaff();
+                    this.updateStats();
+                } catch (err) {
+                    console.error('スタッフ保存エラー:', err);
+                    this.showNotification('スタッフの保存に失敗しました', 'error');
+                }
+            });
+        }
+
+        // 評価項目追加フォーム送信（ついでに実装）
+        const criteriaForm = document.getElementById('criteriaForm');
+        if (criteriaForm) {
+            criteriaForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('criteriaName')?.value?.trim();
+                const category = document.getElementById('criteriaCategory')?.value || '共通';
+                const description = document.getElementById('criteriaDescription')?.value || null;
+                if (!name) {
+                    this.showNotification('項目名は必須です', 'error');
+                    return;
+                }
+                try {
+                    const res = await fetch('/api/criteria', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, category, description })
+                    });
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    this.showNotification('評価項目を追加しました');
+                    this.closeModal('criteriaModal');
+                    criteriaForm.reset();
+                    await this.loadCriteria();
+                    this.updateStats();
+                } catch (err) {
+                    console.error('評価項目保存エラー:', err);
+                    this.showNotification('評価項目の保存に失敗しました', 'error');
+                }
+            });
+        }
     }
 
     showNotification(message, type = 'success') {
