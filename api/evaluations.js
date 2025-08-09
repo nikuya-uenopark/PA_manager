@@ -41,6 +41,9 @@ module.exports = async function handler(req, res) {
         },
         select: { id: true }
       });
+      await prisma.log.create({
+        data: { event: 'evaluation:create', message: `評価作成 staff:${staff_id} criteria:${criteria_id} status:${status || 'learning'}` }
+      }).catch(()=>{});
       res.status(200).json({ id: created.id, message: '評価データが追加されました' });
     } else if (req.method === 'PUT') {
       const { staffId, criteriaId, status } = req.body || {};
@@ -48,10 +51,16 @@ module.exports = async function handler(req, res) {
         where: { staffId: Number(staffId), criteriaId: Number(criteriaId) },
         data: { status }
       });
+      await prisma.log.create({
+        data: { event: 'evaluation:update', message: `評価更新 staff:${staffId} criteria:${criteriaId} status:${status}` }
+      }).catch(()=>{});
       res.status(200).json({ message: '評価が更新されました' });
     } else if (req.method === 'DELETE') {
       const { id } = req.query || {};
       await prisma.evaluation.delete({ where: { id: Number(id) } });
+      await prisma.log.create({
+        data: { event: 'evaluation:delete', message: `評価削除 id:${id}` }
+      }).catch(()=>{});
       res.status(200).json({ message: '評価データが削除されました' });
     } else {
       res.status(405).json({ error: 'Method Not Allowed' });

@@ -16,10 +16,10 @@ datasource db {
 model Staff {
   id         Int       @id @default(autoincrement())
   name       String
+  kana       String?   @db.VarChar(255)
   position   String?   @db.VarChar(255)
-  email      String?   @db.VarChar(255)
-  phone      String?   @db.VarChar(20)
   joined     DateTime? @db.Date
+  birthDate  DateTime? @db.Date @map("birth_date")
   createdAt  DateTime  @default(now()) @map("created_at")
 
   evaluations Evaluation[]
@@ -50,4 +50,11 @@ model Evaluation {
 
   @@index([staffId])
   @@index([criteriaId])
+}
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  event     String   @db.VarChar(100)
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
 }

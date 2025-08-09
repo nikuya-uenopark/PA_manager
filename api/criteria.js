@@ -49,6 +49,9 @@ module.exports = async function handler(req, res) {
         },
         select: { id: true }
       });
+      await prisma.log.create({
+        data: { event: 'criteria:create', message: `評価項目追加 名称:${name} カテゴリ:${category || '共通'}` }
+      }).catch(()=>{});
       res.status(200).json({ id: created.id, message: '評価項目が追加されました' });
     } else if (req.method === 'PUT') {
       // クライアント互換: { items: [{id, sortOrder}] } or { order: [{id, sort_order}] }
@@ -76,6 +79,9 @@ module.exports = async function handler(req, res) {
         await prisma.$transaction(
           ordered.map(it => prisma.criteria.update({ where: { id: it.id }, data: { sortOrder: it.sortOrder } }))
         );
+        await prisma.log.create({
+          data: { event: 'criteria:reorder', message: `評価項目 並び替え 件数:${ordered.length}` }
+        }).catch(()=>{});
 
         return res.status(200).json({ message: '並び順が更新されました' });
       }
@@ -92,11 +98,17 @@ module.exports = async function handler(req, res) {
           description: description || null,
         }
       });
+      await prisma.log.create({
+        data: { event: 'criteria:update', message: `評価項目更新 ID:${id} 名称:${name} カテゴリ:${category || '共通'}` }
+      }).catch(()=>{});
       res.status(200).json({ message: '評価項目が更新されました' });
     } else if (req.method === 'DELETE') {
       const { id } = req.query || {};
       if (!id) return res.status(400).json({ error: 'id is required' });
       await prisma.criteria.delete({ where: { id: Number(id) } });
+      await prisma.log.create({
+        data: { event: 'criteria:delete', message: `評価項目削除 ID:${id}` }
+      }).catch(()=>{});
       res.status(200).json({ message: '評価項目が削除されました' });
     } else {
       res.status(405).json({ error: 'Method Not Allowed' });

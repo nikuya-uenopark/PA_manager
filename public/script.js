@@ -47,14 +47,14 @@ class PAManager {
         });
 
         // スタッフ追加フォーム送信
-        const staffForm = document.getElementById('staffForm');
+    const staffForm = document.getElementById('staffForm');
         if (staffForm) {
             staffForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const name = document.getElementById('staffName')?.value?.trim();
-                const position = document.getElementById('staffPosition')?.value || null;
-                const email = document.getElementById('staffEmail')?.value || null;
-                const phone = document.getElementById('staffPhone')?.value || null;
+        const name = document.getElementById('staffName')?.value?.trim();
+        const kana = document.getElementById('staffKana')?.value?.trim() || null;
+        const position = document.getElementById('staffPositionType')?.value || null; // バイト/社員
+        const birth_date = document.getElementById('staffBirthDate')?.value || null;
                 if (!name) {
                     this.showNotification('名前は必須です', 'error');
                     return;
@@ -63,15 +63,35 @@ class PAManager {
                     const res = await fetch('/api/staff', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, position, email, phone })
+            body: JSON.stringify({ name, kana, position, birth_date })
                     });
                     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                     this.showNotification('スタッフを追加しました');
+                    // ログを作成（読みやすい表記で）
+                    try {
+                        const birthText = (()=>{
+                            if (!birth_date) return '-';
+                            const d = new Date(birth_date);
+                            const y = d.getFullYear();
+                            const m = String(d.getMonth()+1).padStart(2,'0');
+                            const day = String(d.getDate()).padStart(2,'0');
+                            return `${y}/${m}/${day}`;
+                        })();
+                        await fetch('/api/logs', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                event: 'staff:create',
+                                message: `新規スタッフ追加 名前:${name} 役職:${position || '-'} 生年月日:${birthText}`
+                            })
+                        });
+                    } catch {}
                     this.closeModal('staffModal');
                     // フォームをリセット
                     staffForm.reset();
                     // 再読込
                     await this.loadStaff();
+                    await this.loadLogs();
                     this.updateStats();
                 } catch (err) {
                     console.error('スタッフ保存エラー:', err);
@@ -107,6 +127,7 @@ class PAManager {
                     criteriaForm.reset();
                     this.editingCriteriaId = null;
                     await this.loadCriteria();
+                    await this.loadLogs();
                     this.updateStats();
                 } catch (err) {
                     console.error('評価項目保存エラー:', err);
@@ -140,7 +161,8 @@ class PAManager {
         try {
             await Promise.all([
                 this.loadStaff(),
-                this.loadCriteria()
+                this.loadCriteria(),
+                this.loadLogs()
             ]);
             this.updateStats();
         } catch (error) {
@@ -207,6 +229,7 @@ class PAManager {
                         <img src="${avatarUrl}" alt="${staff.name}" class="staff-avatar">
                         <div class="staff-info">
                             <h3>${staff.name}</h3>
+                            <div style="color:#6b7280; font-size:12px;">${staff.kana || ''}</div>
                             <span class="position-badge">${staff.position || '未設定'}</span>
                         </div>
                     </div>
@@ -325,6 +348,8 @@ class PAManager {
                 }
             });
         }
+    // 併せてログも更新
+    this.loadLogs();
     }
 
     showModal(modalId) {
@@ -345,6 +370,26 @@ class PAManager {
         if (totalStaffElement) totalStaffElement.textContent = this.currentStaff.length;
         if (totalCriteriaElement) totalCriteriaElement.textContent = this.currentCriteria.length;
         if (avgProgressElement) avgProgressElement.textContent = Math.floor(Math.random() * 100) + '%';
+    }
+
+    async loadLogs() {
+        try {
+            const res = await fetch('/api/logs?limit=100');
+            if (!res.ok) return;
+            const logs = await res.json();
+            const box = document.getElementById('activityLogs');
+            if (!box) return;
+            if (!logs || logs.length === 0) {
+                box.innerHTML = '<div class="empty-state">まだログはありません</div>';
+                return;
+            }
+            box.innerHTML = logs.map(l => {
+                const t = new Date(l.createdAt).toLocaleString();
+                return `<div class="log-item"><div class="log-time">${t}</div><div class="log-event">${l.event}</div><div class="log-message">${l.message}</div></div>`;
+            }).join('');
+        } catch (e) {
+            console.error('ログ取得エラー', e);
+        }
     }
 
     // 旧: カテゴリ順並び替えは廃止
@@ -409,6 +454,7 @@ PAManager.prototype.deleteCriteria = async function (criteriaId) {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         this.showNotification('評価項目を削除しました');
         await this.loadCriteria();
+        await this.loadLogs();
         this.updateStats();
     } catch (e) {
         console.error('評価項目削除エラー:', e);
@@ -424,6 +470,8 @@ PAManager.prototype.openStaffDetail = async function (staffId) {
     document.getElementById('staffDetailPosition').textContent = staff.position || '未設定';
     const avatarUrl = staff.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(staff.name) + '&background=667eea&color=fff&size=128';
     document.getElementById('staffDetailAvatar').src = avatarUrl;
+    document.getElementById('staffDetailKana').textContent = staff.kana || '-';
+    document.getElementById('staffDetailBirth').textContent = staff.birth_date || (staff.birthDate ? new Date(staff.birthDate).toLocaleDateString() : '-');
 
     // 評価一覧
     await this.renderStaffEvaluations(staffId);
@@ -500,6 +548,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                         if (!res.ok) throw new Error(`save failed ${res.status}`);
                     }
                     this.showNotification('保存しました');
+                    this.loadLogs();
                 } catch (e) {
                     console.error('評価保存エラー:', e);
                     this.showNotification('保存に失敗しました', 'error');

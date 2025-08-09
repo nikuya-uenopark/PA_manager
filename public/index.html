@@ -138,6 +138,10 @@
                                 <h3>改善が必要な項目</h3>
                                 <div id="improvementNeeded"></div>
                             </div>
+                            <div class="stat-card" style="grid-column: 1 / -1;">
+                                <h3>アクティビティログ</h3>
+                                <div id="activityLogs" class="logs-list"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -156,47 +160,25 @@
                 <form id="staffForm">
                     <div class="form-grid">
                         <div class="form-section">
-                            <h4>基本情報</h4>
+                            <h4>プロフィール</h4>
                             <div class="form-group">
                                 <label for="staffName">名前</label>
                                 <input type="text" id="staffName" required>
                             </div>
                             <div class="form-group">
-                                <label for="staffPosition">役職/ポジション</label>
-                                <select id="staffPosition">
-                                    <option value="ホール">ホール</option>
-                                    <option value="キッチン">キッチン</option>
-                                    <option value="レジ">レジ</option>
-                                    <option value="マネージャー">マネージャー</option>
-                                    <option value="その他">その他</option>
+                                <label for="staffKana">フリガナ</label>
+                                <input type="text" id="staffKana" placeholder="ヤマダ タロウ">
+                            </div>
+                            <div class="form-group">
+                                <label for="staffPositionType">区分</label>
+                                <select id="staffPositionType">
+                                    <option value="バイト">バイト</option>
+                                    <option value="社員">社員</option>
                                 </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="staffEmail">メールアドレス</label>
-                                <input type="email" id="staffEmail">
-                            </div>
-                            <div class="form-group">
-                                <label for="staffPhone">電話番号</label>
-                                <input type="tel" id="staffPhone">
-                            </div>
-                        </div>
-                        <div class="form-section">
-                            <h4>詳細情報</h4>
-                            <div class="form-group">
-                                <label for="staffHireDate">入社日</label>
-                                <input type="date" id="staffHireDate">
                             </div>
                             <div class="form-group">
                                 <label for="staffBirthDate">生年月日</label>
                                 <input type="date" id="staffBirthDate">
-                            </div>
-                            <div class="form-group">
-                                <label for="staffAvatar">プロフィール画像URL</label>
-                                <input type="url" id="staffAvatar" placeholder="https://example.com/avatar.jpg">
-                            </div>
-                            <div class="form-group">
-                                <label for="staffNotes">メモ</label>
-                                <textarea id="staffNotes" rows="4" placeholder="スタッフに関するメモや特記事項"></textarea>
                             </div>
                         </div>
                     </div>
@@ -255,7 +237,7 @@
         </div>
     </div>
 
-    <!-- スタッフ詳細/評価モーダル -->
+    <!-- スタッフ詳細/評価モーダル（タブなし、プロフィールを上部に集約） -->
     <div id="staffDetailModal" class="modal">
         <div class="modal-content extra-large">
             <div class="modal-header">
@@ -264,28 +246,17 @@
                     <div class="staff-info">
                         <h3 id="staffDetailName"></h3>
                         <span id="staffDetailPosition" class="position-badge"></span>
+                        <div style="margin-top:6px; color:#6b7280">
+                            <div>フリガナ: <span id="staffDetailKana"></span></div>
+                            <div>生年月日: <span id="staffDetailBirth"></span></div>
+                        </div>
                     </div>
                 </div>
                 <span class="close" onclick="closeModal('staffDetailModal')">&times;</span>
             </div>
             <div class="modal-body">
-                <div class="detail-tabs">
-                    <button class="detail-tab active" onclick="switchDetailTab('evaluations')">評価</button>
-                    <button class="detail-tab" onclick="switchDetailTab('history')">履歴</button>
-                    <button class="detail-tab" onclick="switchDetailTab('profile')">プロフィール</button>
-                </div>
-                
-                <div id="evaluationsTab" class="detail-content active">
-                    <div id="staffEvaluations" class="evaluations-grid"></div>
-                </div>
-                
-                <div id="historyTab" class="detail-content">
-                    <div id="evaluationHistory" class="history-timeline"></div>
-                </div>
-                
-                <div id="profileTab" class="detail-content">
-                    <div id="staffProfile" class="profile-content"></div>
-                </div>
+                <h4 style="margin:10px 0 12px;">評価一覧</h4>
+                <div id="staffEvaluations" class="evaluations-grid"></div>
             </div>
         </div>
     </div>
