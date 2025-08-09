@@ -28,7 +28,7 @@ module.exports = async function handler(req, res) {
   } else if (req.method === 'POST') {
     // スタッフ追加
     try {
-      const { name, position, email, phone } = req.body || {};
+    const { name, position, email, phone, avatar_url, hire_date } = req.body || {};
       if (!name) {
         return res.status(400).json({ error: 'name is required' });
       }
@@ -37,11 +37,12 @@ module.exports = async function handler(req, res) {
           name,
           position: position || null,
           email: email || null,
-          phone: phone || null,
+      phone: phone || null,
+      joined: hire_date ? new Date(hire_date) : null,
         },
         select: { id: true }
       });
-      res.status(200).json({ id: created.id, message: 'スタッフが追加されました' });
+    res.status(200).json({ id: created.id, message: 'スタッフが追加されました' });
     } catch (error) {
       console.error('Staff POST error:', error);
       res.status(500).json({ error: 'スタッフの追加に失敗しました', detail: error.message });
