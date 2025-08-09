@@ -1,16 +1,15 @@
 // Vercel Serverless Function: GET/POST/DELETE /api/criteria
-const { Client } = require('pg');
+const { Pool } = require('pg');
 
-const pool = new Client({
+const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
 // データベース初期化（テーブル拡張）
 async function initializeDatabase() {
-  const client = await pool.connect();
   try {
     // 基本テーブル作成
-    await client.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS staff (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -22,7 +21,7 @@ async function initializeDatabase() {
       )
     `);
 
-    await client.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS criteria (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -33,7 +32,7 @@ async function initializeDatabase() {
       )
     `);
 
-    await client.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS evaluations (
         id SERIAL PRIMARY KEY,
         staff_id INTEGER REFERENCES staff(id),
@@ -47,13 +46,14 @@ async function initializeDatabase() {
     `);
 
     // テーブル拡張（カラム追加）
-    await client.query(`
+    await pool.query(`
       ALTER TABLE criteria 
       ADD COLUMN IF NOT EXISTS category VARCHAR(100) DEFAULT '共通',
       ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0
     `);
-  } finally {
-    client.release();
+  } catch (error) {
+    console.error('Database initialization error:', error);
+    throw error;
   }
 }
 
