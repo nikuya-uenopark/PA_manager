@@ -1,9 +1,5 @@
 // Vercel Serverless Function: 評価管理 API
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+const prisma = require('./_prisma');
 
 module.exports = async function handler(req, res) {
   // CORS設定
@@ -20,36 +16,42 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
       const { staffId } = req.query;
       if (staffId) {
-        const result = await pool.query(
-          `SELECT e.*, c.name, c.category, c.description 
-           FROM evaluations e 
-           JOIN criteria c ON e.criteria_id = c.id 
-           WHERE e.staff_id = $1 
-           ORDER BY c.category, c.name`,
-          [staffId]
-        );
-        res.status(200).json(result.rows);
+        const result = await prisma.evaluation.findMany({
+          where: { staffId: Number(staffId) },
+          include: { criteria: true },
+          orderBy: [
+            { criteria: { category: 'asc' } },
+            { criteria: { name: 'asc' } }
+          ]
+        });
+        res.status(200).json(result);
       } else {
-        const result = await pool.query('SELECT * FROM evaluations ORDER BY created_at DESC');
-        res.status(200).json(result.rows);
+        const result = await prisma.evaluation.findMany({
+          orderBy: [{ createdAt: 'desc' }]
+        });
+        res.status(200).json(result);
       }
     } else if (req.method === 'POST') {
-      const { staff_id, criteria_id, status } = req.body;
-      const insertResult = await pool.query(
-        'INSERT INTO evaluations (staff_id, criteria_id, status) VALUES ($1, $2, $3) RETURNING id',
-        [staff_id, criteria_id, status || 'learning']
-      );
-      res.status(200).json({ id: insertResult.rows[0].id, message: '評価データが追加されました' });
+      const { staff_id, criteria_id, status } = req.body || {};
+      const created = await prisma.evaluation.create({
+        data: {
+          staffId: Number(staff_id),
+          criteriaId: Number(criteria_id),
+          status: status || 'learning',
+        },
+        select: { id: true }
+      });
+      res.status(200).json({ id: created.id, message: '評価データが追加されました' });
     } else if (req.method === 'PUT') {
-      const { staffId, criteriaId, status } = req.body;
-      await pool.query(
-        'UPDATE evaluations SET status = $1 WHERE staff_id = $2 AND criteria_id = $3',
-        [status, staffId, criteriaId]
-      );
+      const { staffId, criteriaId, status } = req.body || {};
+      await prisma.evaluation.updateMany({
+        where: { staffId: Number(staffId), criteriaId: Number(criteriaId) },
+        data: { status }
+      });
       res.status(200).json({ message: '評価が更新されました' });
     } else if (req.method === 'DELETE') {
-      const { id } = req.query;
-      await pool.query('DELETE FROM evaluations WHERE id = $1', [id]);
+      const { id } = req.query || {};
+      await prisma.evaluation.delete({ where: { id: Number(id) } });
       res.status(200).json({ message: '評価データが削除されました' });
     } else {
       res.status(405).json({ error: 'Method Not Allowed' });

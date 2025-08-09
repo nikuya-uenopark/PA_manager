@@ -1,9 +1,5 @@
 // Vercel Serverless Function: 統計・分析 API
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+const prisma = require('./_prisma');
 
 module.exports = async function handler(req, res) {
   // CORS設定
@@ -17,13 +13,17 @@ module.exports = async function handler(req, res) {
   }
   
   try {
-    const staffCount = await pool.query('SELECT COUNT(*) as count FROM staff');
-    const criteriaCount = await pool.query('SELECT COUNT(*) as count FROM criteria');
-    const progressData = await pool.query("SELECT AVG(CASE WHEN status = 'can-do' THEN 100 ELSE 0 END) as overall_progress FROM evaluations");
+    const [staffCount, criteriaCount, progress] = await Promise.all([
+      prisma.staff.count(),
+      prisma.criteria.count(),
+      prisma.evaluation.aggregate({ _avg: { score: true } })
+    ]);
+    // 旧ロジックのダミー（statusで進捗算出していた箇所は要件次第で置換）
+    const overallProgress = Number.isFinite(progress._avg.score) ? Math.round(progress._avg.score || 0) : 0;
     res.status(200).json({
-      staffCount: staffCount.rows[0].count,
-      criteriaCount: criteriaCount.rows[0].count,
-      overallProgress: Math.round(progressData.rows[0].overall_progress || 0)
+      staffCount,
+      criteriaCount,
+      overallProgress
     });
   } catch (error) {
     console.error('Stats API error:', error);

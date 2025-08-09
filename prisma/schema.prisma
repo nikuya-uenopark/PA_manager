@@ -1,0 +1,53 @@
+// Prisma schema for PA_manager (Neon PostgreSQL)
+// Generator
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Datasource
+// DATABASE_URL will come from Vercel/Env
+// Neon requires TLS; use ?sslmode=require in the URL
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Staff {
+  id         Int       @id @default(autoincrement())
+  name       String
+  position   String?   @db.VarChar(255)
+  email      String?   @db.VarChar(255)
+  phone      String?   @db.VarChar(20)
+  joined     DateTime? @db.Date
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  evaluations Evaluation[]
+}
+
+model Criteria {
+  id         Int       @id @default(autoincrement())
+  name       String
+  description String?
+  category   String    @default("共通") @db.VarChar(100)
+  sortOrder  Int       @default(0) @map("sort_order")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  evaluations Evaluation[]
+}
+
+model Evaluation {
+  id         Int       @id @default(autoincrement())
+  staff      Staff     @relation(fields: [staffId], references: [id])
+  staffId    Int
+  criteria   Criteria  @relation(fields: [criteriaId], references: [id])
+  criteriaId Int
+  status     String    @default("not-started") @db.VarChar(50)
+  score      Int?
+  comments   String?
+  evaluatedAt DateTime? @map("evaluated_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([staffId])
+  @@index([criteriaId])
+}

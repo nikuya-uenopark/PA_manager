@@ -6,10 +6,17 @@
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'Static site - no build needed'",
-    "deploy": "vercel --prod"
+    "deploy": "vercel --prod",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:deploy": "prisma migrate deploy"
   },
   "dependencies": {
+    "@prisma/client": "^5.15.0",
     "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "prisma": "^5.15.0"
   },
   "keywords": [
     "人事評価",
@@ -22,5 +29,11 @@
   "license": "MIT",
   "engines": {
     "node": "22.x"
-  }
+  },
+  "packageManager": "npm@10.8.1",
+  "prisma": {
+    "schema": "./prisma/schema.prisma"
+  },
+  "type": "commonjs",
+  "postinstall": "prisma generate || true"
 }
