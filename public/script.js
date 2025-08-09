@@ -8,6 +8,7 @@ class PAManager {
     this.editingCriteriaId = null;
     this._chart = null;
     this._staffEvalCache = new Map(); // key: `${staffId}:${criteriaId}` -> status
+    this.criteriaFilter = '';
         
         this.init();
     }
@@ -111,6 +112,15 @@ class PAManager {
                     console.error('評価項目保存エラー:', err);
                     this.showNotification('評価項目の保存に失敗しました', 'error');
                 }
+            });
+        }
+
+        // カテゴリ絞り込み
+        const filter = document.getElementById('criteriaCategoryFilter');
+        if (filter) {
+            filter.addEventListener('change', () => {
+                this.criteriaFilter = filter.value || '';
+                this.renderCriteria();
             });
         }
     }
@@ -233,18 +243,23 @@ class PAManager {
         const container = document.getElementById('criteriaGrid');
         if (!container) return;
 
-        if (this.currentCriteria.length === 0) {
+        // フィルタ適用 + 名前順
+        const filtered = (this.currentCriteria || [])
+            .filter(c => !this.criteriaFilter || (c.category || '') === this.criteriaFilter)
+            .sort((a,b) => (a.name||'').localeCompare(b.name||''));
+
+        if (filtered.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-list-check" style="font-size: 4rem; color: var(--light-color); margin-bottom: 20px;"></i>
-                    <h3>まだ評価項目が登録されていません</h3>
-                    <p>「項目追加」ボタンから最初の評価項目を追加してください</p>
+                    <h3>表示できる評価項目がありません</h3>
+                    <p>右上のフィルタや「項目追加」をご利用ください</p>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = this.currentCriteria.map(criteria => `
+        container.innerHTML = filtered.map(criteria => `
             <div class="criteria-card" data-id="${criteria.id}">
                 <div class="criteria-header">
                     <div>
@@ -342,34 +357,7 @@ class PAManager {
         if (avgProgressElement) avgProgressElement.textContent = Math.floor(Math.random() * 100) + '%';
     }
 
-    async sortCriteriaByCategory() {
-        const sortedCriteria = [...this.currentCriteria].sort((a, b) => 
-            (a.category || '').localeCompare(b.category || '')
-        );
-
-        try {
-            const order = sortedCriteria.map((item, index) => ({
-                id: item.id,
-                sort_order: index + 1
-            }));
-
-            const response = await fetch('/api/criteria', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ order })
-            });
-
-            if (response.ok) {
-                this.showNotification('カテゴリー順で並び替えました');
-                await this.loadCriteria();
-            } else {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-        } catch (error) {
-            console.error('並び替えエラー:', error);
-            this.showNotification('並び替えに失敗しました', 'error');
-        }
-    }
+    // 旧: カテゴリ順並び替えは廃止
 }
 
 // グローバル変数とインスタンス

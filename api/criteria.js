@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
       try {
         const result = await prisma.criteria.findMany({
           orderBy: [
-            { sortOrder: 'asc' },
+            { name: 'asc' },
             { id: 'asc' }
           ]
         });

@@ -98,10 +98,20 @@
                 <div id="criteriaPanel" class="tab-panel">
                     <div class="panel-header">
                         <h2>評価項目管理</h2>
-                        <div class="panel-actions">
-                            <button class="btn btn-secondary" onclick="sortCriteriaByCategory()">
-                                <i class="fas fa-sort"></i> カテゴリ順
-                            </button>
+                        <div class="panel-actions" style="display:flex; gap:12px; align-items:center;">
+                            <label style="display:flex; align-items:center; gap:8px; color:#6b7280;">
+                                <i class="fas fa-filter"></i>
+                                <select id="criteriaCategoryFilter" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px;">
+                                    <option value="">すべてのカテゴリ</option>
+                                    <option value="共通">共通</option>
+                                    <option value="ホール">ホール</option>
+                                    <option value="キッチン">キッチン</option>
+                                    <option value="レジ">レジ</option>
+                                    <option value="接客">接客</option>
+                                    <option value="マネジメント">マネジメント</option>
+                                    <option value="その他">その他</option>
+                                </select>
+                            </label>
                             <button class="btn btn-primary" onclick="showAddCriteriaModal()">
                                 <i class="fas fa-plus"></i> 項目追加
                             </button>
