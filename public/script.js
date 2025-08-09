@@ -87,9 +87,14 @@ class PAManager {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            this.currentCriteria = await response.json();
-            this.renderCriteria();
-            this.setupSortable();
+            const data = await response.json();
+            if (data.length === 0) {
+                this.showNotification('No criteria data available', 'info');
+            } else {
+                this.currentCriteria = data;
+                this.renderCriteria();
+                this.setupSortable();
+            }
         } catch (error) {
             console.error('Criteria data load error:', error);
             this.showNotification('Failed to load criteria data', 'error');
