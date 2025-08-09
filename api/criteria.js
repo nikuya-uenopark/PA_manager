@@ -1,7 +1,7 @@
 // Vercel Serverless Function: GET/POST/DELETE /api/criteria
-const { Pool } = require('pg');
+const { Client } = require('pg');
 
-const pool = new Pool({
+const pool = new Client({
   connectionString: process.env.DATABASE_URL,
 });
 
