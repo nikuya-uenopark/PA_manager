@@ -23,7 +23,7 @@ module.exports = async function handler(req, res) {
       res.status(200).json(result.rows);
     } catch (error) {
       console.error('Staff GET error:', error);
-      res.status(500).json({ error: 'スタッフデータの取得に失敗しました', detail: error.message });
+      res.status(500).json({ error: 'Staff API failed', detail: error.message });
     }
   } else if (req.method === 'POST') {
     // スタッフ追加

@@ -91,9 +91,8 @@ class PAManager {
             this.renderCriteria();
             this.setupSortable();
         } catch (error) {
-            console.error('評価項目データ読み込みエラー:', error);
-            // ユーザーに通知
-            this.showNotification('評価項目データの読み込みに失敗しました', 'error');
+            console.error('Criteria data load error:', error);
+            this.showNotification('Failed to load criteria data', 'error');
         }
     }
 

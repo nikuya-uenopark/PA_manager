@@ -73,8 +73,13 @@ module.exports = async function handler(req, res) {
     await initializeDatabase();
     
     if (req.method === 'GET') {
-      const result = await pool.query('SELECT * FROM criteria ORDER BY sort_order ASC NULLS LAST, id ASC');
-      res.status(200).json(result.rows);
+      try {
+        const result = await pool.query('SELECT * FROM criteria ORDER BY sort_order ASC NULLS LAST, id ASC');
+        res.status(200).json(result.rows);
+      } catch (error) {
+        console.error('Criteria GET error:', error);
+        res.status(500).json({ error: 'Criteria API failed', detail: error.message });
+      }
     } else if (req.method === 'POST') {
       const { name, category, description } = req.body;
       // 新規追加時は最大sort_order+1
