@@ -59,6 +59,11 @@ module.exports = async function handler(req, res) {
           ? body.order.map((x, idx) => ({ id: x.id, index: Number.isInteger(x.sort_order) ? x.sort_order - 1 : idx }))
           : null;
 
+      // 空配列は変更なしとして成功扱い（UI が 0 件で PUT するケースのため）
+      if ((Array.isArray(body.items) && body.items.length === 0) || (Array.isArray(body.order) && body.order.length === 0)) {
+        return res.status(200).json({ message: 'no items to sort' });
+      }
+
       if (items && Array.isArray(items) && items.length > 0) {
         // バリデーション: id が全て数値化できるか
         const invalid = items.find(it => isNaN(Number(it.id)));
@@ -76,9 +81,9 @@ module.exports = async function handler(req, res) {
       }
 
       // 単一更新（名前やカテゴリの更新など）
-      const { id } = req.query || {};
-      const { name, category, description } = body;
-      if (!id) return res.status(400).json({ error: 'id is required' });
+  const { id } = req.query || {};
+  const { name, category, description } = body;
+  if (!id) return res.status(400).json({ error: 'id is required or provide order/items array' });
       await prisma.criteria.update({
         where: { id: Number(id) },
         data: {
