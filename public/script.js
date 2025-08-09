@@ -5,6 +5,9 @@ class PAManager {
         this.currentStaff = [];
         this.currentCriteria = [];
         this.currentTab = 'staff';
+    this.editingCriteriaId = null;
+    this._chart = null;
+    this._staffEvalCache = new Map(); // key: `${staffId}:${criteriaId}` -> status
         
         this.init();
     }
@@ -76,7 +79,7 @@ class PAManager {
             });
         }
 
-        // 評価項目追加フォーム送信（ついでに実装）
+        // 評価項目追加/編集フォーム送信
         const criteriaForm = document.getElementById('criteriaForm');
         if (criteriaForm) {
             criteriaForm.addEventListener('submit', async (e) => {
@@ -89,15 +92,19 @@ class PAManager {
                     return;
                 }
                 try {
-                    const res = await fetch('/api/criteria', {
-                        method: 'POST',
+                    const isEdit = !!this.editingCriteriaId;
+                    const url = isEdit ? `/api/criteria?id=${this.editingCriteriaId}` : '/api/criteria';
+                    const method = isEdit ? 'PUT' : 'POST';
+                    const res = await fetch(url, {
+                        method,
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name, category, description })
                     });
                     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                    this.showNotification('評価項目を追加しました');
+                    this.showNotification(isEdit ? '評価項目を更新しました' : '評価項目を追加しました');
                     this.closeModal('criteriaModal');
                     criteriaForm.reset();
+                    this.editingCriteriaId = null;
                     await this.loadCriteria();
                     this.updateStats();
                 } catch (err) {
@@ -294,7 +301,10 @@ class PAManager {
     renderAnalytics() {
         const ctx = document.getElementById('progressChart');
         if (ctx && typeof Chart !== 'undefined') {
-            new Chart(ctx, {
+            if (this._chart) {
+                this._chart.destroy();
+            }
+            this._chart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['習得済み', '学習中', '未着手'],
@@ -386,22 +396,140 @@ function closeModal(modalId) {
 }
 
 function showStaffDetail(staffId) {
-    // スタッフ詳細機能の実装
-    paManager.showNotification('スタッフ詳細機能は開発中です');
+    paManager.openStaffDetail(staffId);
 }
 
 function editCriteria(criteriaId) {
-    // 評価項目編集機能の実装
-    paManager.showNotification('編集機能は開発中です');
+    paManager.beginEditCriteria(criteriaId);
 }
 
 function deleteCriteria(criteriaId) {
     if (confirm('この評価項目を削除しますか？')) {
-        // 削除機能の実装
-        paManager.showNotification('削除機能は開発中です');
+    paManager.deleteCriteria(criteriaId);
     }
 }
 
 function sortCriteriaByCategory() {
     paManager.sortCriteriaByCategory();
+}
+
+// 追加メソッド群
+PAManager.prototype.beginEditCriteria = function (criteriaId) {
+    const item = this.currentCriteria.find(c => c.id === criteriaId);
+    if (!item) return;
+    this.editingCriteriaId = criteriaId;
+    document.getElementById('criteriaModalTitle').textContent = '評価項目を編集';
+    document.getElementById('criteriaName').value = item.name || '';
+    document.getElementById('criteriaCategory').value = item.category || '共通';
+    document.getElementById('criteriaDescription').value = item.description || '';
+    this.showModal('criteriaModal');
+}
+
+PAManager.prototype.deleteCriteria = async function (criteriaId) {
+    try {
+        const res = await fetch(`/api/criteria?id=${criteriaId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        this.showNotification('評価項目を削除しました');
+        await this.loadCriteria();
+        this.updateStats();
+    } catch (e) {
+        console.error('評価項目削除エラー:', e);
+        this.showNotification('評価項目の削除に失敗しました', 'error');
+    }
+}
+
+PAManager.prototype.openStaffDetail = async function (staffId) {
+    const staff = this.currentStaff.find(s => s.id === staffId);
+    if (!staff) return;
+    // ヘッダ情報
+    document.getElementById('staffDetailName').textContent = staff.name;
+    document.getElementById('staffDetailPosition').textContent = staff.position || '未設定';
+    const avatarUrl = staff.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(staff.name) + '&background=667eea&color=fff&size=128';
+    document.getElementById('staffDetailAvatar').src = avatarUrl;
+
+    // 評価一覧
+    await this.renderStaffEvaluations(staffId);
+    this.showModal('staffDetailModal');
+}
+
+PAManager.prototype.renderStaffEvaluations = async function (staffId) {
+    const container = document.getElementById('staffEvaluations');
+    if (!container) return;
+    container.innerHTML = '<div class="loading">読み込み中...</div>';
+
+    try {
+        // 既存評価の取得
+        const res = await fetch(`/api/evaluations?staffId=${staffId}`);
+        const evals = res.ok ? await res.json() : [];
+        this._staffEvalCache.clear();
+        for (const ev of evals) {
+            this._staffEvalCache.set(`${ev.staffId}:${ev.criteriaId}`,(ev.status||'not-started'));
+        }
+
+        // 基準（criteria）が0件なら案内
+        if (!this.currentCriteria || this.currentCriteria.length === 0) {
+            container.innerHTML = '<div class="empty-state">評価項目がありません。右上の「項目追加」から作成してください。</div>';
+            return;
+        }
+
+        // グリッド描画
+        container.innerHTML = this.currentCriteria.map(cr => {
+            const key = `${staffId}:${cr.id}`;
+            const status = this._staffEvalCache.get(key) || 'not-started';
+            const color = status === 'done' ? '#00d4aa' : status === 'learning' ? '#ff9f43' : '#f1f2f6';
+            const label = status === 'done' ? '習得済み' : status === 'learning' ? '学習中' : '未着手';
+            return `
+                <div class="criteria-chip" data-staff="${staffId}" data-criteria="${cr.id}" style="border:1px solid #eaeaea; padding:12px; border-radius:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:600">${cr.name}</div>
+                        <small style="color:#6b7280">${cr.category || '共通'}</small>
+                    </div>
+                    <span class="status-badge" style="background:${color}; color:#111; padding:6px 10px; border-radius:9999px; font-size:12px;">${label}</span>
+                </div>
+            `;
+        }).join('');
+
+        // クリックで状態トグル＆保存
+        container.querySelectorAll('.criteria-chip').forEach(el => {
+            el.addEventListener('click', async () => {
+                const sid = Number(el.getAttribute('data-staff'));
+                const cid = Number(el.getAttribute('data-criteria'));
+                const key = `${sid}:${cid}`;
+                const current = this._staffEvalCache.get(key) || 'not-started';
+                const next = current === 'not-started' ? 'learning' : current === 'learning' ? 'done' : 'not-started';
+                // 先に表示を更新（楽観的UI）
+                this._staffEvalCache.set(key, next);
+                const badge = el.querySelector('.status-badge');
+                const color = next === 'done' ? '#00d4aa' : next === 'learning' ? '#ff9f43' : '#f1f2f6';
+                const label = next === 'done' ? '習得済み' : next === 'learning' ? '学習中' : '未着手';
+                badge.style.background = color;
+                badge.textContent = label;
+
+                try {
+                    // まず更新（0件なら作成）
+                    let res = await fetch('/api/evaluations', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ staffId: sid, criteriaId: cid, status: next })
+                    });
+                    if (!res.ok) {
+                        // PUT 失敗時は作成にフォールバック
+                        res = await fetch('/api/evaluations', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ staff_id: sid, criteria_id: cid, status: next })
+                        });
+                        if (!res.ok) throw new Error(`save failed ${res.status}`);
+                    }
+                    this.showNotification('保存しました');
+                } catch (e) {
+                    console.error('評価保存エラー:', e);
+                    this.showNotification('保存に失敗しました', 'error');
+                }
+            });
+        });
+    } catch (e) {
+        console.error('評価一覧読み込みエラー:', e);
+        container.innerHTML = '<div class="empty-state">評価一覧の取得に失敗しました</div>';
+    }
 }
