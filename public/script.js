@@ -175,7 +175,6 @@ class PAManager {
             } else {
                 this.currentCriteria = data;
                 this.renderCriteria();
-                this.setupSortable();
             }
         } catch (error) {
             console.error('Criteria data load error:', error);
@@ -283,17 +282,8 @@ class PAManager {
         `).join('');
     }
 
-    setupSortable() {
-        const criteriaGrid = document.getElementById('criteriaGrid');
-        if (criteriaGrid && typeof Sortable !== 'undefined') {
-            new Sortable(criteriaGrid, {
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                chosenClass: 'sortable-chosen',
-                dragClass: 'sortable-drag'
-            });
-        }
-    }
+    // ドラッグ操作は廃止（no-op）
+    setupSortable() {}
 
     switchTab(tabName) {
         document.querySelectorAll('.tab-button').forEach(btn => {
