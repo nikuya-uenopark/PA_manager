@@ -47,8 +47,10 @@ body {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: var(--dark-color);
     line-height: 1.6;
-    min-height: 100vh;
+    min-height: 100dvh; /* モバイルSafariのアドレスバー対策 */
     overflow-x: hidden;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
 }
 
 /* ローディング画面 */
@@ -101,7 +103,7 @@ body {
     background: var(--white);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
-    min-height: 100vh;
+    min-height: 100dvh; /* ビューポート高さの安定化 */
 }
 
 /* ヘッダー */
@@ -636,7 +638,6 @@ body {
     flex-direction: column;
     gap: 20px;
 }
-
 .stat-card {
     background: var(--white);
     border-radius: var(--border-radius);
@@ -713,6 +714,24 @@ body {
     .form-grid { grid-template-columns: 1fr; gap: 16px; }
     .tab-button span { display: none; }
     .staff-grid, .criteria-grid { grid-template-columns: 1fr; }
+
+/* 横向き最適化（全デバイス） */
+@media (orientation: landscape) {
+    .main-header { padding: 24px; }
+    .panel-header { margin-bottom: 20px; }
+    .analytics-content { gap: 24px; }
+    .chart-container { height: 360px; }
+    .modal-content { max-height: 90vh; overflow: auto; }
+}
+
+/* 横向きかつ高さが低いデバイス（例: iPhone横向き） */
+@media (orientation: landscape) and (max-height: 480px) {
+    .main-header { padding: 16px; }
+    .tab-navigation { padding: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tab-button { padding: 10px 14px; flex: 0 0 auto; }
+    .panel-header { margin-bottom: 12px; padding: 12px 0; }
+    .chart-container { height: 260px; padding: 16px; }
+}
 }
 
 /* スマホ最適化 */
