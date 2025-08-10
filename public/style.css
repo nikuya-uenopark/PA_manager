@@ -286,7 +286,8 @@ body {
     gap: 16px;
     justify-items: stretch;
     align-items: start;
-    justify-content: center; /* 中央寄せ */
+    justify-content: stretch; /* 最大幅で展開 */
+    width: 100%;
 }
 
 .staff-card {
@@ -297,6 +298,7 @@ body {
     transition: var(--transition);
     cursor: pointer;
     border: 2px solid transparent;
+    width: 100%;
 }
 
 .staff-card:hover {
