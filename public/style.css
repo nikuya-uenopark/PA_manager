@@ -548,6 +548,43 @@ body {
     padding: 30px;
 }
 
+/* スタッフ詳細サマリー */
+.staff-detail-summary {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.staff-detail-kana {
+    font-size: 0.9rem;
+    color: #e5e7eb; /* 明るめの文字で見やすく */
+    letter-spacing: 0.04em;
+}
+.staff-detail-name {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #ffffff; /* モーダルヘッダー上で映える色 */
+}
+.staff-detail-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.staff-detail-birth {
+    font-size: 0.9rem;
+    color: #111827;
+    background: #ffffff;
+    border: 1px solid rgba(255,255,255,0.45);
+    padding: 4px 10px;
+    border-radius: 9999px;
+}
+
+@media (max-width: 480px) {
+  .staff-detail-name { font-size: 1.3rem; }
+  .staff-detail-meta { gap: 8px; }
+}
+
 /* フォーム */
 .form-grid {
     display: grid;

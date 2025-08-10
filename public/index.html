@@ -212,15 +212,12 @@
     <div id="staffDetailModal" class="modal">
         <div class="modal-content extra-large">
             <div class="modal-header">
-                <div class="staff-header">
-                    <img id="staffDetailAvatar" class="staff-avatar" src="" alt="">
-                    <div class="staff-info">
-                        <h3 id="staffDetailName"></h3>
+                <div class="staff-detail-summary">
+                    <div id="staffDetailKana" class="staff-detail-kana"></div>
+                    <h3 id="staffDetailName" class="staff-detail-name"></h3>
+                    <div class="staff-detail-meta">
                         <span id="staffDetailPosition" class="position-badge"></span>
-                        <div style="margin-top:6px; color:#6b7280">
-                            <div>フリガナ: <span id="staffDetailKana"></span></div>
-                            <div>生年月日: <span id="staffDetailBirth"></span></div>
-                        </div>
+                        <span class="staff-detail-birth">生年月日: <span id="staffDetailBirth"></span></span>
                     </div>
                 </div>
                 <span class="close" onclick="closeModal('staffDetailModal')">&times;</span>

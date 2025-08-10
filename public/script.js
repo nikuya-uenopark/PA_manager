@@ -555,9 +555,7 @@ PAManager.prototype.openStaffDetail = async function (staffId) {
     // ヘッダ情報
     document.getElementById('staffDetailName').textContent = staff.name;
     document.getElementById('staffDetailPosition').textContent = staff.position || '未設定';
-    const avatarUrl = staff.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(staff.name) + '&background=667eea&color=fff&size=128';
-    document.getElementById('staffDetailAvatar').src = avatarUrl;
-    document.getElementById('staffDetailKana').textContent = staff.kana || '-';
+    document.getElementById('staffDetailKana').textContent = staff.kana || '';
     document.getElementById('staffDetailBirth').textContent = staff.birth_date || (staff.birthDate ? new Date(staff.birthDate).toLocaleDateString() : '-');
 
     // 評価一覧
