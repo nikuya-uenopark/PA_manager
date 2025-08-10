@@ -10,6 +10,9 @@ class PAManager {
     this._staffEvalCache = new Map(); // key: `${staffId}:${criteriaId}` -> status
     this.criteriaFilter = '';
     this.editingStaffId = null;
+    this._savingEvals = new Set(); // `${staffId}:${criteriaId}` while saving
+    this._isSavingStaff = false;
+    this._isSavingCriteria = false;
         
         this.init();
     }
@@ -60,6 +63,10 @@ class PAManager {
                     this.showNotification('名前は必須です', 'error');
                     return;
                 }
+                if (this._isSavingStaff) return;
+                this._isSavingStaff = true;
+                const submitBtn = staffForm.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = true;
                 try {
                                         const isEdit = !!this.editingStaffId;
                                         const url = isEdit ? `/api/staff?id=${this.editingStaffId}` : '/api/staff';
@@ -104,6 +111,9 @@ class PAManager {
                 } catch (err) {
                     console.error('スタッフ保存エラー:', err);
                     this.showNotification('スタッフの保存に失敗しました', 'error');
+                } finally {
+                    this._isSavingStaff = false;
+                    if (submitBtn) submitBtn.disabled = false;
                 }
             });
         }
@@ -120,6 +130,10 @@ class PAManager {
                     this.showNotification('項目名は必須です', 'error');
                     return;
                 }
+                if (this._isSavingCriteria) return;
+                this._isSavingCriteria = true;
+                const submitBtn = criteriaForm.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = true;
                 try {
                     const isEdit = !!this.editingCriteriaId;
                     const url = isEdit ? `/api/criteria?id=${this.editingCriteriaId}` : '/api/criteria';
@@ -140,6 +154,9 @@ class PAManager {
                 } catch (err) {
                     console.error('評価項目保存エラー:', err);
                     this.showNotification('評価項目の保存に失敗しました', 'error');
+                } finally {
+                    this._isSavingCriteria = false;
+                    if (submitBtn) submitBtn.disabled = false;
                 }
             });
         }
@@ -588,11 +605,14 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
         }).join('');
 
         // クリックで状態トグル＆保存
-        container.querySelectorAll('.criteria-chip').forEach(el => {
+    container.querySelectorAll('.criteria-chip').forEach(el => {
             el.addEventListener('click', async () => {
                 const sid = Number(el.getAttribute('data-staff'));
                 const cid = Number(el.getAttribute('data-criteria'));
                 const key = `${sid}:${cid}`;
+        if (this._savingEvals.has(key)) return; // 連打防止
+        this._savingEvals.add(key);
+        el.classList.add('is-busy');
                 const current = this._staffEvalCache.get(key) || 'not-started';
                 const next = current === 'not-started' ? 'learning' : current === 'learning' ? 'done' : 'not-started';
                 // 先に表示を更新（楽観的UI）
@@ -628,6 +648,9 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                 } catch (e) {
                     console.error('評価保存エラー:', e);
                     this.showNotification('保存に失敗しました', 'error');
+                } finally {
+                    this._savingEvals.delete(key);
+                    el.classList.remove('is-busy');
                 }
             });
         });

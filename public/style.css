@@ -327,8 +327,8 @@ body {
     gap: 6px;
 }
 .btn-icon { padding: 6px 8px; }
-    border: 3px solid var(--primary-color);
-    background: var(--light-color);
+/* busy indication on evaluation chip */
+.criteria-chip.is-busy { opacity: 0.6; pointer-events: none; }
 }
 
 .staff-info h3 {
