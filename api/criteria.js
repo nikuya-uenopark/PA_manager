@@ -36,14 +36,16 @@ module.exports = async function handler(req, res) {
         res.status(500).json({ error: 'Criteria API failed', detail: error.message });
       }
   } else if (req.method === 'POST') {
-      const { name, category, description } = req.body || {};
+  const { name, category, description } = req.body || {};
+  const allowed = new Set(['共通','ホール','キッチン','その他']);
+  const cat = allowed.has(category) ? category : '共通';
       if (!name) return res.status(400).json({ error: 'name is required' });
       const last = await prisma.criteria.aggregate({ _max: { sortOrder: true } });
       const nextOrder = (last._max.sortOrder ?? -1) + 1;
       const created = await prisma.criteria.create({
         data: {
           name,
-          category: category || '共通',
+          category: cat,
           description: description || null,
           sortOrder: nextOrder,
         },
@@ -89,12 +91,14 @@ module.exports = async function handler(req, res) {
       // 単一更新（名前やカテゴリの更新など）
   const { id } = req.query || {};
   const { name, category, description } = body;
+  const allowed = new Set(['共通','ホール','キッチン','その他']);
+  const cat = allowed.has(category) ? category : '共通';
   if (!id) return res.status(400).json({ error: 'id is required or provide order/items array' });
       await prisma.criteria.update({
         where: { id: Number(id) },
         data: {
           name,
-          category: category || '共通',
+          category: cat,
           description: description || null,
         }
       });

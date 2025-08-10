@@ -9,6 +9,7 @@ class PAManager {
     this._chart = null;
     this._staffEvalCache = new Map(); // key: `${staffId}:${criteriaId}` -> status
     this.criteriaFilter = '';
+    this.editingStaffId = null;
         
         this.init();
     }
@@ -46,7 +47,7 @@ class PAManager {
             }
         });
 
-        // スタッフ追加フォーム送信
+                // スタッフ追加/更新フォーム送信
     const staffForm = document.getElementById('staffForm');
         if (staffForm) {
             staffForm.addEventListener('submit', async (e) => {
@@ -60,13 +61,16 @@ class PAManager {
                     return;
                 }
                 try {
-                    const res = await fetch('/api/staff', {
-                        method: 'POST',
+                                        const isEdit = !!this.editingStaffId;
+                                        const url = isEdit ? `/api/staff?id=${this.editingStaffId}` : '/api/staff';
+                                        const method = isEdit ? 'PUT' : 'POST';
+                                        const res = await fetch(url, {
+                                                method,
                         headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, kana, position, birth_date })
                     });
                     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                    this.showNotification('スタッフを追加しました');
+                                        this.showNotification(isEdit ? 'スタッフを更新しました' : 'スタッフを追加しました');
                     // ログを作成（読みやすい表記で）
                     try {
                         const birthText = (()=>{
@@ -77,20 +81,24 @@ class PAManager {
                             const day = String(d.getDate()).padStart(2,'0');
                             return `${y}/${m}/${day}`;
                         })();
-                        await fetch('/api/logs', {
+                                                if (!isEdit) {
+                                                    await fetch('/api/logs', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 event: 'staff:create',
                                 message: `新規スタッフ追加 名前:${name} 役職:${position || '-'} 生年月日:${birthText}`
                             })
-                        });
+                                                    });
+                                                }
                     } catch {}
                     this.closeModal('staffModal');
                     // フォームをリセット
                     staffForm.reset();
+                                        this.editingStaffId = null;
                     // 再読込
                     await this.loadStaff();
+                                        await this.loadStaffProgress();
                     await this.loadLogs();
                     this.updateStats();
                 } catch (err) {
@@ -425,6 +433,13 @@ function switchTab(tabName) {
 }
 
 function showAddStaffModal() {
+    // 追加モードに初期化
+    paManager.editingStaffId = null;
+    const title = document.getElementById('staffModalTitle');
+    if (title) title.textContent = '新しいスタッフを追加';
+    const form = document.getElementById('staffForm');
+    if (form) form.reset();
+    document.getElementById('staffPositionType').value = 'バイト';
     paManager.showModal('staffModal');
 }
 
@@ -470,25 +485,23 @@ PAManager.prototype.beginEditCriteria = function (criteriaId) {
 function editStaff(id) {
     const s = paManager.currentStaff.find(x => x.id === id);
     if (!s) return;
-    const name = prompt('名前を編集', s.name);
-    if (name == null) return;
-    const payload = { name, kana: s.kana || null, position: s.position || null };
-    fetch(`/api/staff?id=${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    }).then(r=>{
-        if (!r.ok) throw new Error('update failed');
-        return r.json();
-    }).then(async ()=>{
-        paManager.showNotification('スタッフを更新しました');
-        await paManager.loadStaff();
-        await paManager.loadStaffProgress();
-        await paManager.loadLogs();
-    }).catch(e=>{
-        console.error(e);
-        paManager.showNotification('更新に失敗しました', 'error');
-    });
+    paManager.editingStaffId = id;
+    document.getElementById('staffModalTitle').textContent = 'スタッフを編集';
+    document.getElementById('staffName').value = s.name || '';
+    document.getElementById('staffKana').value = s.kana || '';
+    document.getElementById('staffPositionType').value = s.position || 'バイト';
+    // birth_date: APIは birthDate(DB側), クライアントは birth_date(YYYY-MM-DD)
+    const bd = s.birth_date || (s.birthDate ? new Date(s.birthDate) : null);
+    if (bd) {
+        const d = new Date(bd);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth()+1).padStart(2,'0');
+        const dd = String(d.getDate()).padStart(2,'0');
+        document.getElementById('staffBirthDate').value = `${yyyy}-${mm}-${dd}`;
+    } else {
+        document.getElementById('staffBirthDate').value = '';
+    }
+    paManager.showModal('staffModal');
 }
 
 function deleteStaff(id) {
