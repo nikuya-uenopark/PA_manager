@@ -41,7 +41,7 @@
     background: #fff;
 }
 .log-time { color: #6b7280; font-size: 12px; }
-.log-message { color: #111827; }
+.log-message { color: #111827; word-break: break-word; overflow-wrap: anywhere; }
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
@@ -294,6 +294,7 @@ body {
     height: 60px;
     border-radius: 50%;
     object-fit: cover;
+}
 
 .staff-card-actions {
     position: absolute;
@@ -305,7 +306,6 @@ body {
 .btn-icon { padding: 6px 8px; }
 /* busy indication on evaluation chip */
 .criteria-chip.is-busy { opacity: 0.6; pointer-events: none; }
-}
 
 .staff-info h3 {
     font-size: 1.3rem;
@@ -658,22 +658,15 @@ body {
     }
     
     .form-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr; /* iPadでは2カラム維持 */
         gap: 20px;
     }
     
     .analytics-content {
-        grid-template-columns: 1fr;
+        grid-template-columns: 2fr 1fr; /* iPadでも2カラム維持 */
     }
     
-    .tab-button span {
-        display: none;
-    }
-    
-    .staff-grid,
-    .criteria-grid {
-        grid-template-columns: 1fr;
-    }
+    /* ラベルはiPadでは表示維持。小さめ幅で非表示に切替 */
 }
 
 @media (max-width: 768px) {
@@ -692,6 +685,32 @@ body {
         width: 95%;
         margin: 2% auto;
     }
+}
+
+/* タブレット最適化（iPad想定） */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .analytics-content { gap: 20px; }
+    .chart-container { height: 340px; }
+}
+
+/* 小さめタブレット〜大型スマホで1カラムに */
+@media (max-width: 900px) {
+    .analytics-content { grid-template-columns: 1fr; }
+    .chart-container { height: 320px; }
+    .form-grid { grid-template-columns: 1fr; gap: 16px; }
+    .tab-button span { display: none; }
+    .staff-grid, .criteria-grid { grid-template-columns: 1fr; }
+}
+
+/* スマホ最適化 */
+@media (max-width: 600px) {
+    .analytics-content { gap: 16px; }
+    .chart-container { padding: 16px; height: 280px; }
+    .chart-container canvas { width: 100% !important; height: 100% !important; }
+    .stat-card { padding: 16px; }
+    .logs-list { max-height: 260px; }
+    .log-item { grid-template-columns: 1fr; }
+    .log-time { font-size: 11px; }
 }
 
 /* Sortable.js用のスタイル */
