@@ -415,9 +415,13 @@ class PAManager {
 
     async loadLogs() {
         try {
-            const res = await fetch('/api/logs?limit=100');
+            const res = await fetch('/api/logs?limit=199');
             if (!res.ok) return;
-            const logs = await res.json();
+            let logs = await res.json();
+            // 念のため防御的に最大199件に丸める
+            if (Array.isArray(logs) && logs.length > 199) {
+                logs = logs.slice(0, 199);
+            }
             const box = document.getElementById('activityLogs');
             if (!box) return;
             if (!logs || logs.length === 0) {

@@ -1,5 +1,6 @@
 // Vercel Serverless Function: 評価管理 API
 const prisma = require('./_prisma');
+const { addLog } = require('./_log');
 
 module.exports = async function handler(req, res) {
   // CORS設定
@@ -48,9 +49,7 @@ module.exports = async function handler(req, res) {
         prisma.criteria.findUnique({ where: { id: Number(criteria_id) }, select: { name: true } }).catch(()=>null)
       ]);
       const label = normalized === 'done' ? '習得済み' : normalized === 'learning' ? '学習中' : '未着手';
-      await prisma.log.create({
-        data: { event: 'evaluation:create', message: `評価作成 スタッフ:${staff?.name || staff_id} 項目:${crit?.name || criteria_id} 状態:${label}` }
-      }).catch(()=>{});
+  await addLog('evaluation:create', `評価作成 スタッフ:${staff?.name || staff_id} 項目:${crit?.name || criteria_id} 状態:${label}`).catch(()=>{});
       res.status(200).json({ id: created.id, message: '評価データが追加されました' });
     } else if (req.method === 'PUT') {
       const { staffId, criteriaId, status } = req.body || {};
@@ -69,9 +68,7 @@ module.exports = async function handler(req, res) {
         prisma.criteria.findUnique({ where: { id: cid }, select: { name: true } }).catch(()=>null)
       ]);
       const label = status === 'done' ? '習得済み' : status === 'learning' ? '学習中' : '未着手';
-      await prisma.log.create({
-        data: { event: 'evaluation:update', message: `評価更新 スタッフ:${staff?.name || staffId} 項目:${crit?.name || criteriaId} 状態:${label}` }
-      }).catch(()=>{});
+  await addLog('evaluation:update', `評価更新 スタッフ:${staff?.name || staffId} 項目:${crit?.name || criteriaId} 状態:${label}`).catch(()=>{});
       res.status(200).json({ message: '評価が更新されました' });
     } else if (req.method === 'DELETE') {
       const { id } = req.query || {};
@@ -84,11 +81,9 @@ module.exports = async function handler(req, res) {
           prisma.criteria.findUnique({ where: { id: before.criteriaId }, select: { name: true } }).catch(()=>null)
         ]);
         const label = before.status === 'done' ? '習得済み' : before.status === 'learning' ? '学習中' : '未着手';
-        await prisma.log.create({
-          data: { event: 'evaluation:delete', message: `評価削除 スタッフ:${staff?.name || before.staffId} 項目:${crit?.name || before.criteriaId} 状態:${label}` }
-        }).catch(()=>{});
+  await addLog('evaluation:delete', `評価削除 スタッフ:${staff?.name || before.staffId} 項目:${crit?.name || before.criteriaId} 状態:${label}`).catch(()=>{});
       } else {
-        await prisma.log.create({ data: { event: 'evaluation:delete', message: `評価削除 id:${id}` } }).catch(()=>{});
+  await addLog('evaluation:delete', `評価削除 id:${id}`).catch(()=>{});
       }
       res.status(200).json({ message: '評価データが削除されました' });
     } else {

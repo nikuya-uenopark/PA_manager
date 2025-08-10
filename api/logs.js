@@ -1,5 +1,6 @@
 // Vercel Serverless Function: GET/POST /api/logs
 const prisma = require('./_prisma');
+const { addLog } = require('./_log');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,8 +20,8 @@ module.exports = async function handler(req, res) {
     if (req.method === 'POST') {
       const { event, message } = req.body || {};
       if (!event || !message) return res.status(400).json({ error: 'event and message are required' });
-      const created = await prisma.log.create({ data: { event, message }, select: { id: true } });
-      return res.status(200).json({ id: created.id });
+      const created = await addLog(event, message);
+      return res.status(200).json({ id: created?.id });
     }
     return res.status(405).json({ error: 'Method Not Allowed' });
   } catch (e) {
