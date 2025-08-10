@@ -339,9 +339,6 @@ class PAManager {
                     </div>
                 </div>
                 ${criteria.description ? `<div class="criteria-description">${criteria.description}</div>` : ''}
-                <div class="criteria-stats">
-                    <small>使用回数: ${Math.floor(Math.random() * 50)}回</small>
-                </div>
             </div>
         `).join('');
     }
