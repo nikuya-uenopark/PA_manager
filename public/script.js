@@ -620,7 +620,10 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                         if (!res.ok) throw new Error(`save failed ${res.status}`);
                     }
                     this.showNotification('保存しました');
-                    this.loadLogs();
+                    await this.loadLogs();
+                    await this.loadStaffProgress();
+                    // 最新状態で一覧を描画し直す
+                    await this.renderStaffEvaluations(sid);
                 } catch (e) {
                     console.error('評価保存エラー:', e);
                     this.showNotification('保存に失敗しました', 'error');
