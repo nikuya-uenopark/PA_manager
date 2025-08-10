@@ -81,6 +81,35 @@ module.exports = async function handler(req, res) {
       res.status(500).json({ error: 'スタッフの削除に失敗しました', detail: error.message });
     }
   } else {
-    res.status(405).json({ error: 'Method Not Allowed' });
+    // スタッフ更新
+    if (req.method === 'PUT') {
+      try {
+        const { id } = req.query || {};
+        const { name, kana, position, birth_date, avatar_url, hire_date } = req.body || {};
+        if (!id) return res.status(400).json({ error: 'id is required' });
+        const updated = await prisma.staff.update({
+          where: { id: Number(id) },
+          data: {
+            name,
+            kana: kana ?? undefined,
+            position: position ?? undefined,
+            joined: hire_date ? new Date(hire_date) : undefined,
+            birthDate: birth_date ? new Date(birth_date) : undefined,
+          },
+          select: { id: true, name: true, position: true, birthDate: true }
+        });
+        const bd = updated.birthDate ? new Date(updated.birthDate) : null;
+        const birthText = bd ? `${bd.getFullYear()}/${String(bd.getMonth()+1).padStart(2,'0')}/${String(bd.getDate()).padStart(2,'0')}` : '-';
+        await prisma.log.create({
+          data: { event: 'staff:update', message: `スタッフ更新 ID:${updated.id} 名前:${updated.name} 役職:${updated.position || '-'} 生年月日:${birthText}` }
+        }).catch(()=>{});
+        res.status(200).json({ message: 'スタッフを更新しました' });
+      } catch (error) {
+        console.error('Staff PUT error:', error);
+        res.status(500).json({ error: 'スタッフの更新に失敗しました', detail: error.message });
+      }
+    } else {
+      res.status(405).json({ error: 'Method Not Allowed' });
+    }
   }
 };

@@ -164,6 +164,7 @@ class PAManager {
                 this.loadCriteria(),
                 this.loadLogs()
             ]);
+            await this.loadStaffProgress();
             this.updateStats();
         } catch (error) {
             console.error('データ読み込みエラー:', error);
@@ -182,6 +183,18 @@ class PAManager {
             console.error('スタッフデータ読み込みエラー:', error);
             // ユーザーに通知
             this.showNotification('スタッフデータの読み込みに失敗しました', 'error');
+        }
+    }
+
+    async loadStaffProgress() {
+        try {
+            const res = await fetch('/api/staff-progress');
+            if (!res.ok) return;
+            const list = await res.json();
+            this._progressMap = new Map(list.map(x => [x.staffId, x]));
+            this.renderStaff();
+        } catch (e) {
+            console.error('進捗読み込みエラー:', e);
         }
     }
 
@@ -220,40 +233,45 @@ class PAManager {
         }
 
         container.innerHTML = this.currentStaff.map(staff => {
-            const progress = Math.floor(Math.random() * 100);
             const avatarUrl = staff.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(staff.name) + '&background=667eea&color=fff&size=128';
-            
+            const prog = this._progressMap?.get(staff.id) || { progressPercent: 0, counts: { done: 0, learning: 0, notStarted: (this.currentCriteria?.length || 0) } };
+            const p = prog.progressPercent || 0;
+            const counts = prog.counts || { done: 0, learning: 0, notStarted: 0 };
             return `
-                <div class="staff-card" onclick="showStaffDetail(${staff.id})">
-                    <div class="staff-header">
+                <div class="staff-card">
+                    <div class="staff-card-actions">
+                        <button class="btn btn-secondary btn-icon" title="編集" onclick="event.stopPropagation(); editStaff(${staff.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-danger btn-icon" title="削除" onclick="event.stopPropagation(); deleteStaff(${staff.id})"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <div class="staff-header" onclick="showStaffDetail(${staff.id})">
                         <img src="${avatarUrl}" alt="${staff.name}" class="staff-avatar">
                         <div class="staff-info">
-                            <h3>${staff.name}</h3>
                             <div style="color:#6b7280; font-size:12px;">${staff.kana || ''}</div>
+                            <h3>${staff.name}</h3>
                             <span class="position-badge">${staff.position || '未設定'}</span>
                         </div>
                     </div>
                     <div class="staff-progress">
                         <div class="progress-label">
                             <span>進捗状況</span>
-                            <span class="progress-percent">${progress}%</span>
+                            <span class="progress-percent">${p}%</span>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${progress}%"></div>
+                            <div class="progress-fill" style="width: ${p}%"></div>
                         </div>
                     </div>
                     <div class="staff-stats">
                         <div class="stat-item-small">
-                            <span class="stat-value-small">${Math.floor(Math.random() * 20)}</span>
-                            <span class="stat-label-small">評価済み</span>
+                            <span class="stat-value-small">${counts.notStarted}</span>
+                            <span class="stat-label-small">未着手</span>
                         </div>
                         <div class="stat-item-small">
-                            <span class="stat-value-small">${Math.floor(Math.random() * 10)}</span>
-                            <span class="stat-label-small">習得済み</span>
-                        </div>
-                        <div class="stat-item-small">
-                            <span class="stat-value-small">${Math.floor(Math.random() * 15)}</span>
+                            <span class="stat-value-small">${counts.learning}</span>
                             <span class="stat-label-small">学習中</span>
+                        </div>
+                        <div class="stat-item-small">
+                            <span class="stat-value-small">${counts.done}</span>
+                            <span class="stat-label-small">習得済み</span>
                         </div>
                     </div>
                 </div>
@@ -446,6 +464,47 @@ PAManager.prototype.beginEditCriteria = function (criteriaId) {
     document.getElementById('criteriaCategory').value = item.category || '共通';
     document.getElementById('criteriaDescription').value = item.description || '';
     this.showModal('criteriaModal');
+}
+
+// スタッフ編集（簡易: モーダルは既存の追加フォームを流用するなら別実装。ここでは名前だけの例）
+function editStaff(id) {
+    const s = paManager.currentStaff.find(x => x.id === id);
+    if (!s) return;
+    const name = prompt('名前を編集', s.name);
+    if (name == null) return;
+    const payload = { name, kana: s.kana || null, position: s.position || null };
+    fetch(`/api/staff?id=${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).then(r=>{
+        if (!r.ok) throw new Error('update failed');
+        return r.json();
+    }).then(async ()=>{
+        paManager.showNotification('スタッフを更新しました');
+        await paManager.loadStaff();
+        await paManager.loadStaffProgress();
+        await paManager.loadLogs();
+    }).catch(e=>{
+        console.error(e);
+        paManager.showNotification('更新に失敗しました', 'error');
+    });
+}
+
+function deleteStaff(id) {
+    if (!confirm('このスタッフを削除しますか？')) return;
+    fetch(`/api/staff?id=${id}`, { method: 'DELETE' }).then(r=>{
+        if (!r.ok) throw new Error('delete failed');
+        return r.json();
+    }).then(async ()=>{
+        paManager.showNotification('スタッフを削除しました');
+        await paManager.loadStaff();
+        await paManager.loadStaffProgress();
+        await paManager.loadLogs();
+    }).catch(e=>{
+        console.error(e);
+        paManager.showNotification('削除に失敗しました', 'error');
+    });
 }
 
 PAManager.prototype.deleteCriteria = async function (criteriaId) {
