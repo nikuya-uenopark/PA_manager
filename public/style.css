@@ -22,8 +22,8 @@
     --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
     --border-radius: 12px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --page-max: 1280px;
-    --page-pad: clamp(12px, 3vw, 28px);
+    --page-max: 1440px;
+    --page-pad: clamp(8px, 2vw, 20px);
 }
 
 .logs-list {
@@ -112,9 +112,9 @@ body {
 .main-header {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: var(--white);
-    padding: 30px;
-    border-radius: var(--border-radius);
-    margin-bottom: 30px;
+    padding: clamp(16px, 2vw, 24px);
+    border-radius: 14px;
+    margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -140,9 +140,9 @@ body {
 .tab-navigation {
     display: flex;
     background: var(--light-color);
-    border-radius: var(--border-radius);
-    padding: 8px;
-    margin-bottom: 30px;
+    border-radius: 12px;
+    padding: 8px 10px;
+    margin-bottom: 18px;
     box-shadow: var(--shadow);
 }
 
@@ -282,12 +282,14 @@ body {
 /* スタッフグリッド */
 .staff-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     justify-items: stretch;
     align-items: start;
     justify-content: center; /* 中央寄せ */
 }
+@media (max-width: 1200px) { .staff-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 700px) { .staff-grid { grid-template-columns: 1fr; } }
 
 .staff-card {
     background: var(--white);
