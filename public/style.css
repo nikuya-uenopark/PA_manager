@@ -129,31 +129,7 @@ body {
     font-weight: 400;
 }
 
-.header-stats {
-    display: flex;
-    gap: 30px;
-}
-
-.stat-item {
-    text-align: center;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 20px;
-    border-radius: var(--border-radius);
-    backdrop-filter: blur(10px);
-}
-
-.stat-value {
-    display: block;
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--white);
-}
-
-.stat-label {
-    font-size: 0.9rem;
-    opacity: 0.8;
-    font-weight: 500;
-}
+/* header stats removed */
 
 /* タブナビゲーション */
 .tab-navigation {
