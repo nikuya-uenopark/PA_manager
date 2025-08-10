@@ -257,8 +257,7 @@ class PAManager {
             return;
         }
 
-        container.innerHTML = this.currentStaff.map(staff => {
-            const avatarUrl = staff.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(staff.name) + '&background=667eea&color=fff&size=128';
+    container.innerHTML = this.currentStaff.map(staff => {
             const prog = this._progressMap?.get(staff.id) || { progressPercent: 0, counts: { done: 0, learning: 0, notStarted: (this.currentCriteria?.length || 0) } };
             const p = prog.progressPercent || 0;
             const counts = prog.counts || { done: 0, learning: 0, notStarted: 0 };
@@ -269,7 +268,6 @@ class PAManager {
                         <button class="btn btn-danger btn-icon" title="削除" onclick="event.stopPropagation(); deleteStaff(${staff.id})"><i class="fas fa-trash"></i></button>
                     </div>
                     <div class="staff-header" onclick="showStaffDetail(${staff.id})">
-                        <img src="${avatarUrl}" alt="${staff.name}" class="staff-avatar">
                         <div class="staff-info">
                             <div style="color:#6b7280; font-size:12px;">${staff.kana || ''}</div>
                             <h3>${staff.name}</h3>
