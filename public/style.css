@@ -35,14 +35,14 @@
 }
 .log-item {
     display: grid;
-    grid-template-columns: 180px 1fr;
+    grid-template-columns: 1fr;
     gap: 12px;
     padding: 10px 12px;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     background: #fff;
 }
-.log-time { color: #6b7280; font-size: 12px; }
+.log-time { color: #6b7280; font-size: 12px; display: block; margin-bottom: 2px; }
 .log-message { color: #111827; word-break: break-word; overflow-wrap: anywhere; }
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
