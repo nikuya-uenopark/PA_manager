@@ -95,6 +95,7 @@ body {
 /* メインコンテナ */
 .container {
     max-width: 1400px;
+    width: 100%;
     margin: 0 auto;
     padding: 20px;
     background: var(--white);
@@ -173,6 +174,8 @@ body {
 .tab-panel {
     display: none;
     animation: fadeIn 0.3s ease;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .tab-panel.active {
@@ -264,6 +267,9 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
+    justify-items: stretch;
+    align-items: start;
+    justify-content: center; /* 中央寄せ */
 }
 
 .staff-card {
@@ -372,6 +378,9 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 20px;
+    justify-items: stretch;
+    align-items: start;
+    justify-content: center; /* 中央寄せ */
 }
 
 .criteria-card {
@@ -608,6 +617,8 @@ body {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 30px;
+    align-items: start;
+    justify-content: center; /* 中央寄せ */
 }
 
 .chart-container {
@@ -616,6 +627,8 @@ body {
     padding: 25px;
     box-shadow: var(--shadow);
     height: 400px;
+    -webkit-transform: translateZ(0); /* Safariの描画最適化 */
+    transform: translateZ(0);
 }
 
 .stats-grid {
