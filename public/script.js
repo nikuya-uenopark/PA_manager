@@ -403,13 +403,23 @@ class PAManager {
             const res = await fetch('/api/logs?limit=100');
             if (!res.ok) return;
             const logs = await res.json();
+            // 表示しないイベントを除外（API的な内部ログは非表示）
+            const filtered = (logs || []).filter(l => {
+                const ev = l.event || '';
+                if (ev === 'staff:create') return true; // 表示したい
+                if (ev.startsWith('staff:delete')) return false;
+                if (ev.startsWith('staff:update')) return false;
+                if (ev.startsWith('criteria:')) return false;
+                if (ev.startsWith('evaluation:')) return false;
+                return true;
+            });
             const box = document.getElementById('activityLogs');
             if (!box) return;
-            if (!logs || logs.length === 0) {
+            if (!filtered || filtered.length === 0) {
                 box.innerHTML = '<div class="empty-state">まだログはありません</div>';
                 return;
             }
-            box.innerHTML = logs.map(l => {
+            box.innerHTML = filtered.map(l => {
                 const t = new Date(l.createdAt).toLocaleString();
                 return `<div class="log-item"><div class="log-time">${t}</div><div class="log-event">${l.event}</div><div class="log-message">${l.message}</div></div>`;
             }).join('');
