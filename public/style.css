@@ -22,6 +22,8 @@
     --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
     --border-radius: 12px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --page-max: 1280px;
+    --page-pad: clamp(12px, 3vw, 28px);
 }
 
 .logs-list {
@@ -96,13 +98,13 @@ body {
 
 /* メインコンテナ */
 .container {
-    max-width: 1400px;
+    max-width: none;
     width: 100%;
     margin: 0 auto;
-    padding: 20px;
-    background: var(--white);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
+    padding: var(--page-pad);
+    background: transparent; /* フルブリードに */
+    border-radius: 0;
+    box-shadow: none;
     min-height: 100dvh; /* ビューポート高さの安定化 */
 }
 
@@ -176,12 +178,25 @@ body {
 .tab-panel {
     display: none;
     animation: fadeIn 0.3s ease;
-    max-width: 1400px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: var(--page-max);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--page-pad);
+    padding-right: var(--page-pad);
 }
 
 .tab-panel.active {
     display: block;
+}
+
+/* 全タブで横幅と中央寄せを統一 */
+.main-header,
+.tab-navigation {
+    max-width: var(--page-max);
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
 }
 
 @keyframes fadeIn {
