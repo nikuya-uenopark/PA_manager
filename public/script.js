@@ -559,6 +559,14 @@ PAManager.prototype.openStaffDetail = async function (staffId) {
     document.getElementById('staffDetailKana').textContent = staff.kana || '';
     document.getElementById('staffDetailBirth').textContent = staff.birth_date || (staff.birthDate ? new Date(staff.birthDate).toLocaleDateString() : '-');
 
+    // 変更者セレクトを初期化（全スタッフから選択）
+    const changer = document.getElementById('evaluationChangedBy');
+    if (changer) {
+        const options = (this.currentStaff || []).map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        changer.innerHTML = `<option value="">未選択</option>` + options;
+        changer.value = String(staffId);
+    }
+
     // 評価一覧
     await this.renderStaffEvaluations(staffId);
     this.showModal('staffDetailModal');
@@ -585,7 +593,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
         }
 
         // グリッド描画
-        container.innerHTML = this.currentCriteria.map(cr => {
+    container.innerHTML = this.currentCriteria.map(cr => {
             const key = `${staffId}:${cr.id}`;
             const status = this._staffEvalCache.get(key) || 'not-started';
             const color = status === 'done' ? '#00d4aa' : status === 'learning' ? '#ff9f43' : '#f1f2f6';
@@ -602,6 +610,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
         }).join('');
 
         // クリックで状態トグル＆保存
+    const changerSel = document.getElementById('evaluationChangedBy');
     container.querySelectorAll('.criteria-chip').forEach(el => {
             el.addEventListener('click', async () => {
                 const sid = Number(el.getAttribute('data-staff'));
@@ -621,18 +630,19 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                 badge.textContent = label;
 
                 try {
+                    const changedById = changerSel && changerSel.value ? Number(changerSel.value) : null;
                     // まず更新（0件なら作成）
                     let res = await fetch('/api/evaluations', {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ staffId: sid, criteriaId: cid, status: next })
+                        body: JSON.stringify({ staffId: sid, criteriaId: cid, status: next, changedBy: changedById })
                     });
                     if (!res.ok) {
                         // PUT 失敗時は作成にフォールバック
                         res = await fetch('/api/evaluations', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ staff_id: sid, criteria_id: cid, status: next })
+                            body: JSON.stringify({ staff_id: sid, criteria_id: cid, status: next, changed_by: changedById })
                         });
                         if (!res.ok) throw new Error(`save failed ${res.status}`);
                     }
