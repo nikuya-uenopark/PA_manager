@@ -22,7 +22,7 @@
     --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
     --border-radius: 12px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --page-max: 1440px;
+    --page-max: 1023px;
     --page-pad: clamp(8px, 2vw, 20px);
 }
 
