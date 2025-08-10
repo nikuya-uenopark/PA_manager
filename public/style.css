@@ -393,11 +393,19 @@ body {
 /* 評価項目グリッド */
 .criteria-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     justify-items: stretch;
     align-items: start;
     justify-content: center; /* 中央寄せ */
+}
+
+/* 画面幅に応じて列数を固定（カード幅を一定に） */
+@media (max-width: 1200px) {
+    .criteria-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 700px) {
+    .criteria-grid { grid-template-columns: 1fr; }
 }
 
 .criteria-card {
