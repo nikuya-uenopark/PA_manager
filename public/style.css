@@ -282,14 +282,12 @@ body {
 /* スタッフグリッド */
 .staff-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: 1fr; /* 横長1カラム */
+    gap: 16px;
     justify-items: stretch;
     align-items: start;
     justify-content: center; /* 中央寄せ */
 }
-@media (max-width: 1200px) { .staff-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 700px) { .staff-grid { grid-template-columns: 1fr; } }
 
 .staff-card {
     background: var(--white);
@@ -426,19 +424,12 @@ body {
 
 .criteria-header {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    grid-template-columns: 1fr; /* 横長1カラム */
+    gap: 16px;
     margin-bottom: 15px;
 }
 
 .criteria-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--dark-color);
-    margin-bottom: 8px;
-}
-
-.criteria-category {
     background: var(--secondary-color);
     color: var(--white);
     padding: 4px 10px;
@@ -1015,8 +1006,9 @@ input, textarea, .criteria-description, .staff-position, .staff-name {
 
 .staff-card h3 {
     color: #4a5568;
-    margin-bottom: 8px;
-    font-size: 1.3rem;
+    background: var(--white);
+    border-radius: 12px;
+    padding: 18px 20px; /* 余白を少し圧縮 */
 }
 
 .staff-position {
@@ -1084,9 +1076,9 @@ input, textarea, .criteria-description, .staff-position, .staff-name {
 }
 
 .criteria-card h3 {
-    color: #4a5568;
-    margin-bottom: 5px;
-    font-size: 1.2rem;
+    background: var(--white);
+    border-radius: 12px;
+    padding: 18px 20px; /* 余白を少し圧縮 */
 }
 
 .criteria-category {
