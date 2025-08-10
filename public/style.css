@@ -657,9 +657,7 @@ body {
 }
 
 .stats-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    display: block;
 }
 .stat-card {
     background: var(--white);
