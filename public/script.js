@@ -263,15 +263,15 @@ class PAManager {
             const counts = prog.counts || { done: 0, learning: 0, notStarted: 0 };
             return `
                 <div class="staff-card">
-                    <div class="staff-card-actions">
-                        <button class="btn btn-secondary btn-icon" title="編集" onclick="event.stopPropagation(); editStaff(${staff.id})"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-danger btn-icon" title="削除" onclick="event.stopPropagation(); deleteStaff(${staff.id})"><i class="fas fa-trash"></i></button>
-                    </div>
                     <div class="staff-header" onclick="showStaffDetail(${staff.id})">
                         <div class="staff-info">
                             <div style="color:#6b7280; font-size:12px;">${staff.kana || ''}</div>
                             <h3>${staff.name}</h3>
                             <span class="position-badge">${staff.position || '未設定'}</span>
+                        </div>
+                        <div class="staff-card-actions">
+                            <button class="btn btn-secondary btn-icon" title="編集" onclick="event.stopPropagation(); editStaff(${staff.id})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-icon" title="削除" onclick="event.stopPropagation(); deleteStaff(${staff.id})"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                     <div class="staff-progress">
