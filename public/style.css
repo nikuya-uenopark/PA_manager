@@ -640,7 +640,7 @@ body {
 /* 統計・分析 */
 .analytics-content {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr; /* 常に1カラム: 上=グラフ, 下=ログ */
     gap: 30px;
     align-items: start;
     justify-content: center; /* 中央寄せ */
@@ -697,9 +697,7 @@ body {
         gap: 20px;
     }
     
-    .analytics-content {
-        grid-template-columns: 2fr 1fr; /* iPadでも2カラム維持 */
-    }
+    .analytics-content { grid-template-columns: 1fr; }
     
     /* ラベルはiPadでは表示維持。小さめ幅で非表示に切替 */
 }
