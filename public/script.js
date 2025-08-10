@@ -622,7 +622,8 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                     this.showNotification('保存しました');
                     await this.loadLogs();
                     await this.loadStaffProgress();
-                    // 最新状態で一覧を描画し直す
+                    // キャッシュをクリアしてから最新を取得して描画
+                    this._staffEvalCache.clear();
                     await this.renderStaffEvaluations(sid);
                 } catch (e) {
                     console.error('評価保存エラー:', e);

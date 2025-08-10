@@ -54,13 +54,19 @@ module.exports = async function handler(req, res) {
       res.status(200).json({ id: created.id, message: '評価データが追加されました' });
     } else if (req.method === 'PUT') {
       const { staffId, criteriaId, status } = req.body || {};
-      await prisma.evaluation.updateMany({
-        where: { staffId: Number(staffId), criteriaId: Number(criteriaId) },
+      const sid = Number(staffId);
+      const cid = Number(criteriaId);
+      const result = await prisma.evaluation.updateMany({
+        where: { staffId: sid, criteriaId: cid },
         data: { status }
       });
+      if (result.count === 0) {
+        // 存在しない場合は新規作成して保存を保証
+        await prisma.evaluation.create({ data: { staffId: sid, criteriaId: cid, status: status || 'learning' } });
+      }
       const [staff, crit] = await Promise.all([
-        prisma.staff.findUnique({ where: { id: Number(staffId) }, select: { name: true } }).catch(()=>null),
-        prisma.criteria.findUnique({ where: { id: Number(criteriaId) }, select: { name: true } }).catch(()=>null)
+        prisma.staff.findUnique({ where: { id: sid }, select: { name: true } }).catch(()=>null),
+        prisma.criteria.findUnique({ where: { id: cid }, select: { name: true } }).catch(()=>null)
       ]);
       const label = status === 'done' ? '習得済み' : status === 'learning' ? '学習中' : '未着手';
       await prisma.log.create({
