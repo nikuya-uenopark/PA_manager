@@ -569,6 +569,37 @@ PAManager.prototype.openStaffDetail = async function (staffId) {
 
     // 評価一覧
     await this.renderStaffEvaluations(staffId);
+    // 一括更新ボタンのハンドラ
+    const applyBtn = document.getElementById('applyEvaluationChangesBtn');
+    if (applyBtn) {
+        applyBtn.onclick = async () => {
+            try {
+                const changedById = (document.getElementById('evaluationChangedBy')?.value) ? Number(document.getElementById('evaluationChangedBy').value) : null;
+                const payload = Array.from(this._pendingEvalChanges || []).map(([key, status]) => {
+                    const [sid, cid] = key.split(':').map(Number);
+                    return { staffId: sid, criteriaId: cid, status };
+                });
+                if (payload.length === 0) {
+                    this.showNotification('変更はありません');
+                    return;
+                }
+                const res = await fetch('/api/evaluations-batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ changes: payload, changedBy: changedById })
+                });
+                if (!res.ok) throw new Error('batch update failed');
+                this._pendingEvalChanges.clear();
+                this.showNotification('評価を更新しました');
+                await this.loadLogs();
+                await this.loadStaffProgress();
+                await this.renderStaffEvaluations(staffId);
+            } catch (e) {
+                console.error('一括更新エラー', e);
+                this.showNotification('更新に失敗しました', 'error');
+            }
+        };
+    }
     this.showModal('staffDetailModal');
 }
 
@@ -593,6 +624,8 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
         }
 
         // グリッド描画
+    // 変更のバッファ用マップ
+    if (!this._pendingEvalChanges) this._pendingEvalChanges = new Map();
     container.innerHTML = this.currentCriteria.map(cr => {
             const key = `${staffId}:${cr.id}`;
             const status = this._staffEvalCache.get(key) || 'not-started';
@@ -610,55 +643,21 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
         }).join('');
 
         // クリックで状態トグル＆保存
-    const changerSel = document.getElementById('evaluationChangedBy');
     container.querySelectorAll('.criteria-chip').forEach(el => {
             el.addEventListener('click', async () => {
                 const sid = Number(el.getAttribute('data-staff'));
                 const cid = Number(el.getAttribute('data-criteria'));
                 const key = `${sid}:${cid}`;
-        if (this._savingEvals.has(key)) return; // 連打防止
-        this._savingEvals.add(key);
-        el.classList.add('is-busy');
                 const current = this._staffEvalCache.get(key) || 'not-started';
                 const next = current === 'not-started' ? 'learning' : current === 'learning' ? 'done' : 'not-started';
                 // 先に表示を更新（楽観的UI）
                 this._staffEvalCache.set(key, next);
+                this._pendingEvalChanges.set(key, next);
                 const badge = el.querySelector('.status-badge');
                 const color = next === 'done' ? '#00d4aa' : next === 'learning' ? '#ff9f43' : '#f1f2f6';
                 const label = next === 'done' ? '習得済み' : next === 'learning' ? '学習中' : '未着手';
                 badge.style.background = color;
                 badge.textContent = label;
-
-                try {
-                    const changedById = changerSel && changerSel.value ? Number(changerSel.value) : null;
-                    // まず更新（0件なら作成）
-                    let res = await fetch('/api/evaluations', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ staffId: sid, criteriaId: cid, status: next, changedBy: changedById })
-                    });
-                    if (!res.ok) {
-                        // PUT 失敗時は作成にフォールバック
-                        res = await fetch('/api/evaluations', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ staff_id: sid, criteria_id: cid, status: next, changed_by: changedById })
-                        });
-                        if (!res.ok) throw new Error(`save failed ${res.status}`);
-                    }
-                    this.showNotification('保存しました');
-                    await this.loadLogs();
-                    await this.loadStaffProgress();
-                    // キャッシュをクリアしてから最新を取得して描画
-                    this._staffEvalCache.clear();
-                    await this.renderStaffEvaluations(sid);
-                } catch (e) {
-                    console.error('評価保存エラー:', e);
-                    this.showNotification('保存に失敗しました', 'error');
-                } finally {
-                    this._savingEvals.delete(key);
-                    el.classList.remove('is-busy');
-                }
             });
         });
     } catch (e) {
