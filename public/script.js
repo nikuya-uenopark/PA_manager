@@ -24,29 +24,31 @@ class PAManager {
             this.setup();
         }
     }
-
+    // 初期セットアップ
     setup() {
-        // UIイベントのセットアップと初期データの読み込み
         this.setupEventListeners();
         this.loadData();
     }
 
+    // イベント登録
     setupEventListeners() {
+        // モーダル背景クリックで閉じる
         window.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                this.closeModal(e.target.id);
+            const t = e.target;
+            if (t && t.classList && t.classList.contains('modal')) {
+                this.closeModal(t.id);
             }
         });
 
-                // スタッフ追加/更新フォーム送信
-    const staffForm = document.getElementById('staffForm');
+        // スタッフ追加/更新フォーム
+        const staffForm = document.getElementById('staffForm');
         if (staffForm) {
             staffForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-        const name = document.getElementById('staffName')?.value?.trim();
-        const kana = document.getElementById('staffKana')?.value?.trim() || null;
-        const position = document.getElementById('staffPositionType')?.value || null; // バイト/社員
-        const birth_date = document.getElementById('staffBirthDate')?.value || null;
+                const name = document.getElementById('staffName')?.value?.trim();
+                const kana = document.getElementById('staffKana')?.value?.trim() || null;
+                const position = document.getElementById('staffPositionType')?.value || null;
+                const birth_date = document.getElementById('staffBirthDate')?.value || null;
                 if (!name) {
                     this.showNotification('名前は必須です', 'error');
                     return;
@@ -56,44 +58,30 @@ class PAManager {
                 const submitBtn = staffForm.querySelector('button[type="submit"]');
                 if (submitBtn) submitBtn.disabled = true;
                 try {
-                                        const isEdit = !!this.editingStaffId;
-                                        const url = isEdit ? `/api/staff?id=${this.editingStaffId}` : '/api/staff';
-                                        const method = isEdit ? 'PUT' : 'POST';
-                                        const res = await fetch(url, {
-                                                method,
+                    const isEdit = !!this.editingStaffId;
+                    const url = isEdit ? `/api/staff?id=${this.editingStaffId}` : '/api/staff';
+                    const method = isEdit ? 'PUT' : 'POST';
+                    const res = await fetch(url, {
+                        method,
                         headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, kana, position, birth_date })
+                        body: JSON.stringify({ name, kana, position, birth_date })
                     });
                     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                                        this.showNotification(isEdit ? 'スタッフを更新しました' : 'スタッフを追加しました');
-                    // ログを作成（読みやすい表記で）
-                    try {
-                        const birthText = (()=>{
-                            if (!birth_date) return '-';
-                            const d = new Date(birth_date);
-                            const y = d.getFullYear();
-                            const m = String(d.getMonth()+1).padStart(2,'0');
-                            const day = String(d.getDate()).padStart(2,'0');
-                            return `${y}/${m}/${day}`;
-                        })();
-                                                if (!isEdit) {
-                                                    await fetch('/api/logs', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                event: 'staff:create',
-                                message: `新規スタッフ追加 名前:${name} 役職:${position || '-'} 生年月日:${birthText}`
-                            })
-                                                    });
-                                                }
-                    } catch {}
+                    this.showNotification(isEdit ? 'スタッフを更新しました' : 'スタッフを追加しました');
+                    if (!isEdit) {
+                        try {
+                            await fetch('/api/logs', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ event: 'staff:create', message: `新規スタッフ追加 名前:${name} 役職:${position || '-'} 生年月日:${birth_date || '-'}` })
+                            });
+                        } catch {}
+                    }
                     this.closeModal('staffModal');
-                    // フォームをリセット
                     staffForm.reset();
-                                        this.editingStaffId = null;
-                    // 再読込
+                    this.editingStaffId = null;
                     await this.loadStaff();
-                                        await this.loadStaffProgress();
+                    await this.loadStaffProgress();
                     await this.loadLogs();
                     this.updateStats();
                 } catch (err) {
@@ -106,7 +94,7 @@ class PAManager {
             });
         }
 
-        // 評価項目追加/編集フォーム送信
+        // 評価項目追加/更新フォーム
         const criteriaForm = document.getElementById('criteriaForm');
         if (criteriaForm) {
             criteriaForm.addEventListener('submit', async (e) => {
@@ -717,7 +705,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
             }
             // 「見テストに戻す」
             const resetBtn = el.querySelector('.reset-tested-btn');
-            if (resetBtn) {
+        if (resetBtn) {
                 resetBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const sid = Number(el.getAttribute('data-staff'));
@@ -740,7 +728,9 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                             });
                         }
                     }
-                    if (this._pendingEvalTests) this._pendingEvalTests.delete(key);
+            if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
+            // DB側も未テスト化するため clear 指定
+            this._pendingEvalTests.set(key, { clear: true });
                     if (this._staffEvalTestCache) this._staffEvalTestCache.delete(key);
                 });
             }
