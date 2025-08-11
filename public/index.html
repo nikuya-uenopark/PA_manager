@@ -225,6 +225,26 @@
     <!-- 通知表示用 -->
     <div id="notification" class="notification"></div>
     
+    <!-- テスター選択モーダル -->
+    <div id="testerSelectModal" class="modal">
+        <div class="modal-content" style="max-width:420px;">
+            <div class="modal-header">
+                <h3>テスト確認者を選択</h3>
+                <span class="close" onclick="closeModal('testerSelectModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="testerSelect">確認者</label>
+                    <select id="testerSelect" style="width:100%; padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px; background:#fff;"></select>
+                </div>
+                <div class="form-actions" style="margin-top:14px; display:flex; gap:10px; justify-content:flex-end;">
+                    <button id="confirmTesterBtn" class="btn btn-primary" type="button">決定</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('testerSelectModal')">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- 外部ライブラリ -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>

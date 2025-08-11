@@ -666,13 +666,12 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                         <span class="status-badge" style="background:${color}; color:#111; padding:6px 10px; border-radius:9999px; font-size:12px; white-space:nowrap;">${label}</span>
                     </div>
                     ${cr.description ? `<div class="criteria-chip-desc">${cr.description}</div>` : ''}
-                    <div class="tested-block" style="display:flex; align-items:center; gap:8px;">
-                        <input type="checkbox" class="tested-checkbox" ${testedById ? 'checked' : ''} />
+                    <div class="tested-block" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                         <span class="tested-text ${testedClass}">${testedText}</span>
-                        <select class="tested-select" style="display:${testedById ? 'inline-block' : 'none'}; padding:6px 8px; border:1px solid #e5e7eb; border-radius:6px;">
-                            <option value="">テスター選択</option>
-                            ${options}
-                        </select>
+                        ${testedById
+                            ? `<button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">見テストに戻す</button>`
+                            : `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`
+                        }
                     </div>
                 </div>
             `;
@@ -682,8 +681,8 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
     container.querySelectorAll('.criteria-chip').forEach(el => {
             // チップ本体クリックで状態トグル
             el.addEventListener('click', async (ev) => {
-                // チェックボックスクリックは無視（バブリング停止済み）
-                if (ev.target && ev.target.classList && ev.target.classList.contains('tested-checkbox')) return;
+                // テスト系ボタンは無視
+                if (ev.target && ev.target.classList && (ev.target.classList.contains('open-tester-modal-btn') || ev.target.classList.contains('reset-tested-btn'))) return;
                 const sid = Number(el.getAttribute('data-staff'));
                 const cid = Number(el.getAttribute('data-criteria'));
                 const key = `${sid}:${cid}`;
@@ -699,75 +698,96 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                 badge.textContent = label;
             });
 
-            // チェックボックスのハンドラ
-            const cb = el.querySelector('.tested-checkbox');
-            const sel = el.querySelector('.tested-select');
-            if (cb) {
-                cb.addEventListener('click', (e) => e.stopPropagation());
-                cb.addEventListener('change', () => {
+            // 「未テスト」→ モーダルで確認者選択
+            const openBtn = el.querySelector('.open-tester-modal-btn');
+            if (openBtn) {
+                openBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     const sid = Number(el.getAttribute('data-staff'));
                     const cid = Number(el.getAttribute('data-criteria'));
                     const key = `${sid}:${cid}`;
-                    const textEl = el.querySelector('.tested-text');
-                    if (cb.checked) {
-                        // セレクトを表示
-                        if (sel) sel.style.display = 'inline-block';
-                        // 選択済みならそのまま反映
-                        const testerId = sel && sel.value ? Number(sel.value) : null;
-                        if (testerId) {
-                            const tester = (this.currentStaff || []).find(s => s.id === testerId);
-                            textEl.classList.remove('not-tested');
-                            textEl.classList.add('tested');
-                            textEl.textContent = `完璧！（${tester?.name || ''}）がテスト済み！`;
-                            if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
-                            this._pendingEvalTests.set(key, { testedBy: testerId, testedAt: new Date().toISOString() });
-                        } else {
-                            // まだ選択されていない場合は未テスト表記を維持
-                            textEl.classList.remove('tested');
-                            textEl.classList.add('not-tested');
-                            textEl.textContent = '未テスト';
-                        }
-                    } else {
-                        // 未テスト状態に戻す
-                        if (sel) { sel.value = ''; sel.style.display = 'none'; }
-                        textEl.classList.remove('tested');
-                        textEl.classList.add('not-tested');
-                        textEl.textContent = '未テスト';
-                        if (this._pendingEvalTests) this._pendingEvalTests.delete(key);
+                    const sel = document.getElementById('testerSelect');
+                    if (sel) {
+                        sel.innerHTML = `<option value=\"\">選択してください</option>` + (this.currentStaff||[]).map(s=>`<option value=\"${s.id}\">${s.name}</option>`).join('');
+                        sel.value = '';
                     }
+                    this._pendingTesterTarget = { key, el };
+                    this.showModal('testerSelectModal');
                 });
             }
-            if (sel) {
-                sel.addEventListener('click', (e) => e.stopPropagation());
-                sel.addEventListener('change', () => {
+            // 「見テストに戻す」
+            const resetBtn = el.querySelector('.reset-tested-btn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     const sid = Number(el.getAttribute('data-staff'));
                     const cid = Number(el.getAttribute('data-criteria'));
                     const key = `${sid}:${cid}`;
-                    const textEl = el.querySelector('.tested-text');
-                    const val = sel.value;
-                    if (!val) {
-                        // 選択解除は未テストへ
-                        const cbx = el.querySelector('.tested-checkbox');
-                        if (cbx) cbx.checked = false;
-                        sel.style.display = 'none';
-                        textEl.classList.remove('tested');
-                        textEl.classList.add('not-tested');
-                        textEl.textContent = '未テスト';
-                        if (this._pendingEvalTests) this._pendingEvalTests.delete(key);
-                        return;
+                    const block = el.querySelector('.tested-block');
+                    if (block) {
+                        block.innerHTML = `<span class=\"tested-text not-tested\">未テスト</span><button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
+                        const openBtn2 = block.querySelector('.open-tester-modal-btn');
+                        if (openBtn2) {
+                            openBtn2.addEventListener('click', (ev) => {
+                                ev.stopPropagation();
+                                const sel = document.getElementById('testerSelect');
+                                if (sel) {
+                                    sel.innerHTML = `<option value=\"\">選択してください</option>` + (this.currentStaff||[]).map(s=>`<option value=\"${s.id}\">${s.name}</option>`).join('');
+                                    sel.value = '';
+                                }
+                                this._pendingTesterTarget = { key, el };
+                                this.showModal('testerSelectModal');
+                            });
+                        }
                     }
-                    const testerId = Number(val);
-                    const tester = (this.currentStaff || []).find(s => s.id === testerId);
-                    const cbx = el.querySelector('.tested-checkbox');
-                    if (cbx) cbx.checked = true;
-                    textEl.classList.remove('not-tested');
-                    textEl.classList.add('tested');
-                    textEl.textContent = `完璧！（${tester?.name || ''}）がテスト済み！`;
-                    if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
-                    this._pendingEvalTests.set(key, { testedBy: testerId, testedAt: new Date().toISOString() });
+                    if (this._pendingEvalTests) this._pendingEvalTests.delete(key);
+                    if (this._staffEvalTestCache) this._staffEvalTestCache.delete(key);
                 });
             }
         });
+
+        // モーダルの「決定」ボタン
+        const confirmBtn = document.getElementById('confirmTesterBtn');
+        if (confirmBtn) {
+            confirmBtn.onclick = () => {
+                const sel = document.getElementById('testerSelect');
+                const val = sel && sel.value ? Number(sel.value) : null;
+                if (!val || !this._pendingTesterTarget) { this.closeModal('testerSelectModal'); return; }
+                const { key, el } = this._pendingTesterTarget;
+                const tester = (this.currentStaff||[]).find(s => s.id === val);
+                const block = el.querySelector('.tested-block');
+                if (block) {
+                    block.innerHTML = `<span class=\"tested-text tested\">完璧！（${tester?.name||''}）がテスト済み！</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">見テストに戻す</button>`;
+                    const resetBtn2 = block.querySelector('.reset-tested-btn');
+                    if (resetBtn2) {
+                        resetBtn2.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            block.innerHTML = `<span class=\"tested-text not-tested\">未テスト</span><button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
+                            if (this._pendingEvalTests) this._pendingEvalTests.delete(key);
+                            if (this._staffEvalTestCache) this._staffEvalTestCache.delete(key);
+                            const openBtn3 = block.querySelector('.open-tester-modal-btn');
+                            if (openBtn3) {
+                                openBtn3.addEventListener('click', (ev) => {
+                                    ev.stopPropagation();
+                                    const sel2 = document.getElementById('testerSelect');
+                                    if (sel2) {
+                                        sel2.innerHTML = `<option value=\"\">選択してください</option>` + (this.currentStaff||[]).map(s=>`<option value=\"${s.id}\">${s.name}</option>`).join('');
+                                        sel2.value = '';
+                                    }
+                                    this._pendingTesterTarget = { key, el };
+                                    this.showModal('testerSelectModal');
+                                });
+                            }
+                        });
+                    }
+                }
+                if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
+                this._pendingEvalTests.set(key, { testedBy: val, testedAt: new Date().toISOString() });
+                if (this._staffEvalTestCache) this._staffEvalTestCache.set(key, { testedBy: val, testedAt: new Date().toISOString() });
+                this._pendingTesterTarget = null;
+                this.closeModal('testerSelectModal');
+            };
+        }
     } catch (e) {
         console.error('評価一覧読み込みエラー:', e);
         container.innerHTML = '<div class="empty-state">評価一覧の取得に失敗しました</div>';
