@@ -296,6 +296,10 @@ class PAManager {
                             <span class="stat-value-small">${counts.done}</span>
                             <span class="stat-label-small">習得済み</span>
                         </div>
+                        <div class="stat-item-small">
+                            <span class="stat-value-small">${prog.tested ?? 0}</span>
+                            <span class="stat-label-small">テスト完了</span>
+                        </div>
                     </div>
                 </div>
             `;
