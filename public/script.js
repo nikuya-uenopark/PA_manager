@@ -725,7 +725,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                     const key = `${sid}:${cid}`;
                     const block = el.querySelector('.tested-block');
                     if (block) {
-                        block.innerHTML = `<span class=\"tested-text not-tested\">未テスト</span><button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
+                        block.innerHTML = `<span class=\"tested-text not-tested\"></span><button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
                         const openBtn2 = block.querySelector('.open-tester-modal-btn');
                         if (openBtn2) {
                             openBtn2.addEventListener('click', (ev) => {
