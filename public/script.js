@@ -757,12 +757,12 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                 const tester = (this.currentStaff||[]).find(s => s.id === val);
                 const block = el.querySelector('.tested-block');
                 if (block) {
-                    block.innerHTML = `<span class=\"tested-text tested\">完璧！（${tester?.name||''}）がテスト済み！</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">見テストに戻す</button>`;
+                    block.innerHTML = `<span class=\"tested-text tested\">完璧！（${tester?.name||''}）がテスト済み！</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>`;
                     const resetBtn2 = block.querySelector('.reset-tested-btn');
                     if (resetBtn2) {
                         resetBtn2.addEventListener('click', (e) => {
                             e.stopPropagation();
-                            block.innerHTML = `<span class=\"tested-text not-tested\">未テスト</span><button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
+                            block.innerHTML = `<span class=\"tested-text not-tested\"></span><button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
                             if (this._pendingEvalTests) this._pendingEvalTests.delete(key);
                             if (this._staffEvalTestCache) this._staffEvalTestCache.delete(key);
                             const openBtn3 = block.querySelector('.open-tester-modal-btn');
