@@ -632,12 +632,15 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
             const color = status === 'done' ? '#00d4aa' : status === 'learning' ? '#ff9f43' : '#f1f2f6';
             const label = status === 'done' ? '習得済み' : status === 'learning' ? '学習中' : '未着手';
             return `
-                <div class="criteria-chip" data-staff="${staffId}" data-criteria="${cr.id}" style="border:1px solid #eaeaea; padding:12px; border-radius:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="font-weight:600">${cr.name}</div>
-                        <small style="color:#6b7280">${cr.category || '共通'}</small>
+                <div class="criteria-chip" data-staff="${staffId}" data-criteria="${cr.id}" style="border:1px solid #eaeaea; padding:12px; border-radius:10px; cursor:pointer; display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                        <div>
+                            <div style="font-weight:600">${cr.name}</div>
+                            <small style="color:#6b7280">${cr.category || '共通'}</small>
+                        </div>
+                        <span class="status-badge" style="background:${color}; color:#111; padding:6px 10px; border-radius:9999px; font-size:12px; white-space:nowrap;">${label}</span>
                     </div>
-                    <span class="status-badge" style="background:${color}; color:#111; padding:6px 10px; border-radius:9999px; font-size:12px;">${label}</span>
+                    ${cr.description ? `<div class="criteria-chip-desc">${cr.description}</div>` : ''}
                 </div>
             `;
         }).join('');
