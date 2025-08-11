@@ -26,21 +26,9 @@ class PAManager {
     }
 
     setup() {
-        this.hideLoading();
-        this.loadData();
+        // UIイベントのセットアップと初期データの読み込み
         this.setupEventListeners();
-    }
-
-    hideLoading() {
-        setTimeout(() => {
-            const loadingScreen = document.getElementById('loadingScreen');
-            if (loadingScreen) {
-                loadingScreen.style.opacity = '0';
-                setTimeout(() => {
-                    loadingScreen.style.display = 'none';
-                }, 500);
-            }
-        }, 1000);
+        this.loadData();
     }
 
     setupEventListeners() {
@@ -651,6 +639,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
             const testerName = testedById ? (this.currentStaff.find(s=>s.id===testedById)?.name || '') : '';
             const testedText = testedById ? `完璧！（${testerName}）がテスト済み！` : '未テスト';
             const testedClass = testedById ? 'tested' : 'not-tested';
+            const options = (this.currentStaff || []).map(s => `<option value="${s.id}" ${testedById===s.id ? 'selected' : ''}>${s.name}</option>`).join('');
             return `
                 <div class="criteria-chip" data-staff="${staffId}" data-criteria="${cr.id}" style="border:1px solid #eaeaea; padding:12px; border-radius:10px; cursor:pointer; display:flex; flex-direction:column; gap:8px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
@@ -664,6 +653,10 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                     <div class="tested-block" style="display:flex; align-items:center; gap:8px;">
                         <input type="checkbox" class="tested-checkbox" ${testedById ? 'checked' : ''} />
                         <span class="tested-text ${testedClass}">${testedText}</span>
+                        <select class="tested-select" style="display:${testedById ? 'inline-block' : 'none'}; padding:6px 8px; border:1px solid #e5e7eb; border-radius:6px;">
+                            <option value="">テスター選択</option>
+                            ${options}
+                        </select>
                     </div>
                 </div>
             `;
@@ -692,6 +685,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
 
             // チェックボックスのハンドラ
             const cb = el.querySelector('.tested-checkbox');
+            const sel = el.querySelector('.tested-select');
             if (cb) {
                 cb.addEventListener('click', (e) => e.stopPropagation());
                 cb.addEventListener('change', () => {
@@ -700,29 +694,61 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                     const key = `${sid}:${cid}`;
                     const textEl = el.querySelector('.tested-text');
                     if (cb.checked) {
-                        // スタッフ選択（簡易プロンプト）
-                        const names = (this.currentStaff || []).map(s => `${s.id}:${s.name}`);
-                        const selected = prompt('テストしたスタッフを選択してください\n' + names.join('\n'));
-                        const selId = selected ? Number(String(selected).split(':')[0]) : NaN;
-                        const tester = (this.currentStaff || []).find(s => s.id === selId);
-                        if (!tester) {
-                            cb.checked = false;
-                            return;
+                        // セレクトを表示
+                        if (sel) sel.style.display = 'inline-block';
+                        // 選択済みならそのまま反映
+                        const testerId = sel && sel.value ? Number(sel.value) : null;
+                        if (testerId) {
+                            const tester = (this.currentStaff || []).find(s => s.id === testerId);
+                            textEl.classList.remove('not-tested');
+                            textEl.classList.add('tested');
+                            textEl.textContent = `完璧！（${tester?.name || ''}）がテスト済み！`;
+                            if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
+                            this._pendingEvalTests.set(key, { testedBy: testerId, testedAt: new Date().toISOString() });
+                        } else {
+                            // まだ選択されていない場合は未テスト表記を維持
+                            textEl.classList.remove('tested');
+                            textEl.classList.add('not-tested');
+                            textEl.textContent = '未テスト';
                         }
-                        // UI反映
-                        textEl.classList.remove('not-tested');
-                        textEl.classList.add('tested');
-                        textEl.textContent = `完璧！（${tester.name}）がテスト済み！`;
-                        // テスト情報を別バッファに保持
-                        if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
-                        this._pendingEvalTests.set(key, { testedBy: tester.id, testedAt: new Date().toISOString() });
                     } else {
                         // 未テスト状態に戻す
+                        if (sel) { sel.value = ''; sel.style.display = 'none'; }
                         textEl.classList.remove('tested');
                         textEl.classList.add('not-tested');
                         textEl.textContent = '未テスト';
                         if (this._pendingEvalTests) this._pendingEvalTests.delete(key);
                     }
+                });
+            }
+            if (sel) {
+                sel.addEventListener('click', (e) => e.stopPropagation());
+                sel.addEventListener('change', () => {
+                    const sid = Number(el.getAttribute('data-staff'));
+                    const cid = Number(el.getAttribute('data-criteria'));
+                    const key = `${sid}:${cid}`;
+                    const textEl = el.querySelector('.tested-text');
+                    const val = sel.value;
+                    if (!val) {
+                        // 選択解除は未テストへ
+                        const cbx = el.querySelector('.tested-checkbox');
+                        if (cbx) cbx.checked = false;
+                        sel.style.display = 'none';
+                        textEl.classList.remove('tested');
+                        textEl.classList.add('not-tested');
+                        textEl.textContent = '未テスト';
+                        if (this._pendingEvalTests) this._pendingEvalTests.delete(key);
+                        return;
+                    }
+                    const testerId = Number(val);
+                    const tester = (this.currentStaff || []).find(s => s.id === testerId);
+                    const cbx = el.querySelector('.tested-checkbox');
+                    if (cbx) cbx.checked = true;
+                    textEl.classList.remove('not-tested');
+                    textEl.classList.add('tested');
+                    textEl.textContent = `完璧！（${tester?.name || ''}）がテスト済み！`;
+                    if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
+                    this._pendingEvalTests.set(key, { testedBy: testerId, testedAt: new Date().toISOString() });
                 });
             }
         });
