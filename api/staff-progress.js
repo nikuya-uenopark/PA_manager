@@ -12,22 +12,35 @@ module.exports = async function handler(req, res) {
     const { staffId } = req.query || {};
     const criteriaCount = await prisma.criteria.count();
     const baseWhere = staffId ? { staffId: Number(staffId) } : {};
-    const evals = await prisma.evaluation.findMany({ where: baseWhere, select: { staffId: true, status: true } });
+    const evals = await prisma.evaluation.findMany({ where: baseWhere, select: { staffId: true, status: true, comments: true } });
 
     // 集計
-    const map = new Map(); // staffId -> {done, learning, notStarted}
+    const statusMap = new Map(); // staffId -> {done, learning, notStarted}
+    const testedMap = new Map(); // staffId -> testedCount
     if (staffId) {
-      map.set(Number(staffId), { done: 0, learning: 0, notStarted: 0 });
+      statusMap.set(Number(staffId), { done: 0, learning: 0, notStarted: 0 });
+      testedMap.set(Number(staffId), 0);
     }
     for (const e of evals) {
-      if (!map.has(e.staffId)) map.set(e.staffId, { done: 0, learning: 0, notStarted: 0 });
-      const s = map.get(e.staffId);
+      if (!statusMap.has(e.staffId)) statusMap.set(e.staffId, { done: 0, learning: 0, notStarted: 0 });
+      if (!testedMap.has(e.staffId)) testedMap.set(e.staffId, 0);
+      const s = statusMap.get(e.staffId);
       if (e.status === 'done') s.done++;
       else if (e.status === 'learning') s.learning++;
       else s.notStarted++;
+
+      // comments(JSON) から tested をカウント
+      if (e.comments) {
+        try {
+          const c = JSON.parse(e.comments);
+          if (c && (typeof c.testedBy === 'number')) {
+            testedMap.set(e.staffId, (testedMap.get(e.staffId) || 0) + 1);
+          }
+        } catch {}
+      }
     }
-    // criteria があり、評価未作成分は未着手として数える
-    for (const [sid, agg] of map.entries()) {
+    // criteria があり、評価未作成分は未着手として数える（ステータス集計用）
+    for (const [sid, agg] of statusMap.entries()) {
       const totalRecorded = agg.done + agg.learning + agg.notStarted;
       if (criteriaCount > totalRecorded) {
         agg.notStarted += (criteriaCount - totalRecorded);
@@ -37,15 +50,24 @@ module.exports = async function handler(req, res) {
     if (!staffId) {
       const staffIds = (await prisma.staff.findMany({ select: { id: true } })).map(s => s.id);
       for (const id of staffIds) {
-        if (!map.has(id)) map.set(id, { done: 0, learning: 0, notStarted: criteriaCount });
+        if (!statusMap.has(id)) statusMap.set(id, { done: 0, learning: 0, notStarted: criteriaCount });
+        if (!testedMap.has(id)) testedMap.set(id, 0);
       }
     }
 
-    // レスポンス構築
-    const result = Array.from(map.entries()).map(([sid, agg]) => {
-      const total = Math.max(criteriaCount, agg.done + agg.learning + agg.notStarted);
-      const progress = total > 0 ? Math.round((agg.done / total) * 100) : 0;
-      return { staffId: sid, totalCriteria: criteriaCount, progressPercent: progress, counts: { done: agg.done, learning: agg.learning, notStarted: agg.notStarted } };
+    // レスポンス構築（progressPercent は tested / criteriaCount）
+    const result = Array.from(statusMap.entries()).map(([sid, agg]) => {
+      const tested = testedMap.get(sid) || 0;
+      const total = criteriaCount; // 進捗%は常に評価項目総数を分母にする
+      const progress = total > 0 ? Math.round((tested / total) * 100) : 0;
+      return {
+        staffId: sid,
+        totalCriteria: criteriaCount,
+        progressPercent: progress,
+        counts: { done: agg.done, learning: agg.learning, notStarted: agg.notStarted },
+        // 将来的な利用のため tested を同梱（既存フロントは未使用）
+        tested
+      };
     });
     return res.status(200).json(result);
   } catch (e) {
