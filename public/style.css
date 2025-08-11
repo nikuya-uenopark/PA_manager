@@ -126,6 +126,7 @@ body {
     font-weight: 700;
     margin-bottom: 10px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
 .header-content p {
