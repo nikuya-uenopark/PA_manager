@@ -181,7 +181,19 @@ class PAManager {
             this.updateStats();
         } catch (error) {
             console.error('データ読み込みエラー:', error);
+        } finally {
+            this.hideLoadingScreen();
         }
+    }
+
+    hideLoadingScreen() {
+        const ls = document.getElementById('loadingScreen');
+        if (!ls) return;
+        // フェードアウト
+        ls.style.opacity = '0';
+        setTimeout(() => {
+            ls.style.display = 'none';
+        }, 400);
     }
 
     async loadStaff() {
