@@ -36,6 +36,12 @@ module.exports = async function handler(req, res) {
         if (updated.count === 0) {
           await tx.evaluation.create({ data: { staffId: it.staffId, criteriaId: it.criteriaId, status: it.status } });
         }
+        // comments(JSON文字列)にtestedBy/testedAtを記録
+        const target = (req.body.changes || []).find(c => Number(c.staffId) === it.staffId && Number(c.criteriaId) === it.criteriaId);
+        if (target && target.test && (target.test.testedBy || target.test.testedBy === 0)) {
+          const comments = JSON.stringify({ testedBy: Number(target.test.testedBy), testedAt: target.test.testedAt || new Date().toISOString() });
+          await tx.evaluation.updateMany({ where: { staffId: it.staffId, criteriaId: it.criteriaId }, data: { comments } });
+        }
       }
     });
 

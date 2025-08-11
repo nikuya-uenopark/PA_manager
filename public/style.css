@@ -339,6 +339,8 @@ body {
     padding: 8px 10px;
     word-break: break-word;
 }
+.tested-block .tested-text.not-tested { color: #ef4444; font-weight: 600; }
+.tested-block .tested-text.tested { color: #059669; font-weight: 600; }
 
 .staff-info h3 {
     font-size: 1.3rem;

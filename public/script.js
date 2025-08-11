@@ -577,7 +577,8 @@ PAManager.prototype.openStaffDetail = async function (staffId) {
                 const changedById = (document.getElementById('evaluationChangedBy')?.value) ? Number(document.getElementById('evaluationChangedBy').value) : null;
                 const payload = Array.from(this._pendingEvalChanges || []).map(([key, status]) => {
                     const [sid, cid] = key.split(':').map(Number);
-                    return { staffId: sid, criteriaId: cid, status };
+                    const test = this._pendingEvalTests ? this._pendingEvalTests.get(key) : null;
+                    return { staffId: sid, criteriaId: cid, status, test };
                 });
                 if (payload.length === 0) {
                     this.showNotification('変更はありません');
@@ -590,6 +591,7 @@ PAManager.prototype.openStaffDetail = async function (staffId) {
                 });
                 if (!res.ok) throw new Error('batch update failed');
                 this._pendingEvalChanges.clear();
+                if (this._pendingEvalTests) this._pendingEvalTests.clear();
                 this.showNotification('評価を更新しました');
                 await this.loadLogs();
                 await this.loadStaffProgress();
@@ -613,8 +615,21 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
         const res = await fetch(`/api/evaluations?staffId=${staffId}`);
         const evals = res.ok ? await res.json() : [];
         this._staffEvalCache.clear();
+        if (!this._staffEvalTestCache) this._staffEvalTestCache = new Map();
+        this._staffEvalTestCache.clear();
         for (const ev of evals) {
             this._staffEvalCache.set(`${ev.staffId}:${ev.criteriaId}`,(ev.status||'not-started'));
+            if (ev.comments) {
+                try {
+                    const c = JSON.parse(ev.comments);
+                    if (c && (c.testedBy || c.testedBy === 0)) {
+                        this._staffEvalTestCache.set(`${ev.staffId}:${ev.criteriaId}`, {
+                            testedBy: typeof c.testedBy === 'number' ? c.testedBy : null,
+                            testedAt: c.testedAt || null
+                        });
+                    }
+                } catch {}
+            }
         }
 
         // 基準（criteria）が0件なら案内
@@ -631,6 +646,11 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
             const status = this._staffEvalCache.get(key) || 'not-started';
             const color = status === 'done' ? '#00d4aa' : status === 'learning' ? '#ff9f43' : '#f1f2f6';
             const label = status === 'done' ? '習得済み' : status === 'learning' ? '学習中' : '未着手';
+            const tinfo = this._staffEvalTestCache.get(key);
+            const testedById = tinfo?.testedBy ?? null;
+            const testerName = testedById ? (this.currentStaff.find(s=>s.id===testedById)?.name || '') : '';
+            const testedText = testedById ? `完璧！（${testerName}）がテスト済み！` : '未テスト';
+            const testedClass = testedById ? 'tested' : 'not-tested';
             return `
                 <div class="criteria-chip" data-staff="${staffId}" data-criteria="${cr.id}" style="border:1px solid #eaeaea; padding:12px; border-radius:10px; cursor:pointer; display:flex; flex-direction:column; gap:8px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
@@ -641,13 +661,20 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                         <span class="status-badge" style="background:${color}; color:#111; padding:6px 10px; border-radius:9999px; font-size:12px; white-space:nowrap;">${label}</span>
                     </div>
                     ${cr.description ? `<div class="criteria-chip-desc">${cr.description}</div>` : ''}
+                    <div class="tested-block" style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" class="tested-checkbox" ${testedById ? 'checked' : ''} />
+                        <span class="tested-text ${testedClass}">${testedText}</span>
+                    </div>
                 </div>
             `;
         }).join('');
 
         // クリックで状態トグル＆保存
     container.querySelectorAll('.criteria-chip').forEach(el => {
-            el.addEventListener('click', async () => {
+            // チップ本体クリックで状態トグル
+            el.addEventListener('click', async (ev) => {
+                // チェックボックスクリックは無視（バブリング停止済み）
+                if (ev.target && ev.target.classList && ev.target.classList.contains('tested-checkbox')) return;
                 const sid = Number(el.getAttribute('data-staff'));
                 const cid = Number(el.getAttribute('data-criteria'));
                 const key = `${sid}:${cid}`;
@@ -662,6 +689,42 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                 badge.style.background = color;
                 badge.textContent = label;
             });
+
+            // チェックボックスのハンドラ
+            const cb = el.querySelector('.tested-checkbox');
+            if (cb) {
+                cb.addEventListener('click', (e) => e.stopPropagation());
+                cb.addEventListener('change', () => {
+                    const sid = Number(el.getAttribute('data-staff'));
+                    const cid = Number(el.getAttribute('data-criteria'));
+                    const key = `${sid}:${cid}`;
+                    const textEl = el.querySelector('.tested-text');
+                    if (cb.checked) {
+                        // スタッフ選択（簡易プロンプト）
+                        const names = (this.currentStaff || []).map(s => `${s.id}:${s.name}`);
+                        const selected = prompt('テストしたスタッフを選択してください\n' + names.join('\n'));
+                        const selId = selected ? Number(String(selected).split(':')[0]) : NaN;
+                        const tester = (this.currentStaff || []).find(s => s.id === selId);
+                        if (!tester) {
+                            cb.checked = false;
+                            return;
+                        }
+                        // UI反映
+                        textEl.classList.remove('not-tested');
+                        textEl.classList.add('tested');
+                        textEl.textContent = `完璧！（${tester.name}）がテスト済み！`;
+                        // テスト情報を別バッファに保持
+                        if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
+                        this._pendingEvalTests.set(key, { testedBy: tester.id, testedAt: new Date().toISOString() });
+                    } else {
+                        // 未テスト状態に戻す
+                        textEl.classList.remove('tested');
+                        textEl.classList.add('not-tested');
+                        textEl.textContent = '未テスト';
+                        if (this._pendingEvalTests) this._pendingEvalTests.delete(key);
+                    }
+                });
+            }
         });
     } catch (e) {
         console.error('評価一覧読み込みエラー:', e);
