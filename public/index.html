@@ -1,24 +1,21 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="バイト・パートスタッフのスキル評価と進捗管理を行うWebアプリケーション">
-    <meta name="keywords" content="バイト,パート,評価,管理,スキル,進捗">
-    <meta name="author" content="PA Manager">
-    
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content="バイト・パートスタッフのスキル評価と進捗管理を行うWebアプリケーション" />
+    <meta name="keywords" content="バイト,パート,評価,管理,スキル,進捗" />
+    <meta name="author" content="PA Manager" />
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.svg">
-    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.svg" />
     <title>PA評価管理システム</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <!-- PWAマニフェスト（将来の拡張用） -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#74b9ff">
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#74b9ff" />
 </head>
 <body>
     <!-- ローディング画面 -->
@@ -33,27 +30,22 @@
         <div class="container">
             <header class="main-header">
                 <div class="header-content">
-                    <h1>肉屋の台所 宮益坂店<br>新人教育用システム</h1>
+                    <h1>肉屋の台所 宮益坂店<br />新人教育用システム</h1>
                 </div>
             </header>
-
             <div class="main-content">
                 <!-- タブナビゲーション -->
                 <nav class="tab-navigation">
                     <button class="tab-button active" onclick="switchTab('staff')" id="staffTab">
-                        <i class="fas fa-users"></i>
-                        <span>スタッフ管理</span>
+                        <i class="fas fa-users"></i><span>スタッフ管理</span>
                     </button>
                     <button class="tab-button" onclick="switchTab('criteria')" id="criteriaTab">
-                        <i class="fas fa-list-check"></i>
-                        <span>評価項目管理</span>
+                        <i class="fas fa-list-check"></i><span>評価項目管理</span>
                     </button>
                     <button class="tab-button" onclick="switchTab('analytics')" id="analyticsTab">
-                        <i class="fas fa-chart-line"></i>
-                        <span>ログ</span>
+                        <i class="fas fa-chart-line"></i><span>ログ</span>
                     </button>
                 </nav>
-
                 <!-- スタッフ管理タブ -->
                 <div id="staffPanel" class="tab-panel active">
                     <div class="panel-header">
@@ -66,7 +58,6 @@
                     </div>
                     <div id="staffGrid" class="staff-grid"></div>
                 </div>
-
                 <!-- 評価項目管理タブ -->
                 <div id="criteriaPanel" class="tab-panel">
                     <div class="panel-header">
@@ -89,7 +80,6 @@
                     </div>
                     <div id="criteriaGrid" class="criteria-grid"></div>
                 </div>
-
                 <!-- 分析・統計タブ（円グラフ廃止、ログのみ表示） -->
                 <div id="analyticsPanel" class="tab-panel">
                     <div class="panel-header">
@@ -120,11 +110,11 @@
                             <h4>プロフィール</h4>
                             <div class="form-group">
                                 <label for="staffName">名前</label>
-                                <input type="text" id="staffName" required>
+                                <input type="text" id="staffName" required />
                             </div>
                             <div class="form-group">
                                 <label for="staffKana">フリガナ</label>
-                                <input type="text" id="staffKana" placeholder="ヤマダ タロウ">
+                                <input type="text" id="staffKana" placeholder="ヤマダ タロウ" />
                             </div>
                             <div class="form-group">
                                 <label for="staffPositionType">区分</label>
@@ -135,17 +125,13 @@
                             </div>
                             <div class="form-group">
                                 <label for="staffBirthDate">生年月日</label>
-                                <input type="date" id="staffBirthDate">
+                                <input type="date" id="staffBirthDate" />
                             </div>
                         </div>
                     </div>
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> 保存
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="closeModal('staffModal')">
-                            <i class="fas fa-times"></i> キャンセル
-                        </button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> 保存</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('staffModal')"><i class="fas fa-times"></i> キャンセル</button>
                     </div>
                 </form>
             </div>
@@ -163,7 +149,7 @@
                 <form id="criteriaForm">
                     <div class="form-group">
                         <label for="criteriaName">項目名</label>
-                        <input type="text" id="criteriaName" required placeholder="例: 接客スキル、レジ操作">
+                        <input type="text" id="criteriaName" required placeholder="例: 接客スキル、レジ操作" />
                     </div>
                     <div class="form-group">
                         <label for="criteriaCategory">カテゴリー</label>
@@ -176,40 +162,29 @@
                     </div>
                     <div class="form-group">
                         <label for="criteriaDescription">説明</label>
-                        <textarea id="criteriaDescription" rows="4" placeholder="行ごとに入力すると保存時に - 箇条書きへ整形 (OFF でプレーン保存)"></textarea>
+                        <textarea id="criteriaDescription" rows="4" placeholder="業務内容を記入（複数の場合は改行してください）"></textarea>
                         <div class="criteria-desc-tools" aria-live="polite">
-                            <div class="desc-row">
-                                <label class="auto-format-toggle">
-                                    <input type="checkbox" id="criteriaAutoFormat" checked>
-                                    <span>自動整形 (- と &lt;br&gt; 追加)</span>
-                                </label>
-                                <button type="button" id="criteriaFormatNowBtn" class="btn btn-secondary btn-small" style="display:none;">手動整形</button>
-                            </div>
-                            <div class="desc-example">
-                                <div class="example-title">入力例</div>
+                            <div class="desc-example" style="margin-top:0;">
+                                <div class="example-title" style="font-size:11px;">自動整形 (常に有効) 入力例</div>
                                 <div class="example-body">
                                     <div class="example-before">
                                         <span class="badge">入力</span>
-<pre>ログイン方法
+                                        <pre>ログイン方法
 色の変え方
 予約の動かし方</pre>
                                     </div>
-                                    <div class="example-arrow">→ 保存時</div>
+                                    <div class="example-arrow">→</div>
                                     <div class="example-after">
                                         <span class="badge">保存後</span>
-<pre>- ログイン方法<br>- 色の変え方<br>- 予約の動かし方</pre>
+                                        <pre>- ログイン方法<br>- 色の変え方<br>- 予約の動かし方</pre>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> 保存
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="closeModal('criteriaModal')">
-                            <i class="fas fa-times"></i> キャンセル
-                        </button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> 保存</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('criteriaModal')"><i class="fas fa-times"></i> キャンセル</button>
                     </div>
                 </form>
             </div>
@@ -239,19 +214,19 @@
                     <div style="display:flex; flex-direction:column; gap:6px;">
                         <div style="font-size:12px; font-weight:600; color:#374151;">進捗</div>
                         <div class="eval-filter-group" style="display:flex; flex-wrap:wrap; gap:10px;">
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="not-started" checked> 未着手</label>
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="learning" checked> 学習中</label>
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="done" checked> 習得済み</label>
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="tested" checked> テスト完了</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="not-started" checked /> 未着手</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="learning" checked /> 学習中</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="done" checked /> 習得済み</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="tested" checked /> テスト完了</label>
                         </div>
                     </div>
                     <div style="display:flex; flex-direction:column; gap:6px;">
                         <div style="font-size:12px; font-weight:600; color:#374151;">カテゴリ</div>
                         <div class="eval-filter-group" style="display:flex; flex-wrap:wrap; gap:10px;">
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="共通" checked> 共通</label>
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="ホール" checked> ホール</label>
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="キッチン" checked> キッチン</label>
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="その他" checked> その他</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="共通" checked /> 共通</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="ホール" checked /> ホール</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="キッチン" checked /> キッチン</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="その他" checked /> その他</label>
                         </div>
                     </div>
                 </div>
@@ -263,7 +238,6 @@
 
     <!-- 通知表示用 -->
     <div id="notification" class="notification"></div>
-    
     <!-- テスター選択モーダル -->
     <div id="testerSelectModal" class="modal">
         <div class="modal-content" style="max-width:420px;">
@@ -288,7 +262,6 @@
         <div class="saving-spinner"></div>
         <div class="saving-text">保存中...</div>
     </div>
-    
     <!-- 外部ライブラリ（Chart.js 依存削除） -->
     <script src="script.js"></script>
 </body>

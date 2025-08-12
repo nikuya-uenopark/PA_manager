@@ -102,13 +102,10 @@ class PAManager {
                 const name = document.getElementById('criteriaName')?.value?.trim();
                 const category = document.getElementById('criteriaCategory')?.value || '共通';
                 let description = document.getElementById('criteriaDescription')?.value || null;
-                const auto = document.getElementById('criteriaAutoFormat');
-                if (description && auto && auto.checked) {
-                    // 各行をトリムし空行除去 → "- " 付与 → <br> 連結
+                if (description) {
+                    // 常時自動整形: 行ごとに - を付与し <br> 連結
                     const lines = description.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length>0);
-                    if (lines.length) {
-                        description = lines.map(l => l.startsWith('-') ? l : `- ${l}`).join('<br>');
-                    }
+                    if (lines.length) description = lines.map(l => l.startsWith('-') ? l : `- ${l}`).join('<br>');
                 }
                 if (!name) {
                     this.showNotification('項目名は必須です', 'error');
@@ -144,26 +141,7 @@ class PAManager {
                 }
             });
         }
-        // 自動整形トグルと手動整形ボタン制御
-        const autoChk = document.getElementById('criteriaAutoFormat');
-        const manualBtn = document.getElementById('criteriaFormatNowBtn');
-        if (autoChk) {
-            autoChk.addEventListener('change', () => {
-                if (manualBtn) manualBtn.style.display = autoChk.checked ? 'none' : 'inline-flex';
-            });
-        }
-        if (manualBtn) {
-            manualBtn.addEventListener('click', () => {
-                const ta = document.getElementById('criteriaDescription');
-                if (!ta) return;
-                let val = ta.value || '';
-                if (!val.trim()) return;
-                const lines = val.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length>0);
-                if (!lines.length) return;
-                const out = lines.map(l => l.startsWith('-') ? l : `- ${l}`).join('\n');
-                ta.value = out; // 手動整形時は改行のまま表示
-            });
-        }
+    // (チェックボックス廃止) 常時自動整形のため追加イベント不要
 
         // カテゴリ絞り込み
         const filter = document.getElementById('criteriaCategoryFilter');
