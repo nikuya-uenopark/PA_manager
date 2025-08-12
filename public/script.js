@@ -487,6 +487,30 @@ PAManager.prototype.loadSharedNote = async function() {
                     this.saveSharedNote();
                 }, 1000); // 1秒後自動保存
             });
+            // 定期的な外部更新同期 (編集していない時のみ)。既に設定済なら再設定しない
+            if (!this._sharedNotePoller) {
+                this._sharedNotePoller = setInterval(async () => {
+                    // 自分が未保存編集中(ステータスが編集中/保存中)なら衝突回避のため同期しない
+                    const st = document.getElementById('sharedNoteStatus');
+                    const stText = st ? st.textContent : '';
+                    if (stText && (stText.includes('編集中') || stText.includes('保存中'))) return;
+                    try {
+                        const r = await fetch('/api/shared-note');
+                        if (!r.ok) return;
+                        const d = await r.json();
+                        const currentTa = document.getElementById('sharedNoteContent');
+                        if (!currentTa) return;
+                        const serverVal = d?.content || '';
+                        // 自分が最後に保存した内容と違い、かつ今ローカル未変更なら更新
+                        if (serverVal !== this._sharedNoteOriginal && currentTa.value === this._sharedNoteOriginal) {
+                            currentTa.value = serverVal;
+                            this._sharedNoteOriginal = serverVal;
+                            if (st) st.textContent = '同期中...';
+                            setTimeout(()=>{ if (st && st.textContent === '同期中...') st.textContent = '最新です'; }, 2000);
+                        }
+                    } catch(_) { /* ignore */ }
+                }, 15000); // 15秒毎
+            }
         }
     } catch (e) {
         console.error('共有メモ読み込み失敗', e);
@@ -537,6 +561,11 @@ PAManager.prototype.saveSharedNote = async function(force=false) {
 
 function saveSharedNote() {
     paManager.saveSharedNote(true);
+}
+
+// 手動再読込用 (ボタン等から呼べる)
+function refreshSharedNote() {
+    if (paManager) paManager.loadSharedNote();
 }
 
 // グローバル変数とインスタンス
