@@ -417,6 +417,18 @@ let paManager;
 // 初期化
 paManager = new PAManager();
 
+// ---- iOSなどでのダブルタップズーム抑止 ----
+let _lastTouchEnd = 0;
+document.addEventListener('touchend', function(e){
+    const now = Date.now();
+    if (now - _lastTouchEnd <= 350) {
+        e.preventDefault();
+    }
+    _lastTouchEnd = now;
+}, { passive:false });
+// ピンチズーム無効化
+document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, { passive:false });
+
 // グローバル関数
 function switchTab(tabName) {
     paManager.switchTab(tabName);
@@ -623,8 +635,8 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
             const tinfo = this._staffEvalTestCache.get(key);
             const testedById = tinfo?.testedBy ?? null;
             const testerName = testedById ? (this.currentStaff.find(s=>s.id===testedById)?.name || '') : '';
-            const testedText = testedById ? `完璧！${testerName}がテスト済み！` : '未テスト';
-            const testedClass = testedById ? 'tested' : 'not-tested';
+            const testedText = testedById ? `完璧！${testerName}がテスト済み！` : '';
+            const testedClass = testedById ? 'tested' : '';
             const options = (this.currentStaff || []).map(s => `<option value="${s.id}" ${testedById===s.id ? 'selected' : ''}>${s.name}</option>`).join('');
             return `
                 <div class="criteria-chip" data-staff="${staffId}" data-criteria="${cr.id}" style="border:1px solid #eaeaea; padding:12px; border-radius:10px; cursor:pointer; display:flex; flex-direction:column; gap:8px;">
@@ -637,9 +649,8 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                     </div>
                     ${cr.description ? `<div class="criteria-chip-desc">${cr.description}</div>` : ''}
                     <div class="tested-block" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <span class="tested-text ${testedClass}">${testedText}</span>
                         ${testedById
-                            ? `<button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>`
+                            ? `<span class=\"tested-text tested\">${testedText}</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>`
                             : `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`
                         }
                     </div>
@@ -695,7 +706,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                     const key = `${sid}:${cid}`;
                     const block = el.querySelector('.tested-block');
                     if (block) {
-                        block.innerHTML = `<span class=\"tested-text not-tested\"></span><button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
+                        block.innerHTML = `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
                         const openBtn2 = block.querySelector('.open-tester-modal-btn');
                         if (openBtn2) {
                             openBtn2.addEventListener('click', (ev) => {
@@ -734,7 +745,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                     if (resetBtn2) {
                         resetBtn2.addEventListener('click', (e) => {
                             e.stopPropagation();
-                            block.innerHTML = `<span class=\"tested-text not-tested\"></span><button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
+                            block.innerHTML = `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
                             if (this._pendingEvalTests) this._pendingEvalTests.delete(key);
                             if (this._staffEvalTestCache) this._staffEvalTestCache.delete(key);
                             const openBtn3 = block.querySelector('.open-tester-modal-btn');
