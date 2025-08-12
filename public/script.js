@@ -641,7 +641,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
             const tinfo = this._staffEvalTestCache.get(key);
             const testedById = tinfo?.testedBy ?? null;
             const testerName = testedById ? (this.currentStaff.find(s=>s.id===testedById)?.name || '') : '';
-            const testedText = testedById ? `完璧！（${testerName}）がテスト済み！` : '未テスト';
+            const testedText = testedById ? `完璧！${testerName}がテスト済み！` : '未テスト';
             const testedClass = testedById ? 'tested' : 'not-tested';
             const options = (this.currentStaff || []).map(s => `<option value="${s.id}" ${testedById===s.id ? 'selected' : ''}>${s.name}</option>`).join('');
             return `
@@ -657,7 +657,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                     <div class="tested-block" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                         <span class="tested-text ${testedClass}">${testedText}</span>
                         ${testedById
-                            ? `<button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">見テストに戻す</button>`
+                            ? `<button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>`
                             : `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`
                         }
                     </div>
@@ -703,7 +703,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                     this.showModal('testerSelectModal');
                 });
             }
-            // 「見テストに戻す」
+            // 「未テストに戻す」
             const resetBtn = el.querySelector('.reset-tested-btn');
         if (resetBtn) {
                 resetBtn.addEventListener('click', (e) => {
@@ -747,7 +747,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                 const tester = (this.currentStaff||[]).find(s => s.id === val);
                 const block = el.querySelector('.tested-block');
                 if (block) {
-                    block.innerHTML = `<span class=\"tested-text tested\">完璧！（${tester?.name||''}）がテスト済み！</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>`;
+                    block.innerHTML = `<span class=\"tested-text tested\">完璧！${tester?.name||''}がテスト済み！</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>`;
                     const resetBtn2 = block.querySelector('.reset-tested-btn');
                     if (resetBtn2) {
                         resetBtn2.addEventListener('click', (e) => {

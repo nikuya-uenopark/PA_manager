@@ -568,7 +568,7 @@ body {
 }
 .staff-detail-kana {
     font-size: 0.9rem;
-    color: #e5e7eb; /* 明るめの文字で見やすく */
+    color: #e5e7eb;
     letter-spacing: 0.04em;
 }
 .staff-detail-name {
