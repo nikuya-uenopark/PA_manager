@@ -1,220 +1,169 @@
-# PA評価管理システム v3.0 - プロフェッショナル版
+# PA評価管理システム v3.x
 
-横向きiPad最適化のモダンなスキル管理・評価システム
+新人教育 / スキル評価 / 進捗共有を 1 画面で扱える軽量 Web アプリ。iPad 横向き最適化・サーバレス・最小依存で高速表示。
 
-## ✨ 主な特徴
+## 特徴
 
-### 🎨 モダンなデザイン 
-- **美しいグラデーション** - 洗練されたビジュアルデザイン
-- **スムーズアニメーション** - 直感的な操作体験
-- **レスポンシブレイアウト** - あらゆるデバイスに対応
+- タブ: 共有メモ / スタッフ / 評価項目 / ログ
+- 評価モーダル: ローカル反映 → 閉じる時に一括保存
+- 評価項目説明: 行頭 "- " 自動付与し `<br>` 化
+- 共有メモ: 1 秒デバウンス自動保存 (空文字も履歴)
+- ログ: 最新 200 件ローテーション / 複数行表示
+- セキュリティ: 共通サニタイズ
 
-### 📊 高度な機能
-- **タブ切り替えシステム** - スタッフ管理・評価項目・分析を一元化
-- **ドラッグ&ドロップ** - 評価項目の直感的並び替え
-- **リアルタイム統計** - 進捗状況の可視化
-- **評価ログ機能** - 変更履歴の完全記録
-- **プロフィール管理** - 詳細なスタッフ情報
+## 技術スタック
 
-### 🚀 技術仕様
-- **フロントエンド**: モダンHTML5, CSS3 Grid/Flexbox, ES6+ JavaScript
-- **バックエンド**: Vercel Serverless Functions
-- **データベース**: Neon PostgreSQL（クラウドネイティブ）
-- **デザインシステム**: カスタムCSS変数、Inter フォント
-- **外部ライブラリ**: Chart.js, Sortable.js, Font Awesome
+- フロント: Vanilla JS / HTML / CSS
+- サーバ: Vercel Functions (Node.js)
+- ORM / DB: Prisma + PostgreSQL
+- フォント: Inter / Font Awesome
+- 外部ライブラリ: なし
 
-## 🎯 主要機能
+## データモデル
 
-### スタッフ管理
-- **プロフィール機能**: アバター、連絡先、入社日などの詳細情報
-- **進捗可視化**: リアルタイムで更新される習得状況
-- **統計表示**: 評価済み・習得済み・学習中項目数の一覧
+| Model | 主なフィールド | 備考 |
+|-------|----------------|------|
+| Staff | id, name, kana, position, joined, birthDate, createdAt | joined/birthDate は Date |
+| Criteria | id, name, description, category, sortOrder, createdAt | category 既定 '共通'; description は `<br>` 保存可 |
+| Evaluation | id, staffId, criteriaId, status, score?, comments?, createdAt | status: not-started / learning / done; comments JSON({testedBy, testedAt}) |
+| Log | id, event, message, createdAt | 最新 200 件保持 |
 
-### 評価項目管理
-- **カテゴリー分類**: ホール・キッチン・レジ・共通など
-- **ドラッグ&ドロップ**: 直感的な並び替え機能
-- **自動並び替え**: カテゴリー順ワンクリック整理
+`comments` JSON 例:
 
-### 分析・統計
-- **チャート表示**: Chart.jsによる美しい進捗グラフ
-- **パフォーマンス分析**: トップパフォーマー・改善点の可視化
-- **履歴管理**: 評価変更の完全ログ
-
-## 🛠 セットアップ手順
-
-### 1. リポジトリのクローン
-
-```bash
-git clone https://github.com/nikuya-uenopark/PA_manager.git
-cd PA_manager
-```
-
-### 2. 依存関係のインストール
-
-```bash
-npm install
-```
-
-### 3. Neon PostgreSQL データベース作成
-
-1. [Neon](https://neon.tech/) で無料アカウント作成
-2. 新規プロジェクト作成
-3. データベース接続文字列（DATABASE_URL）を取得
-
-### 4. Vercel プロジェクト作成
-
-1. [Vercel](https://vercel.com/) で新規プロジェクト作成
-2. GitHubリポジトリを連携
-3. 環境変数 `DATABASE_URL` に Neon の接続文字列を設定
-
-### 5. データベース初期化
-
-システムが自動的にテーブルを作成しますが、手動で作成する場合：
-
-```sql
--- スタッフテーブル（拡張版）
-CREATE TABLE IF NOT EXISTS staff (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    position VARCHAR(255),
-    joined DATE,
-    avatar_url TEXT,
-    phone VARCHAR(20),
-    email VARCHAR(255),
-    notes TEXT,
-    hire_date DATE,
-    birth_date DATE
-);
-
--- 評価項目テーブル（拡張版）
-CREATE TABLE IF NOT EXISTS criteria (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    category VARCHAR(100) DEFAULT '共通',
-    sort_order INTEGER DEFAULT 0
-);
-
--- 評価テーブル
-CREATE TABLE IF NOT EXISTS evaluations (
-    id SERIAL PRIMARY KEY,
-    staff_id INTEGER REFERENCES staff(id) ON DELETE CASCADE,
-    criteria_id INTEGER REFERENCES criteria(id) ON DELETE CASCADE,
-    score INTEGER,
-    comment TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 評価ログテーブル（新機能）
-CREATE TABLE IF NOT EXISTS evaluation_logs (
-    id SERIAL PRIMARY KEY,
-    staff_id INTEGER REFERENCES staff(id) ON DELETE CASCADE,
-    criteria_id INTEGER REFERENCES criteria(id) ON DELETE CASCADE,
-    old_score INTEGER,
-    new_score INTEGER,
-    old_status VARCHAR(50),
-    new_status VARCHAR(50),
-    comment TEXT,
-    changed_by VARCHAR(255),
-    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### 6. デプロイ
-
-```bash
-# Vercelで自動デプロイ
-vercel --prod
-```
-
-## 📱 使用方法
-
-### 基本操作
-1. **タブ切り替え**: 上部のタブで機能を切り替え
-2. **スタッフ追加**: 「新規スタッフ追加」ボタンから登録
-3. **評価項目追加**: 「項目追加」ボタンから新規作成
-4. **並び替え**: 評価項目をドラッグ&ドロップで並び替え
-
-### 推奨デバイス
-- **デスクトップ**: Chrome, Safari, Firefox 最新版
-- **タブレット**: 10インチ以上推奨
-
-## 🎨 デザインシステム
-
-### カラーパレット
-- **プライマリー**: `#667eea` → `#764ba2` グラデーション
-- **セカンダリー**: `#f093fb` アクセントカラー
-- **成功**: `#00d4aa` 習得済み
-- **警告**: `#ff9f43` 学習中
-- **エラー**: `#ff6b6b` 要改善
-
-### タイポグラフィー
-- **メインフォント**: Inter (Google Fonts)
-- **システムフォント**: SF Pro (iOS), Roboto (Android)
-
-## 🚀 技術的特徴
-
-### パフォーマンス最適化
-- **遅延読み込み**: 必要な時のみデータ取得
-- **キャッシュ戦略**: ブラウザキャッシュ活用
-- **軽量化**: 最小限のライブラリ使用
-
-### セキュリティ
-- **SQL インジェクション対策**: パラメータ化クエリ
-- **XSS 対策**: エスケープ処理
-- **CSRF 対策**: SameSite Cookie
-
-## 🔧 カスタマイズ
-
-### テーマ変更
-CSS変数を編集してカスタムテーマを作成：
-
-```css
-:root {
-    --primary-color: #your-color;
-    --secondary-color: #your-color;
-    /* その他の変数... */
+```json
+{
+    "testedBy": 12,
+    "testedAt": "2025-08-12T05:18:40.000Z"
 }
 ```
 
-### 新機能追加
-1. API エンドポイント追加: `/api/` フォルダ
-2. フロントエンド機能: `script.js` に追加
-3. スタイル: `style.css` に追加
+## 🔐 サニタイズ方針
 
-## 🐛 トラブルシューティング
+`api/_sanitize.js` の `sanitizeContent(raw, { allowBr })` を利用。
 
-### よくある問題
+- script / iframe / object / embed / svg / link / meta タグ除去
+- `javascript:` スキーム除去
+- on* イベント属性除去
+- `allowBr=true` の場合のみ `<br>` を素通し (他はエスケープ)
+- 適用対象: staff.name/kana/position, criteria.name/description(allowBr), evaluation.status, shared-note 本文
 
-**Q: データベース接続エラー**
-A: Vercel の環境変数 `DATABASE_URL` を確認
-
-**Q: モーダルが表示されない**
-A: JavaScript エラーをブラウザコンソールで確認
-
-**Q: ドラッグ&ドロップが動作しない**
-A: Sortable.js の CDN 読み込みを確認
-
-### デバッグモード
-開発者ツールのコンソールでエラーログを確認できます。
-
-## 📄 ライセンス
-
-MIT License - 自由に使用、改変、配布が可能です。
-
-## 🤝 コントリビューション
-
-1. このリポジトリをフォーク
-2. 新機能ブランチを作成 (`git checkout -b feature/amazing-feature`)
-3. 変更をコミット (`git commit -m 'Add amazing feature'`)
-4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
-5. プルリクエストを作成
-
-## 📞 サポート
-
-- **Issues**: [GitHub Issues](https://github.com/nikuya-uenopark/PA_manager/issues)
-- **Wiki**: 詳細なドキュメントは Wiki をご覧ください
+| HTTP | 意味 |
+|------|------|
+| 200  | 成功 |
+| 400  | バリデーションエラー / パラメータ不足 |
+| 405  | メソッド不許可 |
+| 500  | サーバ内部エラー |
 
 ---
 
-**Built with ❤️ for modern teams**
+### 1. スタッフ API `/api/staff`
+
+| Method | 用途           | パラメータ       | Body 例                                                                 | 戻り値 |
+|--------|----------------|------------------|-------------------------------------------------------------------------|--------|
+| POST   | 新規追加       | なし             | `{ "name":"山田", "kana":"ヤマダ", "position":"社員", "birth_date":"2001-04-24" }` | `{ id, message }` |
+| PUT    | 更新           | `?id=number`     | 上記と同形式 (未指定は変更なし)                                         | `{ message }` |
+| DELETE | 削除           | `?id=number`     | -                                                                       | `{ message, deletedEvaluations }` |
+
+ログイベント: `staff:create`, `staff:update`, `staff:delete`
+
+---
+
+### 2. 評価項目 API `/api/criteria`
+
+| Method | 用途                    | パラメータ        | Body                                                                                                                 | 備考 |
+|--------|-------------------------|-------------------|----------------------------------------------------------------------------------------------------------------------|------|
+| POST   | 追加                    | なし              | `{ "name":"レジ操作", "category":"ホール", "description":"- ログイン<br>- 会計" }`                             | name 必須。category は {共通/ホール/キッチン/その他} 以外は共通 |
+| PUT    | 並び替え or 単一更新    | `?id` (単一時)    | 並び替え: `{ "items": [{"id":3,"sortOrder":0}, ...] }` または `{ "order": [{"id":3,"sort_order":1}, ...] }` / 単一更新: `{ "name":..., "category":..., "description":... }` | 並び替えは配列順を採用 |
+| DELETE | 削除                    | `?id=number`      | -                                                                                                                    | - |
+
+ログイベント: `criteria:create`, `criteria:update`, `criteria:delete`, `criteria:reorder`
+
+---
+
+### 3. 評価 API `/api/evaluations`
+
+| Method | 用途                   | パラメータ            | Body                                                                                       | 備考 |
+|--------|------------------------|-----------------------|--------------------------------------------------------------------------------------------|------|
+| GET    | 全評価 (降順)          | なし                  | -                                                                                          | 一覧用途 |
+| POST   | 新規作成               | なし                  | `{ "staff_id":1, "criteria_id":5, "status":"learning", "changed_by":2 }`             | status 省略時 `learning` |
+| PUT    | 更新 (無ければ作成)    | なし                  | `{ "staffId":1, "criteriaId":5, "status":"done", "changedBy":2 }`                  | upsert 動作 |
+| DELETE | 単一削除               | `?id=number`          | -                                                                                          | - |
+
+ステータス値: `not-started` / `learning` / `done` (UI 表示: 未着手 / 学習中 / 習得済み)
+
+ログイベント: `evaluation:create`, `evaluation:update`, `evaluation:delete`
+
+---
+
+### 4. 評価一括更新 API `/api/evaluations-batch`
+
+| Method | 用途                                   | Body 例 |
+|--------|----------------------------------------|---------|
+
+動作: `status` 不正値→ `not-started` に正規化。`test.testedBy` (数値) で comments JSON `{ testedBy, testedAt }` 保存。`test.clear=true` で削除。
+
+レスポンス例: `{ "message":"batch updated", "count":12 }`
+
+ログイベント: `evaluation:batch-update` (メッセージ書式: `評価更新\n変更者：<名前>\nスタッフ：<複数>\n件数：N\n項目：<criteria一覧>`)
+
+---
+
+### 5. スタッフ進捗集計 API `/api/staff-progress`
+
+| モード   | パラメータ       | 戻り値例 |
+|----------|------------------|----------|
+| 個別一覧 | `?staffId` 任意  | `[ { staffId, totalCriteria, progressPercent, counts:{done,learning,notStarted}, tested } ]` |
+
+`progressPercent = (tested / totalCriteria) * 100` (丸め)
+
+---
+
+### 6. ログ API `/api/logs`
+
+| Method | 用途         | パラメータ                | Body 例                            | 備考 |
+|--------|--------------|---------------------------|------------------------------------|------|
+| POST   | 任意ログ追加 | なし                      | `{ "event":"custom", "message":"内容" }` | 追加後 200 件に prune |
+
+`addLog()` 仕様: 空 message は shared-note のみ許容。トランザクションで古い順削除。
+
+---
+
+### 7. 共有メモ API `/api/shared-note`
+
+| Method | 用途       | Body 例                 | 備考 |
+|--------|------------|-------------------------|------|
+| POST   | 保存       | `{ "content":"文字列" }` | 15000 文字超は末尾 `...[省略]` 付与。空文字も保存 |
+
+ログイベント: `shared-note` (本文先頭行に "メモ更新")
+
+---
+
+### 8. エクスポート API `/api/export`
+
+| Method | 用途            | 備考 |
+|--------|-----------------|------|
+
+---
+
+### 9. ヘルスチェック `/api/health`
+
+| Method | 用途            | 備考 |
+|--------|-----------------|------|
+| POST   | デバッグ挿入     | `?action=debug-insert` で staff 1 行追加 |
+
+---
+
+### 10. 内部ユーティリティ
+
+- `_log.js`: `addLog(event, message)` 追加 & 200件制限
+- `_sanitize.js`: サニタイズ共通関数
+
+## 🧪 ステータス遷移
+
+`not-started` → (クリック) → `learning` → (クリック) → `done` → (クリック) → `not-started`
+
+テスト完了は status を変えず `comments` のみ付帯管理。
+
+## 📞 サポート
+
+Issuesへ

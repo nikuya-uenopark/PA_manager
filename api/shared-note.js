@@ -14,7 +14,13 @@ module.exports = async function handler(req, res) {
         where: { event: 'shared-note' },
         orderBy: { createdAt: 'desc' }
       });
-      res.status(200).json({ content: latest ? latest.message : '' });
+      // ログには "メモ更新" を含めて保存しているが、表示用には取り除く
+      let content = '';
+      if (latest && typeof latest.message === 'string') {
+        const prefix = 'メモ更新\n';
+        content = latest.message.startsWith(prefix) ? latest.message.slice(prefix.length) : latest.message;
+      }
+      res.status(200).json({ content });
     } else if (req.method === 'POST') {
       const { content } = req.body || {};
       const text = (content || '').toString();
