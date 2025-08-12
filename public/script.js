@@ -68,15 +68,6 @@ class PAManager {
                     });
                     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                     this.showNotification(isEdit ? 'スタッフを更新しました' : 'スタッフを追加しました');
-                    if (!isEdit) {
-                        try {
-                            await fetch('/api/logs', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ event: 'staff:create', message: `新規スタッフ追加 名前:${name} 役職:${position || '-'} 生年月日:${birth_date || '-'}` })
-                            });
-                        } catch {}
-                    }
                     this.closeModal('staffModal');
                     staffForm.reset();
                     this.editingStaffId = null;
