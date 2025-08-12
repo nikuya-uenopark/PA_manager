@@ -509,7 +509,8 @@ PAManager.prototype.saveSharedNote = async function(force=false) {
     const ta = document.getElementById('sharedNoteContent');
     if (!ta) return;
     const content = ta.value;
-    if (!force && content === this._sharedNoteOriginal) {
+    // 空文字は常に保存したいので、同一判定でも content === '' の場合は続行
+    if (!force && content === this._sharedNoteOriginal && content !== '') {
         const s = document.getElementById('sharedNoteStatus');
         if (s) s.textContent = '変更なし';
         return;
