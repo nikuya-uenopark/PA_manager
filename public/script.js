@@ -148,14 +148,20 @@ class PAManager {
     }
 
     showNotification(message, type = 'success') {
-        const notification = document.getElementById('notification');
-        notification.textContent = message;
-        notification.className = `notification ${type}`;
-        notification.style.display = 'block';
-        
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 3000);
+        const el = document.getElementById('notification');
+        if (!el) return;
+        el.textContent = message;
+        el.className = 'notification';
+        void el.offsetWidth; // reflow to restart animation
+        if (type === 'error') el.classList.add('error');
+        else if (type === 'warning') el.classList.add('warning');
+        el.classList.add('show');
+        el.style.display = 'block';
+        clearTimeout(this._notifyTimer);
+        this._notifyTimer = setTimeout(()=>{
+            el.classList.remove('show');
+            setTimeout(()=>{ if(!el.classList.contains('show')) el.style.display='none'; }, 500);
+        }, 2000); // 約2秒表示
     }
 
     async loadData() {
@@ -352,35 +358,11 @@ class PAManager {
         this.currentTab = tabName;
 
         if (tabName === 'analytics') {
-            setTimeout(() => this.renderAnalytics(), 100);
+            // ログのみ更新（グラフ廃止）
+            this.loadLogs();
         }
     }
-
-    renderAnalytics() {
-        const ctx = document.getElementById('progressChart');
-        if (ctx && typeof Chart !== 'undefined') {
-            if (this._chart) {
-                this._chart.destroy();
-            }
-            this._chart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['習得済み', '学習中', '未着手'],
-                    datasets: [{
-                        data: [30, 45, 25],
-                        backgroundColor: ['#00d4aa', '#ff9f43', '#f1f2f6'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        }
-    // 併せてログも更新
-    this.loadLogs();
-    }
+    // renderAnalytics 削除（円グラフ機能廃止）
 
     showModal(modalId) {
         document.getElementById(modalId).style.display = 'block';

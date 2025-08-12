@@ -50,7 +50,7 @@
                     </button>
                     <button class="tab-button" onclick="switchTab('analytics')" id="analyticsTab">
                         <i class="fas fa-chart-line"></i>
-                        <span>分析・統計</span>
+                        <span>ログ</span>
                     </button>
                 </nav>
 
@@ -90,20 +90,15 @@
                     <div id="criteriaGrid" class="criteria-grid"></div>
                 </div>
 
-                <!-- 分析・統計タブ -->
+                <!-- 分析・統計タブ（円グラフ廃止、ログのみ表示） -->
                 <div id="analyticsPanel" class="tab-panel">
                     <div class="panel-header">
-                        <h2>分析・統計</h2>
+                        <h2>アクティビティログ</h2>
                     </div>
                     <div class="analytics-content">
-                        <div class="chart-container">
-                            <canvas id="progressChart"></canvas>
-                        </div>
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <h3>アクティビティログ</h3>
-                                <div id="activityLogs" class="logs-list"></div>
-                            </div>
+                        <div class="stat-card full-width">
+                            <h3>最新ログ</h3>
+                            <div id="activityLogs" class="logs-list"></div>
                         </div>
                     </div>
                 </div>
@@ -245,8 +240,7 @@
         </div>
     </div>
     
-    <!-- 外部ライブラリ -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 外部ライブラリ（Chart.js 依存削除） -->
     <script src="script.js"></script>
 </body>
 </html>
