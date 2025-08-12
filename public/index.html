@@ -210,6 +210,26 @@
                     <label for="evaluationChangedBy" style="min-width:64px;">進捗変更者</label>
                     <select id="evaluationChangedBy" style="flex:1; max-width:320px; padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px; background:#fff;"></select>
                 </div>
+                <div id="evaluationFilters" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:10px 14px; margin-bottom:14px; display:flex; flex-direction:column; gap:10px;">
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <div style="font-size:12px; font-weight:600; color:#374151;">進捗</div>
+                        <div class="eval-filter-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="not-started" checked> 未着手</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="learning" checked> 学習中</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="done" checked> 習得済み</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="tested" checked> テスト完了</label>
+                        </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <div style="font-size:12px; font-weight:600; color:#374151;">カテゴリ</div>
+                        <div class="eval-filter-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="共通" checked> 共通</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="ホール" checked> ホール</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="キッチン" checked> キッチン</label>
+                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="その他" checked> その他</label>
+                        </div>
+                    </div>
+                </div>
                 <h4 style="margin:10px 0 12px;">評価一覧</h4>
                 <div id="staffEvaluations" class="evaluations-grid"></div>
             </div>

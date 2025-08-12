@@ -634,10 +634,16 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
             return;
         }
 
-        // グリッド描画
-    // 変更のバッファ用マップ
-    if (!this._pendingEvalChanges) this._pendingEvalChanges = new Map();
-    container.innerHTML = this.currentCriteria.map(cr => {
+        // フィルタ選択取得
+        const statusChecks = Array.from(document.querySelectorAll('input[name="evalStatusFilter[]"]:checked')).map(i=>i.value);
+        const catChecks = Array.from(document.querySelectorAll('input[name="evalCategoryFilter[]"]:checked')).map(i=>i.value);
+        // ステータス判定関数 (tested: commentsにtestedByがある)
+        const isTested = (key) => this._staffEvalTestCache && this._staffEvalTestCache.has(key);
+        const filteredCriteria = (this.currentCriteria || []).filter(cr => catChecks.length===0 || catChecks.includes(cr.category || '共通'));
+
+        // 描画
+        if (!this._pendingEvalChanges) this._pendingEvalChanges = new Map();
+        container.innerHTML = filteredCriteria.map(cr => {
             const key = `${staffId}:${cr.id}`;
             const status = this._staffEvalCache.get(key) || 'not-started';
             const color = status === 'done' ? '#00d4aa' : status === 'learning' ? '#ff9f43' : '#f1f2f6';
@@ -648,6 +654,12 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
             const testedText = testedById ? `完璧！${testerName}がテスト済み！` : '';
             const testedClass = testedById ? 'tested' : '';
             const options = (this.currentStaff || []).map(s => `<option value="${s.id}" ${testedById===s.id ? 'selected' : ''}>${s.name}</option>`).join('');
+            // ステータスフィルタ適合判定
+            const logicalStatusValues = [];
+            logicalStatusValues.push(status); // not-started | learning | done
+            if (testedById) logicalStatusValues.push('tested');
+            const statusMatch = statusChecks.length===0 || statusChecks.some(v => logicalStatusValues.includes(v));
+            if (!statusMatch) return ''; // 非表示
             return `
                 <div class="criteria-chip" data-staff="${staffId}" data-criteria="${cr.id}" style="border:1px solid #eaeaea; padding:12px; border-radius:10px; cursor:pointer; display:flex; flex-direction:column; gap:8px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
@@ -667,6 +679,17 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                 </div>
             `;
         }).join('');
+
+        // フィルタ更新イベント（初期登録は1回）
+        if (!this._evalFilterBound) {
+            this._evalFilterBound = true;
+            document.querySelectorAll('#evaluationFilters input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    // 再描画（キャッシュ/変更マップは保持）
+                    this.renderStaffEvaluations(staffId);
+                });
+            });
+        }
 
         // クリックで状態トグル＆保存
     container.querySelectorAll('.criteria-chip').forEach(el => {

@@ -1454,6 +1454,21 @@ input, textarea, .criteria-description, .staff-position, .staff-name {
     z-index:3000;
     backdrop-filter: blur(2px);
 }
+.eval-filter-chip {
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:6px 10px;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:9999px;
+    font-size:12px;
+    cursor:pointer;
+    user-select:none;
+    transition:background .2s, border-color .2s;
+}
+.eval-filter-chip input { accent-color: var(--primary-color); }
+.eval-filter-chip:hover { background:#f1f5f9; }
 .saving-spinner { width:52px; height:52px; border:5px solid rgba(255,255,255,0.4); border-top:5px solid #fff; border-radius:50%; animation: spin 1s linear infinite; margin-bottom:14px; }
 .saving-text { color:#fff; font-size:16px; font-weight:600; letter-spacing:.5px; }
 
