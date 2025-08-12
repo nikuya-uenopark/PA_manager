@@ -209,7 +209,6 @@
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
                     <label for="evaluationChangedBy" style="min-width:64px;">進捗変更者</label>
                     <select id="evaluationChangedBy" style="flex:1; max-width:320px; padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px; background:#fff;"></select>
-                    <button id="applyEvaluationChangesBtn" class="btn btn-primary" type="button">更新</button>
                 </div>
                 <h4 style="margin:10px 0 12px;">評価一覧</h4>
                 <div id="staffEvaluations" class="evaluations-grid"></div>
@@ -238,6 +237,11 @@
                 </div>
             </div>
         </div>
+    </div>
+    <!-- 保存オーバーレイ -->
+    <div id="savingOverlay" class="saving-overlay">
+        <div class="saving-spinner"></div>
+        <div class="saving-text">保存中...</div>
     </div>
     
     <!-- 外部ライブラリ（Chart.js 依存削除） -->

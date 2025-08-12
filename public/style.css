@@ -1442,6 +1442,21 @@ input, textarea, .criteria-description, .staff-position, .staff-name {
 .notification.error { background: var(--danger-color); }
 .notification.warning { background: var(--warning-color); }
 
+/* 保存オーバーレイ */
+.saving-overlay {
+    position: fixed;
+    top:0;left:0;width:100%;height:100%;
+    background: rgba(0,0,0,0.35);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    z-index:3000;
+    backdrop-filter: blur(2px);
+}
+.saving-spinner { width:52px; height:52px; border:5px solid rgba(255,255,255,0.4); border-top:5px solid #fff; border-radius:50%; animation: spin 1s linear infinite; margin-bottom:14px; }
+.saving-text { color:#fff; font-size:16px; font-weight:600; letter-spacing:.5px; }
+
 .notification i {
     font-size: 1.2rem;
 }

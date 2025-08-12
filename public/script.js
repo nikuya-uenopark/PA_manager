@@ -164,6 +164,40 @@ class PAManager {
         }, 2000); // 約2秒表示
     }
 
+    async _autoSaveStaffEvaluations() {
+        try {
+            if (!this._pendingEvalChanges || this._pendingEvalChanges.size === 0) {
+                // テスター即時保存は別で処理済みなので何もしない
+                return;
+            }
+            const overlay = document.getElementById('savingOverlay');
+            if (overlay) overlay.style.display = 'flex';
+            const changedById = (document.getElementById('evaluationChangedBy')?.value) ? Number(document.getElementById('evaluationChangedBy').value) : null;
+            const payload = Array.from(this._pendingEvalChanges.entries()).map(([key, status]) => {
+                const [sid, cid] = key.split(':').map(Number);
+                const test = this._pendingEvalTests ? this._pendingEvalTests.get(key) : null;
+                return { staffId: sid, criteriaId: cid, status, test };
+            });
+            const res = await fetch('/api/evaluations-batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ changes: payload, changedBy: changedById })
+            });
+            if (!res.ok) throw new Error('auto batch failed');
+            this._pendingEvalChanges.clear();
+            if (this._pendingEvalTests) this._pendingEvalTests.clear();
+            await this.loadLogs();
+            await this.loadStaffProgress();
+            this.showNotification('評価を自動保存しました');
+        } catch (e) {
+            console.error('自動保存エラー', e);
+            this.showNotification('評価の自動保存に失敗', 'error');
+        } finally {
+            const overlay = document.getElementById('savingOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+    }
+
     async loadData() {
         try {
             await Promise.all([
@@ -370,8 +404,12 @@ class PAManager {
     }
 
     closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
+        const el = document.getElementById(modalId);
+        if (el) el.style.display = 'none';
         document.body.style.overflow = 'auto';
+        if (modalId === 'staffDetailModal') {
+            this._autoSaveStaffEvaluations();
+        }
     }
 
     updateStats() {
@@ -555,39 +593,8 @@ PAManager.prototype.openStaffDetail = async function (staffId) {
 
     // 評価一覧
     await this.renderStaffEvaluations(staffId);
-    // 一括更新ボタンのハンドラ
-    const applyBtn = document.getElementById('applyEvaluationChangesBtn');
-    if (applyBtn) {
-        applyBtn.onclick = async () => {
-            try {
-                const changedById = (document.getElementById('evaluationChangedBy')?.value) ? Number(document.getElementById('evaluationChangedBy').value) : null;
-                const payload = Array.from(this._pendingEvalChanges || []).map(([key, status]) => {
-                    const [sid, cid] = key.split(':').map(Number);
-                    const test = this._pendingEvalTests ? this._pendingEvalTests.get(key) : null;
-                    return { staffId: sid, criteriaId: cid, status, test };
-                });
-                if (payload.length === 0) {
-                    this.showNotification('変更はありません');
-                    return;
-                }
-                const res = await fetch('/api/evaluations-batch', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ changes: payload, changedBy: changedById })
-                });
-                if (!res.ok) throw new Error('batch update failed');
-                this._pendingEvalChanges.clear();
-                if (this._pendingEvalTests) this._pendingEvalTests.clear();
-                this.showNotification('評価を更新しました');
-                await this.loadLogs();
-                await this.loadStaffProgress();
-                await this.renderStaffEvaluations(staffId);
-            } catch (e) {
-                console.error('一括更新エラー', e);
-                this.showNotification('更新に失敗しました', 'error');
-            }
-        };
-    }
+    // モーダル閉じる時に一括保存するためフラグ
+    this._activeStaffDetailId = staffId;
     this.showModal('staffDetailModal');
 }
 
