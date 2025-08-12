@@ -144,6 +144,26 @@ class PAManager {
                 }
             });
         }
+        // 自動整形トグルと手動整形ボタン制御
+        const autoChk = document.getElementById('criteriaAutoFormat');
+        const manualBtn = document.getElementById('criteriaFormatNowBtn');
+        if (autoChk) {
+            autoChk.addEventListener('change', () => {
+                if (manualBtn) manualBtn.style.display = autoChk.checked ? 'none' : 'inline-flex';
+            });
+        }
+        if (manualBtn) {
+            manualBtn.addEventListener('click', () => {
+                const ta = document.getElementById('criteriaDescription');
+                if (!ta) return;
+                let val = ta.value || '';
+                if (!val.trim()) return;
+                const lines = val.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length>0);
+                if (!lines.length) return;
+                const out = lines.map(l => l.startsWith('-') ? l : `- ${l}`).join('\n');
+                ta.value = out; // 手動整形時は改行のまま表示
+            });
+        }
 
         // カテゴリ絞り込み
         const filter = document.getElementById('criteriaCategoryFilter');

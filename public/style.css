@@ -401,6 +401,94 @@ body {
     opacity: 0.7;
 }
 
+/* === 評価項目説明ツール === */
+.criteria-desc-tools {
+    margin-top: 8px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 12px;
+    color: #374151;
+}
+.criteria-desc-tools .desc-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.criteria-desc-tools .auto-format-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
+.criteria-desc-tools .auto-format-toggle input[type="checkbox"] {
+    transform: scale(1.1);
+    accent-color: var(--primary-color);
+}
+.criteria-desc-tools .desc-example {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.criteria-desc-tools .desc-example .example-title {
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .5px;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+.criteria-desc-tools .example-body {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+.criteria-desc-tools .example-before,
+.criteria-desc-tools .example-after {
+    flex: 1 1 160px;
+    min-width: 160px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 8px 10px;
+    position: relative;
+}
+.criteria-desc-tools pre {
+    margin: 0;
+    font-family: ui-monospace, Menlo, Consolas, 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.criteria-desc-tools .badge {
+    position: absolute;
+    top: -10px;
+    left: 8px;
+    background: var(--primary-color);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    letter-spacing: .5px;
+}
+.criteria-desc-tools .example-arrow {
+    align-self: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+}
+@media (max-width: 600px) {
+    .criteria-desc-tools .example-body { flex-direction: column; gap: 12px; }
+    .criteria-desc-tools .example-arrow { display: none; }
+}
+
 /* 評価項目グリッド */
 .criteria-grid {
     display: grid;
