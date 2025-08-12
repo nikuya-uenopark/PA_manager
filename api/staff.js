@@ -1,6 +1,7 @@
 // Vercel Serverless Function: GET /api/staff
 const prisma = require('./_prisma');
 const { addLog } = require('./_log');
+const { sanitizeContent } = require('./_sanitize');
 
 module.exports = async function handler(req, res) {
   // CORS設定
@@ -29,7 +30,10 @@ module.exports = async function handler(req, res) {
   } else if (req.method === 'POST') {
     // スタッフ追加
     try {
-  const { name, kana, position, birth_date, avatar_url, hire_date } = req.body || {};
+  let { name, kana, position, birth_date, avatar_url, hire_date } = req.body || {};
+  name = sanitizeContent(name);
+  kana = kana ? sanitizeContent(kana) : null;
+  position = position ? sanitizeContent(position) : null;
       if (!name) {
         return res.status(400).json({ error: 'name is required' });
       }
@@ -97,7 +101,10 @@ ID：${id} (既に存在しない)`).catch(()=>{});
     if (req.method === 'PUT') {
       try {
         const { id } = req.query || {};
-        const { name, kana, position, birth_date, avatar_url, hire_date } = req.body || {};
+  let { name, kana, position, birth_date, avatar_url, hire_date } = req.body || {};
+  name = sanitizeContent(name);
+  kana = kana ? sanitizeContent(kana) : undefined;
+  position = position ? sanitizeContent(position) : undefined;
         if (!id) return res.status(400).json({ error: 'id is required' });
         const updated = await prisma.staff.update({
           where: { id: Number(id) },

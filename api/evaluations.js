@@ -1,6 +1,7 @@
 // Vercel Serverless Function: 評価管理 API
 const prisma = require('./_prisma');
 const { addLog } = require('./_log');
+const { sanitizeContent } = require('./_sanitize');
 
 module.exports = async function handler(req, res) {
   // CORS設定
@@ -33,6 +34,8 @@ module.exports = async function handler(req, res) {
 
     if (req.method === 'POST') {
       const { staff_id, criteria_id, status, changed_by } = req.body || {};
+    // status might be a short string label; sanitize to be safe
+    status = status ? sanitizeContent(status) : status;
       const normalized = status || 'learning';
       const created = await prisma.evaluation.create({
         data: { staffId: Number(staff_id), criteriaId: Number(criteria_id), status: normalized },
@@ -54,6 +57,7 @@ module.exports = async function handler(req, res) {
 
     if (req.method === 'PUT') {
       const { staffId, criteriaId, status, changedBy } = req.body || {};
+    status = status ? sanitizeContent(status) : status;
       const sid = Number(staffId);
       const cid = Number(criteriaId);
       const result = await prisma.evaluation.updateMany({ where: { staffId: sid, criteriaId: cid }, data: { status } });
