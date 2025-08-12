@@ -166,16 +166,19 @@ class PAManager {
 
     async _autoSaveStaffEvaluations() {
         try {
-            if (!this._pendingEvalChanges || this._pendingEvalChanges.size === 0) {
-                // テスター即時保存は別で処理済みなので何もしない
-                return;
-            }
+            const hasStatus = this._pendingEvalChanges && this._pendingEvalChanges.size > 0;
+            const hasTester = this._pendingEvalTests && this._pendingEvalTests.size > 0;
+            if (!hasStatus && !hasTester) return; // 変更なし
             const overlay = document.getElementById('savingOverlay');
             if (overlay) overlay.style.display = 'flex';
             const changedById = (document.getElementById('evaluationChangedBy')?.value) ? Number(document.getElementById('evaluationChangedBy').value) : null;
-            const payload = Array.from(this._pendingEvalChanges.entries()).map(([key, status]) => {
+            const keys = new Set();
+            if (hasStatus) for (const k of this._pendingEvalChanges.keys()) keys.add(k);
+            if (hasTester) for (const k of this._pendingEvalTests.keys()) keys.add(k);
+            const payload = Array.from(keys).map(key => {
                 const [sid, cid] = key.split(':').map(Number);
-                const test = this._pendingEvalTests ? this._pendingEvalTests.get(key) : null;
+                const status = this._pendingEvalChanges ? this._pendingEvalChanges.get(key) : undefined;
+                const test = this._pendingEvalTests ? this._pendingEvalTests.get(key) : undefined;
                 return { staffId: sid, criteriaId: cid, status, test };
             });
             const res = await fetch('/api/evaluations-batch', {
