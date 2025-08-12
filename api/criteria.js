@@ -105,7 +105,8 @@ module.exports = async function handler(req, res) {
       const { id } = req.query || {};
       if (!id) return res.status(400).json({ error: 'id is required' });
       await prisma.criteria.delete({ where: { id: Number(id) } });
-  await addLog('criteria:delete', `評価項目削除 ID:${id}`).catch(()=>{});
+  await addLog('criteria:delete', `評価項目削除
+ID:${id}`).catch(()=>{});
       res.status(200).json({ message: '評価項目が削除されました' });
     } else {
       res.status(405).json({ error: 'Method Not Allowed' });

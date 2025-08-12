@@ -55,7 +55,9 @@ module.exports = async function handler(req, res) {
       const changer = await prisma.staff.findUnique({ where: { id: Number(changedBy) }, select: { name: true } }).catch(()=>null);
       changerName = changer?.name || '-';
     }
-    await addLog('evaluation:batch-update', `評価一括更新 変更者:${changerName} 件数:${items.length}`).catch(()=>{});
+    await addLog('evaluation:batch-update', `評価一括更新
+変更者:${changerName}
+件数:${items.length}`).catch(()=>{});
 
     return res.status(200).json({ message: 'batch updated', count: items.length });
   } catch (e) {
