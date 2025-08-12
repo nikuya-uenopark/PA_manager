@@ -65,11 +65,21 @@ module.exports = async function handler(req, res) {
       if (!id) {
         return res.status(400).json({ error: 'id is required' });
       }
-      // 事前に取得しておき、ログに使う
-      const before = await prisma.staff.findUnique({ where: { id: Number(id) }, select: { name: true, position: true } }).catch(()=>null);
-      await prisma.staff.delete({ where: { id: Number(id) } });
-  await addLog('staff:delete', `スタッフ削除 ID:${id} 名前:${before?.name || '-'} 役職:${before?.position || '-'}`).catch(()=>{});
-      res.status(200).json({ message: 'スタッフが削除されました' });
+      const sid = Number(id);
+      const result = await prisma.$transaction(async (tx) => {
+        const before = await tx.staff.findUnique({ where: { id: sid }, select: { name: true, position: true } });
+        if (!before) return { before: null, evals: 0 };
+        // 関連評価を先に削除（外部キー制約回避）
+        const delEval = await tx.evaluation.deleteMany({ where: { staffId: sid } });
+        await tx.staff.delete({ where: { id: sid } });
+        return { before, evals: delEval.count };
+      });
+      if (result.before) {
+        await addLog('staff:delete', `スタッフ削除 ID:${id} 名前:${result.before.name} 役職:${result.before.position || '-'} 評価削除:${result.evals}件`).catch(()=>{});
+      } else {
+        await addLog('staff:delete', `スタッフ削除 ID:${id} (既に存在しない)`).catch(()=>{});
+      }
+      res.status(200).json({ message: 'スタッフを削除しました', deletedEvaluations: result.evals });
     } catch (error) {
       console.error('Staff DELETE error:', error);
       res.status(500).json({ error: 'スタッフの削除に失敗しました', detail: error.message });
