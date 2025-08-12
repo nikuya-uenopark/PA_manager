@@ -4,7 +4,7 @@ class PAManager {
     constructor() {
         this.currentStaff = [];
         this.currentCriteria = [];
-        this.currentTab = 'staff';
+    this.currentTab = 'sharedNote';
     this.editingCriteriaId = null;
     this._chart = null;
     this._staffEvalCache = new Map(); // key: `${staffId}:${criteriaId}` -> status
@@ -214,6 +214,8 @@ class PAManager {
                 this.loadCriteria(),
                 this.loadLogs()
             ]);
+            // 共有メモは最後に読み込み（他と独立）
+            this.loadSharedNote();
             await this.loadStaffProgress();
             this.updateStats();
         } catch (error) {
@@ -391,18 +393,23 @@ class PAManager {
         document.querySelectorAll('.tab-button').forEach(btn => {
             btn.classList.remove('active');
         });
-        document.getElementById(tabName + 'Tab').classList.add('active');
+        const tabBtn = document.getElementById(tabName + 'Tab');
+        if (tabBtn) tabBtn.classList.add('active');
 
         document.querySelectorAll('.tab-panel').forEach(panel => {
             panel.classList.remove('active');
         });
-        document.getElementById(tabName + 'Panel').classList.add('active');
+        const panel = document.getElementById(tabName + 'Panel');
+        if (panel) panel.classList.add('active');
 
         this.currentTab = tabName;
 
         if (tabName === 'analytics') {
             // ログのみ更新（グラフ廃止）
             this.loadLogs();
+        } else if (tabName === 'sharedNote') {
+            // 遅延読み込み（まだ未読なら）
+            if (!this._sharedNoteLoaded) this.loadSharedNote();
         }
     }
     // renderAnalytics 削除（円グラフ機能廃止）
@@ -459,6 +466,85 @@ class PAManager {
     }
 
     // 旧: カテゴリ順並び替えは廃止
+}
+
+// --- 共有メモ機能 ---
+PAManager.prototype.loadSharedNote = async function() {
+    try {
+        const statusEl = document.getElementById('sharedNoteStatus');
+        if (statusEl) statusEl.textContent = '読み込み中...';
+        const res = await fetch('/api/shared-note');
+        if (!res.ok) throw new Error('failed');
+        const data = await res.json();
+        const ta = document.getElementById('sharedNoteContent');
+        if (ta) ta.value = data?.content || '';
+        this._sharedNoteOriginal = ta ? ta.value : '';
+        this._sharedNoteLoaded = true;
+        if (statusEl) statusEl.textContent = '最新です';
+        const upd = document.getElementById('sharedNoteUpdated');
+        if (upd && data?.updatedAt) {
+            upd.textContent = '最終更新: ' + new Date(data.updatedAt).toLocaleString();
+        }
+        // イベント1回だけ設定
+        if (!this._sharedNoteBound && ta) {
+            this._sharedNoteBound = true;
+            ta.addEventListener('input', () => {
+                const s = document.getElementById('sharedNoteStatus');
+                if (s) s.textContent = '編集中...';
+                clearTimeout(this._sharedNoteTimer);
+                this._sharedNoteTimer = setTimeout(()=>{
+                    this.saveSharedNote();
+                }, 1000); // 1秒後自動保存
+            });
+        }
+    } catch (e) {
+        console.error('共有メモ読み込み失敗', e);
+        const statusEl = document.getElementById('sharedNoteStatus');
+        if (statusEl) statusEl.textContent = '読み込み失敗';
+    }
+};
+
+PAManager.prototype.saveSharedNote = async function(force=false) {
+    if (this._savingSharedNote) return;
+    const ta = document.getElementById('sharedNoteContent');
+    if (!ta) return;
+    const content = ta.value;
+    if (!force && content === this._sharedNoteOriginal) {
+        const s = document.getElementById('sharedNoteStatus');
+        if (s) s.textContent = '変更なし';
+        return;
+    }
+    this._savingSharedNote = true;
+    const statusEl = document.getElementById('sharedNoteStatus');
+    if (statusEl) statusEl.textContent = '保存中...';
+    try {
+        const res = await fetch('/api/shared-note', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content })
+        });
+        if (!res.ok) throw new Error('save failed');
+        this._sharedNoteOriginal = content;
+        if (statusEl) statusEl.textContent = '保存しました';
+        const upd = document.getElementById('sharedNoteUpdated');
+        if (upd) upd.textContent = '最終更新: ' + new Date().toLocaleString();
+        // ログ更新も反映（バックエンドでログ書き込み想定）
+        this.loadLogs();
+    } catch (e) {
+        console.error('共有メモ保存失敗', e);
+        if (statusEl) statusEl.textContent = '保存失敗';
+        this.showNotification('共有メモの保存に失敗しました', 'error');
+    } finally {
+        this._savingSharedNote = false;
+        // 2秒後にステータスを落ち着いた表示へ
+        setTimeout(()=>{
+            if (statusEl && statusEl.textContent === '保存しました') statusEl.textContent = '最新です';
+        }, 2000);
+    }
+};
+
+function saveSharedNote() {
+    paManager.saveSharedNote(true);
 }
 
 // グローバル変数とインスタンス

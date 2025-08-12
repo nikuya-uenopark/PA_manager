@@ -36,7 +36,10 @@
             <div class="main-content">
                 <!-- タブナビゲーション -->
                 <nav class="tab-navigation">
-                    <button class="tab-button active" onclick="switchTab('staff')" id="staffTab">
+                    <button class="tab-button active" onclick="switchTab('sharedNote')" id="sharedNoteTab">
+                        <i class="fas fa-note-sticky"></i><span>共有メモ</span>
+                    </button>
+                    <button class="tab-button" onclick="switchTab('staff')" id="staffTab">
                         <i class="fas fa-users"></i><span>スタッフ管理</span>
                     </button>
                     <button class="tab-button" onclick="switchTab('criteria')" id="criteriaTab">
@@ -46,8 +49,28 @@
                         <i class="fas fa-chart-line"></i><span>ログ</span>
                     </button>
                 </nav>
+                <!-- 共有メモタブ -->
+                <div id="sharedNotePanel" class="tab-panel active">
+                    <div class="panel-header" style="align-items:flex-start;">
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <h2 style="margin:0;">共有メモ</h2>
+                            <div style="font-size:12px; color:#6b7280; line-height:1.4;">新商品 / 問題点 / 改善点 / 変更点 / 注意事項 などをここで共有してください。<br>入力は自動保存（約1秒後）され、履歴はログとして蓄積されます。</div>
+                        </div>
+                        <div class="panel-actions" style="display:flex; gap:10px; align-items:center;">
+                            <span id="sharedNoteStatus" style="font-size:12px; color:#6b7280;">読み込み中...</span>
+                            <button class="btn btn-primary" type="button" onclick="saveSharedNote()"><i class="fas fa-save"></i> 手動保存</button>
+                        </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                        <textarea id="sharedNoteContent" rows="18" placeholder="ここに共有事項を記入してください（例）\n- 新メニュー◯◯提供開始（来週月曜〜）\n- 発注シートの記入方法変更：在庫欄→残数欄へ\n- 17~19時の混雑時：ドリンク優先レーン試験導入\n" style="width:100%; padding:14px 16px; border:1px solid #e5e7eb; border-radius:10px; font-family:inherit; line-height:1.5; resize:vertical;"></textarea>
+                        <div style="font-size:11px; color:#9ca3af; display:flex; justify-content:space-between;">
+                            <span>最大約15,000文字。長文は適宜整理してください。</span>
+                            <span id="sharedNoteUpdated" style="color:#6b7280;"></span>
+                        </div>
+                    </div>
+                </div>
                 <!-- スタッフ管理タブ -->
-                <div id="staffPanel" class="tab-panel active">
+                <div id="staffPanel" class="tab-panel">
                     <div class="panel-header">
                         <h2>スタッフ管理</h2>
                         <div class="panel-actions">
