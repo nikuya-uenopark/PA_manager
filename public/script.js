@@ -650,7 +650,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
             const label = status === 'done' ? '習得済み' : status === 'learning' ? '学習中' : '未着手';
             const tinfo = this._staffEvalTestCache.get(key);
             const testedById = tinfo?.testedBy ?? null;
-            const testerName = testedById ? (this.currentStaff.find(s=>s.id===testedById)?.name || '退職済み先輩方') : '';
+            const testerName = testedById ? (this.currentStaff.find(s=>s.id===testedById)?.name || '歴代の猛者') : '';
             const testedText = testedById ? `完璧！${testerName}がテスト済み！` : '';
             const testedClass = testedById ? 'tested' : '';
             const options = (this.currentStaff || []).map(s => `<option value="${s.id}" ${testedById===s.id ? 'selected' : ''}>${s.name}</option>`).join('');
@@ -773,7 +773,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                 const tester = (this.currentStaff||[]).find(s => s.id === val);
                 const block = el.querySelector('.tested-block');
                 if (block) {
-                    const displayName = tester?.name || '退職済み先輩方';
+                    const displayName = tester?.name || '歴代の猛者';
                     block.innerHTML = `<span class=\"tested-text tested\">完璧！${displayName}がテスト済み！</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>`;
                     const resetBtn2 = block.querySelector('.reset-tested-btn');
                     if (resetBtn2) {
