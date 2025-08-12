@@ -176,7 +176,13 @@
                     </div>
                     <div class="form-group">
                         <label for="criteriaDescription">説明</label>
-                        <textarea id="criteriaDescription" rows="3" placeholder="この項目の詳細説明や評価基準"></textarea>
+                        <textarea id="criteriaDescription" rows="4" placeholder="改行ごとに自動で箇条書き整形されます (例: 行を増やして入力するだけで - 付きリストになります)"></textarea>
+                        <div style="margin-top:6px; display:flex; flex-direction:column; gap:4px; font-size:12px; color:#6b7280;">
+                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                                <input type="checkbox" id="criteriaAutoFormat" checked style="transform:scale(1.1);"> 自動で「- 」+ 改行(&lt;br&gt;)に整形
+                            </label>
+                            <div>入力例:<br>ログイン方法↵<br>色の変え方↵<br>予約の動かし方 → 保存時に<br>- ログイン方法<br>- 色の変え方<br>- 予約の動かし方 に変換</div>
+                        </div>
                     </div>
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">

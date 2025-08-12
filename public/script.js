@@ -101,7 +101,15 @@ class PAManager {
                 e.preventDefault();
                 const name = document.getElementById('criteriaName')?.value?.trim();
                 const category = document.getElementById('criteriaCategory')?.value || '共通';
-                const description = document.getElementById('criteriaDescription')?.value || null;
+                let description = document.getElementById('criteriaDescription')?.value || null;
+                const auto = document.getElementById('criteriaAutoFormat');
+                if (description && auto && auto.checked) {
+                    // 各行をトリムし空行除去 → "- " 付与 → <br> 連結
+                    const lines = description.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length>0);
+                    if (lines.length) {
+                        description = lines.map(l => l.startsWith('-') ? l : `- ${l}`).join('<br>');
+                    }
+                }
                 if (!name) {
                     this.showNotification('項目名は必須です', 'error');
                     return;
@@ -520,7 +528,17 @@ PAManager.prototype.beginEditCriteria = function (criteriaId) {
     document.getElementById('criteriaModalTitle').textContent = '評価項目を編集';
     document.getElementById('criteriaName').value = item.name || '';
     document.getElementById('criteriaCategory').value = item.category || '共通';
-    document.getElementById('criteriaDescription').value = item.description || '';
+    // description に <br> を含む場合は改行に戻し、先頭の "- " は表示上そのまま
+    const descEl = document.getElementById('criteriaDescription');
+    if (descEl) {
+        if (item.description) {
+            // <br> を改行へ置換してテキストエリアに表示
+            const restored = item.description.replace(/<br\s*\/?>/gi, '\n');
+            descEl.value = restored;
+        } else {
+            descEl.value = '';
+        }
+    }
     this.showModal('criteriaModal');
 }
 
