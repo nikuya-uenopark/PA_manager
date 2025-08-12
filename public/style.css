@@ -1436,39 +1436,10 @@ input, textarea, .criteria-description, .staff-position, .staff-name {
 }
 
 /* 通知システム */
-.notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: white;
-    padding: 15px 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    display: none;
-.notification.show {
-    display: flex;
-}
-    align-items: center;
-    gap: 10px;
-    z-index: 2000;
-    animation: slideInRight 0.3s ease;
-    max-width: 400px;
-}
-
-.notification-success {
-    border-left: 4px solid #48bb78;
-    color: #2d3748;
-}
-
-.notification-error {
-    border-left: 4px solid #f56565;
-    color: #2d3748;
-}
-
-.notification-info {
-    border-left: 4px solid #4299e1;
-    color: #2d3748;
-}
+/* 通知システム（重複定義を整理） */
+.notification.info { background: var(--accent-color); }
+.notification.error { background: var(--danger-color); }
+.notification.warning { background: var(--warning-color); }
 
 .notification i {
     font-size: 1.2rem;
