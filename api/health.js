@@ -3,15 +3,30 @@ const prisma = require('./_prisma');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // POST (debug insert) を先にハンドル
+  if (req.method === 'POST') {
+    try {
+      const action = (req.query.action || req.body?.action || '').toString();
+      if (action !== 'debug-insert') {
+        return res.status(400).json({ error: 'invalid action', hint: 'use ?action=debug-insert' });
+      }
+      const name = `debug-${Date.now()}`;
+      const row = await prisma.staff.create({ data: { name } });
+      return res.status(200).json({ ok: true, inserted: { id: row.id, name } });
+    } catch (e) {
+      return res.status(500).json({ ok: false, error: e.message });
+    }
+  }
+
   const info = {
-    ok: true,
-    time: new Date().toISOString(),
-    node: process.version,
-    env: process.env.VERCEL_ENV || process.env.NODE_ENV || 'unknown',
+      ok: true,
+      time: new Date().toISOString(),
+      node: process.version,
+      env: process.env.VERCEL_ENV || process.env.NODE_ENV || 'unknown'
   };
   try {
     // Lightweight probe

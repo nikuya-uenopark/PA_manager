@@ -1,4 +1,6 @@
-// GET /api/staff-progress?staffId= or none for all
+// GET /api/staff-progress
+//   ?staffId=ID 単一スタッフ
+//   ?summary=1  サマリ統計 (staffCount / criteriaCount / overallProgress など)
 const prisma = require('./_prisma');
 
 module.exports = async function handler(req, res) {
@@ -7,6 +9,32 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
+
+  // サマリーモード（元 stats.js を統合）
+  if (req.query && (req.query.summary === '1' || req.query.summary === 'true')) {
+    try {
+      const [staffCount, criteriaCount] = await Promise.all([
+        prisma.staff.count(),
+        prisma.criteria.count(),
+      ]);
+      // overallProgress: テスト完了割合 (tested / criteriaCount) の全スタッフ平均
+      // staff-progress ロジックを簡易再利用
+      const evals = await prisma.evaluation.findMany({ select: { status: true, comments: true } });
+      let tested = 0;
+      if (criteriaCount > 0) {
+        for (const e of evals) {
+          if (e.comments) {
+            try { const c = JSON.parse(e.comments); if (c && typeof c.testedBy === 'number') tested++; } catch {}
+          }
+        }
+      }
+      const overallProgress = criteriaCount > 0 && staffCount > 0 ? Math.round((tested / (criteriaCount * staffCount)) * 100) : 0;
+      return res.status(200).json({ staffCount, criteriaCount, overallProgress });
+    } catch (e) {
+      console.error('summary stats error', e);
+      return res.status(500).json({ error: 'summary failed', detail: e.message });
+    }
+  }
 
   try {
     const { staffId } = req.query || {};
