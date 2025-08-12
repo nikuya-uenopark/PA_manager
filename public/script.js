@@ -563,11 +563,6 @@ function saveSharedNote() {
     paManager.saveSharedNote(true);
 }
 
-// 手動再読込用 (ボタン等から呼べる)
-function refreshSharedNote() {
-    if (paManager) paManager.loadSharedNote();
-}
-
 // グローバル変数とインスタンス
 let paManager;
 
