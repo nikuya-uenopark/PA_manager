@@ -9,7 +9,9 @@ const prisma = require('./_prisma');
  * @returns {Promise<{id:number}>}
  */
 async function addLog(event, message) {
-  if (!event || !message) return null;
+  // 空メッセージは通常弾くが shared-note の場合のみ許容（内容消去も履歴化したい）
+  if (!event) return null;
+  if ((message === undefined || message === null) || (message === '' && event !== 'shared-note')) return null;
   return prisma.$transaction(async (tx) => {
     const created = await tx.log.create({ data: { event, message }, select: { id: true } });
     // Find logs beyond the newest 200 and delete them in bulk
