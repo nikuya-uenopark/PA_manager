@@ -45,10 +45,10 @@ module.exports = async function handler(req, res) {
       ]);
       const label = normalized === 'done' ? '習得済み' : normalized === 'learning' ? '学習中' : '未着手';
       await addLog('evaluation:create', `評価作成
-変更者:${changer?.name || '-'}
-スタッフ:${staff?.name || staff_id}
-項目:${crit?.name || criteria_id}
-状態:${label}`).catch(()=>{});
+変更者：${changer?.name || '-'}
+スタッフ：${staff?.name || staff_id}
+項目：${crit?.name || criteria_id}
+状態：${label}`).catch(()=>{});
       return res.status(200).json({ id: created.id, message: '評価データが追加されました' });
     }
 
@@ -67,10 +67,10 @@ module.exports = async function handler(req, res) {
       ]);
       const label = status === 'done' ? '習得済み' : status === 'learning' ? '学習中' : '未着手';
       await addLog('evaluation:update', `評価更新
-変更者:${changer?.name || '-'}
-スタッフ:${staff?.name || staffId}
-項目:${crit?.name || criteriaId}
-状態:${label}`).catch(()=>{});
+変更者：${changer?.name || '-'}
+スタッフ：${staff?.name || staffId}
+項目：${crit?.name || criteriaId}
+状態：${label}`).catch(()=>{});
       return res.status(200).json({ message: '評価が更新されました' });
     }
 
@@ -85,12 +85,12 @@ module.exports = async function handler(req, res) {
         ]);
         const label = before.status === 'done' ? '習得済み' : before.status === 'learning' ? '学習中' : '未着手';
         await addLog('evaluation:delete', `評価削除
-スタッフ:${staff?.name || before.staffId}
-項目:${crit?.name || before.criteriaId}
-状態:${label}`).catch(()=>{});
+スタッフ：${staff?.name || before.staffId}
+項目：${crit?.name || before.criteriaId}
+状態：${label}`).catch(()=>{});
       } else {
         await addLog('evaluation:delete', `評価削除
-id:${id}`).catch(()=>{});
+id：${id}`).catch(()=>{});
       }
       return res.status(200).json({ message: '評価データが削除されました' });
     }
