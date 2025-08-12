@@ -873,6 +873,12 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
             if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
             // DB側も未テスト化するため clear 指定
             this._pendingEvalTests.set(key, { clear: true });
+                    // ステータスを維持するため、変更セットに現在値を入れておく（未送信による not-started 初期化防止）
+                    if (!this._pendingEvalChanges) this._pendingEvalChanges = new Map();
+                    if (!this._pendingEvalChanges.has(key)) {
+                        const curStatus = this._staffEvalCache.get(key) || 'not-started';
+                        this._pendingEvalChanges.set(key, curStatus);
+                    }
                     if (this._staffEvalTestCache) this._staffEvalTestCache.delete(key);
                 });
             }
@@ -917,6 +923,12 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
                 if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
                 this._pendingEvalTests.set(key, { testedBy: val, testedAt: new Date().toISOString() });
                 if (this._staffEvalTestCache) this._staffEvalTestCache.set(key, { testedBy: val, testedAt: new Date().toISOString() });
+                // ステータス未変更でも現状値を送ることでサーバ側で not-started へ初期化されるのを防止
+                if (!this._pendingEvalChanges) this._pendingEvalChanges = new Map();
+                if (!this._pendingEvalChanges.has(key)) {
+                    const curStatus = this._staffEvalCache.get(key) || 'not-started';
+                    this._pendingEvalChanges.set(key, curStatus);
+                }
                 this._pendingTesterTarget = null;
                 this.closeModal('testerSelectModal');
             };
