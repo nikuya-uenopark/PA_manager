@@ -49,17 +49,24 @@ module.exports = async function handler(req, res) {
       }
     });
 
-    // ログ1本に集約
+  // 指定フォーマットのログ出力
     let changerName = '-';
     if (changedBy) {
       const changer = await prisma.staff.findUnique({ where: { id: Number(changedBy) }, select: { name: true } }).catch(()=>null);
       changerName = changer?.name || '-';
     }
-    await addLog('evaluation:batch-update', `評価一括更新
-変更者：${changerName}
-件数：${items.length}`).catch(()=>{});
+    const staffIdsAll = Array.from(new Set(items.map(i=>i.staffId)));
+    const criteriaIdsAll = Array.from(new Set(items.map(i=>i.criteriaId)));
+    const [staffListAll, criteriaListAll] = await Promise.all([
+      prisma.staff.findMany({ where: { id: { in: staffIdsAll } }, select: { id:true, name:true } }).catch(()=>[]),
+      prisma.criteria.findMany({ where: { id: { in: criteriaIdsAll } }, select: { id:true, name:true } }).catch(()=>[])
+    ]);
+    const staffNames = staffListAll.map(s=>s.name || `#${s.id}`).join('、') || '-';
+    const criteriaNames = criteriaListAll.map(c=>c.name || `#${c.id}`).join(', ') || '-';
+  const logMessage = `評価更新\n変更者：${changerName}\nスタッフ：${staffNames}\n件数：${items.length}\n項目：${criteriaNames}`;
+  await addLog('evaluation:batch-update', logMessage).catch(()=>{});
 
-    return res.status(200).json({ message: 'batch updated', count: items.length });
+  return res.status(200).json({ message: 'batch updated', count: items.length });
   } catch (e) {
     console.error('evaluations-batch error', e);
     return res.status(500).json({ error: 'evaluations-batch failed', detail: e.message });
