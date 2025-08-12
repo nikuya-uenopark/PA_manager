@@ -416,6 +416,9 @@ class PAManager {
         const el = document.getElementById(modalId);
         if (el) el.style.display = 'none';
         document.body.style.overflow = 'auto';
+        if (modalId === 'criteriaModal') {
+            this.editingCriteriaId = null;
+        }
         if (modalId === 'staffDetailModal') {
             this._autoSaveStaffEvaluations();
         }
@@ -493,6 +496,16 @@ function showAddStaffModal() {
 }
 
 function showAddCriteriaModal() {
+    // 追加モード: 前回の編集状態をリセット
+    paManager.editingCriteriaId = null;
+    const title = document.getElementById('criteriaModalTitle');
+    if (title) title.textContent = '新しい評価項目を追加';
+    const nameEl = document.getElementById('criteriaName');
+    if (nameEl) nameEl.value = '';
+    const catEl = document.getElementById('criteriaCategory');
+    if (catEl) catEl.value = '共通';
+    const descEl = document.getElementById('criteriaDescription');
+    if (descEl) descEl.value = '';
     paManager.showModal('criteriaModal');
 }
 
