@@ -52,7 +52,10 @@ module.exports = async function handler(req, res) {
         const day = String(d.getDate()).padStart(2, '0');
         return `${y}/${m}/${day}`;
       })();
-  await addLog('staff:create', `新規スタッフ追加 名前:${name} 役職:${position || '-'} 生年月日:${birthText}`).catch(()=>{});
+  await addLog('staff:create', `新規スタッフ追加
+名前:${name}
+役職:${position || '-'}
+生年月日:${birthText}`).catch(()=>{});
     res.status(200).json({ id: created.id, message: 'スタッフが追加されました' });
     } catch (error) {
       console.error('Staff POST error:', error);
@@ -75,9 +78,14 @@ module.exports = async function handler(req, res) {
         return { before, evals: delEval.count };
       });
       if (result.before) {
-        await addLog('staff:delete', `スタッフ削除 ID:${id} 名前:${result.before.name} 役職:${result.before.position || '-'} 評価削除:${result.evals}件`).catch(()=>{});
+        await addLog('staff:delete', `スタッフ削除
+ID:${id}
+名前:${result.before.name}
+役職:${result.before.position || '-'}
+評価削除:${result.evals}件`).catch(()=>{});
       } else {
-        await addLog('staff:delete', `スタッフ削除 ID:${id} (既に存在しない)`).catch(()=>{});
+        await addLog('staff:delete', `スタッフ削除
+ID:${id} (既に存在しない)`).catch(()=>{});
       }
       res.status(200).json({ message: 'スタッフを削除しました', deletedEvaluations: result.evals });
     } catch (error) {
@@ -104,7 +112,11 @@ module.exports = async function handler(req, res) {
         });
         const bd = updated.birthDate ? new Date(updated.birthDate) : null;
         const birthText = bd ? `${bd.getFullYear()}/${String(bd.getMonth()+1).padStart(2,'0')}/${String(bd.getDate()).padStart(2,'0')}` : '-';
-  await addLog('staff:update', `スタッフ更新 ID:${updated.id} 名前:${updated.name} 役職:${updated.position || '-'} 生年月日:${birthText}`).catch(()=>{});
+  await addLog('staff:update', `スタッフ更新
+ID:${updated.id}
+名前:${updated.name}
+役職:${updated.position || '-'}
+生年月日:${birthText}`).catch(()=>{});
         res.status(200).json({ message: 'スタッフを更新しました' });
       } catch (error) {
         console.error('Staff PUT error:', error);
