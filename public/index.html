@@ -51,21 +51,21 @@
                 </nav>
                 <!-- 共有メモタブ -->
                 <div id="sharedNotePanel" class="tab-panel active">
-                    <div class="panel-header" style="align-items:flex-start;">
-                        <div style="display:flex; flex-direction:column; gap:4px;">
-                            <h2 style="margin:0; color:#fff;">共有メモ</h2>
-                            <div style="font-size:12px; color:#fff; line-height:1.4;">新商品 / 問題点 / 改善点 / 変更点 / 注意事項 などをここで共有してください。<br>入力は自動保存（約1秒後）され、履歴はログとして蓄積されます。</div>
+                    <div class="panel-header align-start">
+                        <div class="shared-note-head">
+                            <h2 class="no-margin">共有メモ</h2>
+                            <div class="shared-note-desc">新商品 / 問題点 / 改善点 / 変更点 / 注意事項 などをここで共有してください。<br>入力は自動保存（約1秒後）され、履歴はログとして蓄積されます。</div>
                         </div>
-                        <div class="panel-actions" style="display:flex; gap:10px; align-items:center;">
-                            <span id="sharedNoteStatus" style="font-size:12px; color:#fff;">読み込み中...</span>
+                        <div class="panel-actions compact">
+                            <span id="sharedNoteStatus">読み込み中...</span>
                             <button class="btn btn-primary" type="button" onclick="saveSharedNote()"><i class="fas fa-save"></i> 手動保存</button>
                         </div>
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:12px;">
-                        <textarea id="sharedNoteContent" rows="18" placeholder="ここに共有事項を記入してください<br>（例）<br>・新メニュー提供開始が10月からなので、レシピを見ておいてください。<br>・チャッカマン発注先の変更 セントラル→リクエ<br>・冷蔵庫はお盆明け届く予定です。" style="width:100%; padding:14px 16px; border:1px solid #e5e7eb; border-radius:10px; font-family:inherit; line-height:1.5; resize:vertical;"></textarea>
-                        <div style="font-size:11px; color:#9ca3af; display:flex; justify-content:space-between;">
+                    <div class="shared-note-body">
+                        <textarea id="sharedNoteContent" rows="18" placeholder="ここに共有事項を記入してください<br>（例）<br>・新メニュー提供開始が10月からなので、レシピを見ておいてください。<br>・チャッカマン発注先の変更 セントラル→リクエ<br>・冷蔵庫はお盆明け届く予定です。"></textarea>
+                        <div class="shared-note-footer">
                             <span>最大約15,000文字。長文は適宜整理してください。</span>
-                            <span id="sharedNoteUpdated" style="color:#fff;"></span>
+                            <span id="sharedNoteUpdated"></span>
                         </div>
                     </div>
                 </div>
@@ -85,10 +85,10 @@
                 <div id="criteriaPanel" class="tab-panel">
                     <div class="panel-header">
                         <h2>評価項目管理</h2>
-                        <div class="panel-actions" style="display:flex; gap:12px; align-items:center;">
-                            <label style="display:flex; align-items:center; gap:8px; color:#6b7280;">
+                        <div class="panel-actions criteria-actions">
+                            <label class="criteria-filter-label">
                                 <i class="fas fa-filter"></i>
-                                <select id="criteriaCategoryFilter" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px;">
+                                <select id="criteriaCategoryFilter">
                                     <option value="">すべてのカテゴリ</option>
                                     <option value="共通">共通</option>
                                     <option value="ホール">ホール</option>
@@ -229,23 +229,23 @@
                 <span class="close" onclick="closeModal('staffDetailModal')">&times;</span>
             </div>
             <div class="modal-body">
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-                    <label for="evaluationChangedBy" style="min-width:64px;">進捗変更者</label>
-                    <select id="evaluationChangedBy" style="flex:1; max-width:320px; padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px; background:#fff;"></select>
+                <div class="eval-changer-row">
+                    <label for="evaluationChangedBy" class="label-fixed">進捗変更者</label>
+                    <select id="evaluationChangedBy"></select>
                 </div>
-                <div id="evaluationFilters" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:10px 14px; margin-bottom:14px; display:flex; flex-direction:column; gap:10px;">
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                        <div style="font-size:12px; font-weight:600; color:#374151;">進捗</div>
-                        <div class="eval-filter-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                <div id="evaluationFilters">
+                    <div class="filter-section">
+                        <div class="filter-section-title">進捗</div>
+                        <div class="eval-filter-group">
                             <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="not-started" checked /> 未着手</label>
                             <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="learning" checked /> 学習中</label>
                             <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="done" checked /> 習得済み</label>
                             <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="tested" checked /> テスト完了</label>
                         </div>
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                        <div style="font-size:12px; font-weight:600; color:#374151;">カテゴリ</div>
-                        <div class="eval-filter-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                    <div class="filter-section">
+                        <div class="filter-section-title">カテゴリ</div>
+                        <div class="eval-filter-group">
                             <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="共通" checked /> 共通</label>
                             <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="ホール" checked /> ホール</label>
                             <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="キッチン" checked /> キッチン</label>
@@ -253,7 +253,7 @@
                         </div>
                     </div>
                 </div>
-                <h4 style="margin:10px 0 12px;">評価一覧</h4>
+                <h4 class="eval-list-title">評価一覧</h4>
                 <div id="staffEvaluations" class="evaluations-grid"></div>
             </div>
         </div>
@@ -263,7 +263,7 @@
     <div id="notification" class="notification"></div>
     <!-- テスター選択モーダル -->
     <div id="testerSelectModal" class="modal">
-        <div class="modal-content" style="max-width:420px;">
+        <div class="modal-content max-420">
             <div class="modal-header">
                 <h3>テスト確認者を選択</h3>
                 <span class="close" onclick="closeModal('testerSelectModal')">&times;</span>
@@ -271,9 +271,9 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="testerSelect">確認者</label>
-                    <select id="testerSelect" style="width:100%; padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px; background:#fff;"></select>
+                    <select id="testerSelect"></select>
                 </div>
-                <div class="form-actions" style="margin-top:14px; display:flex; gap:10px; justify-content:flex-end;">
+                <div class="form-actions tester-actions">
                     <button id="confirmTesterBtn" class="btn btn-primary" type="button">決定</button>
                     <button type="button" class="btn btn-secondary" onclick="closeModal('testerSelectModal')">キャンセル</button>
                 </div>
