@@ -26,12 +26,8 @@ class PAManager {
     }
     // 初期セットアップ
     setup() {
-    this.setupEventListeners();
-    // 認証後に loadData を呼ぶ
-    this._authenticated = false;
-    // ログイン機能撤廃: 直接認証済み扱いでデータ読み込み
-    this._authenticated = true;
-    this.loadData();
+        this.setupEventListeners();
+        this.loadData();
     }
 
     // イベント登録
@@ -52,12 +48,6 @@ class PAManager {
                 const name = document.getElementById('staffName')?.value?.trim();
                 const kana = document.getElementById('staffKana')?.value?.trim() || null;
                 const position = document.getElementById('staffPositionType')?.value || null;
-                const mgmtCodeRaw = document.getElementById('staffMgmtCode')?.value?.trim() || '';
-                let mgmtCode = mgmtCodeRaw === '' ? null : mgmtCodeRaw;
-                if (mgmtCode && !/^\d{4}$/.test(mgmtCode)) {
-                    this.showNotification('管理番号は4桁の数字', 'error');
-                    return;
-                }
                 const birth_date = document.getElementById('staffBirthDate')?.value || null;
                 if (!name) {
                     this.showNotification('名前は必須です', 'error');
@@ -74,7 +64,7 @@ class PAManager {
                     const res = await fetch(url, {
                         method,
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, kana, position, birth_date, mgmtCode })
+                        body: JSON.stringify({ name, kana, position, birth_date })
                     });
                     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                     this.showNotification(isEdit ? 'スタッフを更新しました' : 'スタッフを追加しました');
@@ -154,7 +144,305 @@ class PAManager {
         }
     }
 
-    // (ログイン廃止に伴い関連メソッド削除)
+    showNotification(message, type = 'success') {
+        const el = document.getElementById('notification');
+        if (!el) return;
+        el.textContent = message;
+        el.className = 'notification';
+        void el.offsetWidth; // reflow to restart animation
+        if (type === 'error') el.classList.add('error');
+        else if (type === 'warning') el.classList.add('warning');
+        el.classList.add('show');
+        el.style.display = 'block';
+        clearTimeout(this._notifyTimer);
+        this._notifyTimer = setTimeout(()=>{
+            el.classList.remove('show');
+            setTimeout(()=>{ if(!el.classList.contains('show')) el.style.display='none'; }, 500);
+        }, 2000); // 約2秒表示
+    }
+
+    async _autoSaveStaffEvaluations() {
+        try {
+            const hasStatus = this._pendingEvalChanges && this._pendingEvalChanges.size > 0;
+            const hasTester = this._pendingEvalTests && this._pendingEvalTests.size > 0;
+            if (!hasStatus && !hasTester) return; // 変更なし
+            const overlay = document.getElementById('savingOverlay');
+            if (overlay) overlay.style.display = 'flex';
+            const changedById = (document.getElementById('evaluationChangedBy')?.value) ? Number(document.getElementById('evaluationChangedBy').value) : null;
+            const keys = new Set();
+            if (hasStatus) for (const k of this._pendingEvalChanges.keys()) keys.add(k);
+            if (hasTester) for (const k of this._pendingEvalTests.keys()) keys.add(k);
+            const payload = Array.from(keys).map(key => {
+                const [sid, cid] = key.split(':').map(Number);
+                const status = this._pendingEvalChanges ? this._pendingEvalChanges.get(key) : undefined;
+                const test = this._pendingEvalTests ? this._pendingEvalTests.get(key) : undefined;
+                return { staffId: sid, criteriaId: cid, status, test };
+            });
+            const res = await fetch('/api/evaluations-batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ changes: payload, changedBy: changedById })
+            });
+            if (!res.ok) throw new Error('auto batch failed');
+            this._pendingEvalChanges.clear();
+            if (this._pendingEvalTests) this._pendingEvalTests.clear();
+            await this.loadLogs();
+            await this.loadStaffProgress();
+            this.showNotification('評価を自動保存しました');
+        } catch (e) {
+            console.error('自動保存エラー', e);
+            this.showNotification('評価の自動保存に失敗', 'error');
+        } finally {
+            const overlay = document.getElementById('savingOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+    }
+
+    async loadData() {
+        try {
+            await Promise.all([
+                this.loadStaff(),
+                this.loadCriteria(),
+                this.loadLogs()
+            ]);
+            // 共有メモは最後に読み込み（他と独立）
+            this.loadSharedNote();
+            await this.loadStaffProgress();
+            this.updateStats();
+        } catch (error) {
+            console.error('データ読み込みエラー:', error);
+        } finally {
+            this.hideLoadingScreen();
+        }
+    }
+
+    hideLoadingScreen() {
+        const ls = document.getElementById('loadingScreen');
+        if (!ls) return;
+        // フェードアウト
+        ls.style.opacity = '0';
+        setTimeout(() => {
+            ls.style.display = 'none';
+        }, 400);
+    }
+
+    async loadStaff() {
+        try {
+            const response = await fetch('/api/staff');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            this.currentStaff = await response.json();
+            this.renderStaff();
+        } catch (error) {
+            console.error('スタッフデータ読み込みエラー:', error);
+            // ユーザーに通知
+            this.showNotification('スタッフデータの読み込みに失敗しました', 'error');
+        }
+    }
+
+    async loadStaffProgress() {
+        try {
+            const res = await fetch('/api/staff-progress');
+            if (!res.ok) return;
+            const list = await res.json();
+            this._progressMap = new Map(list.map(x => [x.staffId, x]));
+            this.renderStaff();
+        } catch (e) {
+            console.error('進捗読み込みエラー:', e);
+        }
+    }
+
+    async loadCriteria() {
+        try {
+            const response = await fetch('/api/criteria');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            if (data.length === 0) {
+                this.showNotification('No criteria data available', 'info');
+            } else {
+                this.currentCriteria = data;
+                this.renderCriteria();
+            }
+        } catch (error) {
+            console.error('Criteria data load error:', error);
+            this.showNotification('Failed to load criteria data', 'error');
+        }
+    }
+
+    renderStaff() {
+        const container = document.getElementById('staffGrid');
+        if (!container) return;
+
+        if (this.currentStaff.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-users" style="font-size: 4rem; color: var(--light-color); margin-bottom: 20px;"></i>
+                    <h3>まだスタッフが登録されていません</h3>
+                    <p>「新規スタッフ追加」ボタンから最初のスタッフを追加してください</p>
+                </div>
+            `;
+            return;
+        }
+
+    container.innerHTML = this.currentStaff.map(staff => {
+            const prog = this._progressMap?.get(staff.id) || { progressPercent: 0, counts: { done: 0, learning: 0, notStarted: (this.currentCriteria?.length || 0) } };
+            const p = prog.progressPercent || 0;
+            const counts = prog.counts || { done: 0, learning: 0, notStarted: 0 };
+            return `
+                <div class="staff-card">
+                    <div class="staff-header" onclick="showStaffDetail(${staff.id})">
+                        <div class="staff-info">
+                            <div style="color:#6b7280; font-size:12px;">${staff.kana || ''}</div>
+                            <h3>${staff.name}</h3>
+                            <span class="position-badge">${staff.position || '未設定'}</span>
+                        </div>
+                        <div class="staff-card-actions">
+                            <button class="btn btn-secondary btn-icon" title="編集" onclick="event.stopPropagation(); editStaff(${staff.id})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-icon" title="削除" onclick="event.stopPropagation(); deleteStaff(${staff.id})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="staff-progress">
+                        <div class="progress-label">
+                            <span>進捗状況</span>
+                            <span class="progress-percent">${p}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${p}%"></div>
+                        </div>
+                    </div>
+                    <div class="staff-stats">
+                        <div class="stat-item-small">
+                            <span class="stat-value-small">${counts.notStarted}</span>
+                            <span class="stat-label-small">未着手</span>
+                        </div>
+                        <div class="stat-item-small">
+                            <span class="stat-value-small">${counts.learning}</span>
+                            <span class="stat-label-small">学習中</span>
+                        </div>
+                        <div class="stat-item-small">
+                            <span class="stat-value-small">${counts.done}</span>
+                            <span class="stat-label-small">習得済み</span>
+                        </div>
+                        <div class="stat-item-small">
+                            <span class="stat-value-small">${prog.tested ?? 0}</span>
+                            <span class="stat-label-small">テスト完了</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    renderCriteria() {
+        const container = document.getElementById('criteriaGrid');
+        if (!container) return;
+
+        // フィルタ適用 + 名前順
+        const filtered = (this.currentCriteria || [])
+            .filter(c => !this.criteriaFilter || (c.category || '') === this.criteriaFilter)
+            .sort((a,b) => (a.name||'').localeCompare(b.name||''));
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-list-check" style="font-size: 4rem; color: var(--light-color); margin-bottom: 20px;"></i>
+                    <h3>表示できる評価項目がありません</h3>
+                    <p>右上のフィルタや「項目追加」をご利用ください</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = filtered.map(criteria => `
+            <div class="criteria-card" data-id="${criteria.id}">
+                <div class="criteria-header">
+                    <div>
+                        <div class="criteria-title">${criteria.name}</div>
+                        <span class="criteria-category">${criteria.category || '共通'}</span>
+                    </div>
+                    <div class="criteria-actions">
+                        <button class="btn btn-secondary" onclick="editCriteria(${criteria.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteCriteria(${criteria.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                ${criteria.description ? `<div class="criteria-description">${criteria.description}</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    // ドラッグ操作は廃止（no-op）
+    setupSortable() {}
+
+    switchTab(tabName) {
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        const tabBtn = document.getElementById(tabName + 'Tab');
+        if (tabBtn) tabBtn.classList.add('active');
+
+        document.querySelectorAll('.tab-panel').forEach(panel => {
+            panel.classList.remove('active');
+        });
+        const panel = document.getElementById(tabName + 'Panel');
+        if (panel) panel.classList.add('active');
+
+        this.currentTab = tabName;
+
+        if (tabName === 'analytics') {
+            // ログのみ更新（グラフ廃止）
+            this.loadLogs();
+        } else if (tabName === 'sharedNote') {
+            // 遅延読み込み（まだ未読なら）
+            if (!this._sharedNoteLoaded) this.loadSharedNote();
+        }
+    }
+    // renderAnalytics 削除（円グラフ機能廃止）
+
+    showModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeModal(modalId) {
+        if (modalId === 'staffDetailModal') {
+        const hasStatus = this._pendingEvalChanges && this._pendingEvalChanges.size > 0;
+        const hasTester = this._pendingEvalTests && this._pendingEvalTests.size > 0;
+        if (hasStatus || hasTester) {
+            const changer = document.getElementById('evaluationChangedBy');
+            const changedByVal = changer ? changer.value : '';
+            if (!changedByVal) {
+                if (changer) {
+                    changer.classList.add('input-error');
+                    changer.focus();
+                }
+                this.showNotification('進捗変更者を選択してください', 'error');
+                return; // abort close
+            }
+        }
+    }
+        const el = document.getElementById(modalId);
+        if (el) el.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        if (modalId === 'criteriaModal') this.editingCriteriaId = null;
+        if (modalId === 'staffDetailModal') this._autoSaveStaffEvaluations();
+    }
+
+    updateStats() {
+        const totalStaffElement = document.getElementById('totalStaff');
+        const totalCriteriaElement = document.getElementById('totalCriteria');
+        const avgProgressElement = document.getElementById('avgProgress');
+        
+        if (totalStaffElement) totalStaffElement.textContent = this.currentStaff.length;
+        if (totalCriteriaElement) totalCriteriaElement.textContent = this.currentCriteria.length;
+        if (avgProgressElement) avgProgressElement.textContent = Math.floor(Math.random() * 100) + '%';
+    }
 
     async loadLogs() {
         try {
@@ -310,144 +598,6 @@ function switchTab(tabName) {
     paManager.switchTab(tabName);
 }
 
-// === Login Logic ===
-PAManager.prototype.initLoginUI = function() {
-    const overlay = document.getElementById('loginOverlay');
-    if (!overlay) { this._authenticated = true; this.loadData(); return; }
-    const root = document.getElementById('loginRoot');
-    const intro = document.getElementById('loginIntro');
-    const inputArea = document.getElementById('loginInputArea');
-    const digitRow = document.getElementById('loginDigitRow');
-    const codeEl = document.getElementById('loginCodeFloating');
-    const errEl = document.getElementById('loginError');
-    const swipeTrack = document.getElementById('loginSwipeTrack');
-    const swipeThumb = document.getElementById('loginSwipeThumb');
-    let code = '';
-    const digits = ['0','1','2','3','4','5','6','7','8','9'];
-    const renderDigits = () => {
-        if (!digitRow) return;
-        digitRow.innerHTML = digits.map(d=>`<button type="button" data-digit="${d}">${d}</button>`).join('');
-    };
-    const redraw = () => {
-        if (codeEl) codeEl.textContent = code || '';
-        if (errEl) errEl.textContent='';
-    };
-    // イントロ → タップで入力フェーズ
-    overlay.addEventListener('click', () => {
-        if (!this._authenticated && root.getAttribute('data-phase') === 'intro') {
-            root.setAttribute('data-phase','input');
-            if (intro) intro.style.display='none';
-            if (inputArea) inputArea.style.display='flex';
-        }
-    }, { once:false });
-    renderDigits();
-    const handleDigit = (btnEl)=> {
-        if (!btnEl) return;
-        if (code.length >=4) return; // 4桁固定
-        code += btnEl.getAttribute('data-digit');
-        redraw();
-    };
-    // タップ / クリック両対応 (iPad Safari のゴーストクリック回避で pointer/ touch / click すべて受付)
-    const digitHandler = (el)=>{
-        if (!el) return;
-        if (code.length >=4) return;
-        code += el.getAttribute('data-digit');
-        redraw();
-        if (code.length === 4) {
-            // スワイプ待ち表示強調
-            if (swipeTrack) swipeTrack.classList.add('ready');
-        }
-    };
-
-    let _lastPointerTime = 0;
-    ['pointerdown'].forEach(ev => {
-        digitRow.addEventListener(ev, (e)=>{
-            const now = performance.now();
-            if (now - _lastPointerTime < 40) return; // 同一イベント多重防止
-            _lastPointerTime = now;
-            const t = e.target.closest('button[data-digit]');
-            if (!t) return;
-            e.preventDefault(); e.stopPropagation();
-            digitHandler(t);
-        });
-    });
-    // スワイプ不要: 削除
-    const attemptLogin = async () => {
-        if (code.length !== 4) return; // 4桁揃っていない
-        try {
-            const res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code }) });
-            if (!res.ok) throw new Error('login');
-            const data = await res.json();
-            localStorage.setItem('pa_token', data.token);
-            localStorage.setItem('pa_staffName', data.staff.name);
-            this._authenticated = true;
-            overlay.classList.add('fade-out');
-            setTimeout(()=>{ overlay.style.display='none'; this.loadData(); this._setupIdleTimer(); }, 600);
-        } catch(e) {
-            // 失敗: シェイク + クリア
-            root.classList.add('swipe-fail');
-            setTimeout(()=> root.classList.remove('swipe-fail'), 450);
-            code=''; redraw();
-            if (errEl) errEl.textContent='管理番号が違います';
-            if (swipeTrack) swipeTrack.classList.remove('ready','swiping','done');
-        }
-    };
-
-    // スワイプジェスチャー
-    if (swipeTrack && swipeThumb) {
-        let drag = false; let startX = 0; let curX = 0; const maxMove = ()=> swipeTrack.clientWidth - swipeThumb.clientWidth - 8; // padding考慮
-        const resetThumb = ()=> { swipeThumb.style.transform='translateX(0)'; swipeTrack.classList.remove('swiping','done'); };
-        const onPointerDown = (e)=>{
-            if (code.length !== 4) return; // 4桁でないと開始不可
-            drag = true; startX = e.clientX; curX = 0; swipeTrack.classList.add('swiping');
-        };
-        const onPointerMove = (e)=>{
-            if (!drag) return; curX = Math.max(0, Math.min(e.clientX - startX, maxMove()));
-            swipeThumb.style.transform = `translateX(${curX}px)`;
-        };
-        const onPointerUp = ()=>{
-            if (!drag) return; drag = false;
-            const threshold = maxMove() * 0.75;
-            if (curX >= threshold) {
-                swipeTrack.classList.add('done');
-                attemptLogin();
-            } else {
-                resetThumb();
-            }
-        };
-        swipeThumb.addEventListener('pointerdown', onPointerDown);
-        window.addEventListener('pointermove', onPointerMove);
-        window.addEventListener('pointerup', onPointerUp);
-    }
-    // 既存トークンがあっても毎回再ログインを要求 (スキップ禁止)
-    localStorage.removeItem('pa_token');
-    localStorage.removeItem('pa_staffName');
-    // イントロフェード終了後自動で入力待ちに移行
-    // イントロのアニメーション (3s) 完了後にフェーズ切替しつつフェードイン
-    setTimeout(()=>{
-        if (root.getAttribute('data-phase')==='intro') {
-            root.setAttribute('data-phase','input');
-            if (intro) intro.style.display='none';
-            if (inputArea) {
-                inputArea.style.display='flex';
-                // 1フレーム待って opacity 1 (CSS transition)
-                requestAnimationFrame(()=> inputArea.style.opacity='1');
-            }
-        }
-    }, 2000); // フェードアウト後 2s で入力へ
-    redraw();
-};
-
-// === 再ログイン制御 ===
-// forceRelogin 削除
-
-// ページが非表示→再表示 / フォーカス時に再ログイン要求
-// 可視性/フォーカス時の再ログイン処理削除
-
-// アイドルタイムアウト (例: 10分無操作で再ログイン)
-// アイドルタイマー削除
-// ログイン成功時に idle タイマー開始 (attemptLogin 内で呼ばれるように追記)
-
 function showAddStaffModal() {
     // 追加モードに初期化
     paManager.editingStaffId = null;
@@ -456,7 +606,6 @@ function showAddStaffModal() {
     const form = document.getElementById('staffForm');
     if (form) form.reset();
     document.getElementById('staffPositionType').value = 'バイト';
-    const mgmtEl = document.getElementById('staffMgmtCode'); if (mgmtEl) mgmtEl.value = '';
     paManager.showModal('staffModal');
 }
 
@@ -527,7 +676,6 @@ function editStaff(id) {
     document.getElementById('staffName').value = s.name || '';
     document.getElementById('staffKana').value = s.kana || '';
     document.getElementById('staffPositionType').value = s.position || 'バイト';
-    const mgmtEl = document.getElementById('staffMgmtCode'); if (mgmtEl) mgmtEl.value = s.mgmtCode || '';
     // birth_date: APIは birthDate(DB側), クライアントは birth_date(YYYY-MM-DD)
     const bd = s.birth_date || (s.birthDate ? new Date(s.birthDate) : null);
     if (bd) {
@@ -579,7 +727,6 @@ PAManager.prototype.openStaffDetail = async function (staffId) {
     document.getElementById('staffDetailPosition').textContent = staff.position || '未設定';
     document.getElementById('staffDetailKana').textContent = staff.kana || '';
     document.getElementById('staffDetailBirth').textContent = staff.birth_date || (staff.birthDate ? new Date(staff.birthDate).toLocaleDateString() : '-');
-    const mgmtSpan = document.getElementById('staffDetailMgmt'); if (mgmtSpan) mgmtSpan.textContent = staff.mgmtCode || '-';
     const changer = document.getElementById('evaluationChangedBy');
     if (changer) {
         const options = (this.currentStaff || []).map(s => `<option value="${s.id}">${s.name}</option>`).join('');
