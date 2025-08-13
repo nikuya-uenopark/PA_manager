@@ -411,15 +411,27 @@ class PAManager {
     }
 
     closeModal(modalId) {
+        if (modalId === 'staffDetailModal') {
+        const hasStatus = this._pendingEvalChanges && this._pendingEvalChanges.size > 0;
+        const hasTester = this._pendingEvalTests && this._pendingEvalTests.size > 0;
+        if (hasStatus || hasTester) {
+            const changer = document.getElementById('evaluationChangedBy');
+            const changedByVal = changer ? changer.value : '';
+            if (!changedByVal) {
+                if (changer) {
+                    changer.classList.add('input-error');
+                    changer.focus();
+                }
+                this.showNotification('進捗変更者を選択してください', 'error');
+                return; // abort close
+            }
+        }
+    }
         const el = document.getElementById(modalId);
         if (el) el.style.display = 'none';
         document.body.style.overflow = 'auto';
-        if (modalId === 'criteriaModal') {
-            this.editingCriteriaId = null;
-        }
-        if (modalId === 'staffDetailModal') {
-            this._autoSaveStaffEvaluations();
-        }
+        if (modalId === 'criteriaModal') this.editingCriteriaId = null;
+        if (modalId === 'staffDetailModal') this._autoSaveStaffEvaluations();
     }
 
     updateStats() {
@@ -711,23 +723,18 @@ PAManager.prototype.deleteCriteria = async function (criteriaId) {
 PAManager.prototype.openStaffDetail = async function (staffId) {
     const staff = this.currentStaff.find(s => s.id === staffId);
     if (!staff) return;
-    // ヘッダ情報
     document.getElementById('staffDetailName').textContent = staff.name;
     document.getElementById('staffDetailPosition').textContent = staff.position || '未設定';
     document.getElementById('staffDetailKana').textContent = staff.kana || '';
     document.getElementById('staffDetailBirth').textContent = staff.birth_date || (staff.birthDate ? new Date(staff.birthDate).toLocaleDateString() : '-');
-
-    // 変更者セレクトを初期化（全スタッフから選択）
     const changer = document.getElementById('evaluationChangedBy');
     if (changer) {
         const options = (this.currentStaff || []).map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         changer.innerHTML = `<option value="">未選択</option>` + options;
-        changer.value = String(staffId);
+        changer.value = '';// default blank
+        changer.classList.remove('input-error');
     }
-
-    // 評価一覧
     await this.renderStaffEvaluations(staffId);
-    // モーダル閉じる時に一括保存するためフラグ
     this._activeStaffDetailId = staffId;
     this.showModal('staffDetailModal');
 }
@@ -824,7 +831,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
 
         // クリックで状態トグル＆保存
     container.querySelectorAll('.criteria-chip').forEach(el => {
-            // チップ本体クリックで状態トグル
+            // テスト系ボタンは無視
             el.addEventListener('click', async (ev) => {
                 // テスト系ボタンは無視
                 if (ev.target && ev.target.classList && (ev.target.classList.contains('open-tester-modal-btn') || ev.target.classList.contains('reset-tested-btn'))) return;
