@@ -65,7 +65,7 @@ body {
 .login-animated-bg:after { animation-direction:reverse; animation-duration:26s; opacity:.35; }
 @keyframes spinSlow { to { transform:translate(-50%,-50%) rotate(360deg); } }
 .login-center { position:relative; z-index:2; width:100%; padding:4vw 5vw; display:flex; flex-direction:column; align-items:center; gap:40px; }
-.login-intro { font-size:clamp(42px,7vw,96px); font-weight:700; letter-spacing:.08em; background:linear-gradient(120deg,#fff,#a5b4fc 40%,#fff); -webkit-background-clip:text; color:transparent; opacity:0; animation:introFade 3s ease forwards; }
+.login-intro { font-size:clamp(42px,7vw,96px); font-weight:700; letter-spacing:.08em; background:linear-gradient(120deg,#fff,#a5b4fc 40%,#fff); -webkit-background-clip:text; background-clip:text; color:transparent; opacity:0; animation:introFade 3s ease forwards; }
 @keyframes introFade { 0% { opacity:0; transform:translateY(20px) scale(.92); } 20% { opacity:1; transform:translateY(0) scale(1); } 80% { opacity:1; } 100% { opacity:0; transform:translateY(-15px) scale(.98); } }
 .login-input-area { width:100%; max-width:1200px; display:flex; flex-direction:column; gap:46px; }
 .login-code-floating { font-size:clamp(56px,10vw,120px); font-weight:700; letter-spacing:.18em; text-align:center; min-height:1.1em; color:#ffffffdd; text-shadow:0 6px 24px rgba(0,0,0,0.6); font-variant-numeric:slashed-zero tabular-nums; }
@@ -83,7 +83,7 @@ body {
 @keyframes fadeAway { 0% { opacity:1; } 100% { opacity:0; } }
 @keyframes popIn { 0% { transform:scale(.85); opacity:0; } 100% { transform:scale(1); opacity:1; } }
 @keyframes fadeAway { 0% { opacity:1; transform:scale(1); } 100% { opacity:0; transform:scale(.96); } }
-@keyframes slideDown { 0% { transform:translateY(-20px); opacity:0; } 100% { transform:translateY(0); opacity:1; } }
+@keyframes slideDown { 0% { transform:translateY(-20px); opacity:0; } 100% { transform:translateY(0); opacity:1; } } 
 
 /* ローディング画面 */
 #loadingScreen {
