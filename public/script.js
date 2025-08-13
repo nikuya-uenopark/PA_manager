@@ -634,7 +634,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // コンロつけ 日付 & 卓番号
     const dateInput = document.getElementById('stoveDate');
     const numSelect = document.getElementById('stoveNumber');
-    const result = document.getElementById('stoveResult');
     const weekdays = ['日','月','火','水','木','金','土'];
     function updateStove() {
         let formattedDate = '';
@@ -648,14 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formattedDate = `${y}/${m}/${da}(${w})`;
             }
         }
-        const num = numSelect && numSelect.value ? numSelect.value : '';
-        if (result) {
-            if (formattedDate || num) {
-                result.textContent = formattedDate + (formattedDate && num ? ' ' : '') + (num ? num + '' : '');
-            } else {
-                result.textContent = '';
-            }
-        }
+    // 表示要素削除済みのため結果テキストはUIに反映しない
         // デバウンス保存 (paManager利用可時のみ)
         if (window.paManager) {
             const s = document.getElementById('sharedNoteStatus');
