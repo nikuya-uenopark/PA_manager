@@ -10,7 +10,9 @@
     "deploy": "vercel --prod",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:deploy": "prisma migrate deploy",
+  "prisma:deploy": "prisma migrate deploy",
+  "prisma:migrate": "prisma migrate dev --name sync-mgmt-code",
+  "prisma:seed": "prisma db seed",
     "postinstall": "prisma generate || true"
   },
   "dependencies": {
@@ -33,7 +35,8 @@
   },
   "packageManager": "npm@10.8.1",
   "prisma": {
-    "schema": "./prisma/schema.prisma"
+    "schema": "./prisma/schema.prisma",
+    "seed": "node prisma/seed.js"
   },
   "type": "commonjs",
   "postinstall:note": "moved to scripts to ensure Vercel runs prisma generate"
