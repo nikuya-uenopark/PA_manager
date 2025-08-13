@@ -182,125 +182,7 @@ class PAManager {
                         </div>
                         <div class="stat-item-small">
                             <span class="stat-value-small">${counts.done}</span>
-                            <span class="stat-label-small">習得済み</span>
-                        </div>
-                        <div class="stat-item-small">
-                            <span class="stat-value-small">${prog.tested ?? 0}</span>
-                            <span class="stat-label-small">テスト完了</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    renderCriteria() {
-        const container = document.getElementById('criteriaGrid');
-        if (!container) return;
-
-        // フィルタ適用 + 名前順
-        const filtered = (this.currentCriteria || [])
-            .filter(c => !this.criteriaFilter || (c.category || '') === this.criteriaFilter)
-            .sort((a,b) => (a.name||'').localeCompare(b.name||''));
-
-        if (filtered.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-list-check" style="font-size: 4rem; color: var(--light-color); margin-bottom: 20px;"></i>
-                    <h3>表示できる評価項目がありません</h3>
-                    <p>右上のフィルタや「項目追加」をご利用ください</p>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = filtered.map(criteria => `
-            <div class="criteria-card" data-id="${criteria.id}">
-                <div class="criteria-header">
-                    <div>
-                        <div class="criteria-title">${criteria.name}</div>
-                        <span class="criteria-category">${criteria.category || '共通'}</span>
-                    </div>
-                    <div class="criteria-actions">
-                        <button class="btn btn-secondary" onclick="editCriteria(${criteria.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-danger" onclick="deleteCriteria(${criteria.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                ${criteria.description ? `<div class="criteria-description">${criteria.description}</div>` : ''}
-            </div>
-        `).join('');
-    }
-
-    // ドラッグ操作は廃止（no-op）
-    setupSortable() {}
-
-    switchTab(tabName) {
-        document.querySelectorAll('.tab-button').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        const tabBtn = document.getElementById(tabName + 'Tab');
-        if (tabBtn) tabBtn.classList.add('active');
-
-        document.querySelectorAll('.tab-panel').forEach(panel => {
-            panel.classList.remove('active');
-        });
-        const panel = document.getElementById(tabName + 'Panel');
-        if (panel) panel.classList.add('active');
-
-        this.currentTab = tabName;
-
-        if (tabName === 'analytics') {
-            // ログのみ更新（グラフ廃止）
-            this.loadLogs();
-        } else if (tabName === 'sharedNote') {
-            // 遅延読み込み（まだ未読なら）
-            if (!this._sharedNoteLoaded) this.loadSharedNote();
-        }
-    }
-    // renderAnalytics 削除（円グラフ機能廃止）
-
-    showModal(modalId) {
-        document.getElementById(modalId).style.display = 'block';
-        document.body.style.overflow = 'hidden';
-    }
-
-    closeModal(modalId) {
-        if (modalId === 'staffDetailModal') {
-        const hasStatus = this._pendingEvalChanges && this._pendingEvalChanges.size > 0;
-        const hasTester = this._pendingEvalTests && this._pendingEvalTests.size > 0;
-        if (hasStatus || hasTester) {
-            const changer = document.getElementById('evaluationChangedBy');
-            const changedByVal = changer ? changer.value : '';
-            if (!changedByVal) {
-                if (changer) {
-                    changer.classList.add('input-error');
-                    changer.focus();
-                }
-                this.showNotification('進捗変更者を選択してください', 'error');
-                return; // abort close
-            }
-        }
-    }
-        const el = document.getElementById(modalId);
-        if (el) el.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        if (modalId === 'criteriaModal') this.editingCriteriaId = null;
-        if (modalId === 'staffDetailModal') this._autoSaveStaffEvaluations();
-    }
-
-    updateStats() {
-        const totalStaffElement = document.getElementById('totalStaff');
-        const totalCriteriaElement = document.getElementById('totalCriteria');
-        const avgProgressElement = document.getElementById('avgProgress');
-        
-        if (totalStaffElement) totalStaffElement.textContent = this.currentStaff.length;
-        if (totalCriteriaElement) totalCriteriaElement.textContent = this.currentCriteria.length;
-        if (avgProgressElement) avgProgressElement.textContent = Math.floor(Math.random() * 100) + '%';
-    }
+                            // (ログインロジック削除済)
 
     async loadLogs() {
         try {
@@ -585,49 +467,13 @@ PAManager.prototype.initLoginUI = function() {
 };
 
 // === 再ログイン制御 ===
-PAManager.prototype.forceRelogin = function(reason='') {
-    const overlay = document.getElementById('loginOverlay');
-    const root = document.getElementById('loginRoot');
-    const intro = document.getElementById('loginIntro');
-    const inputArea = document.getElementById('loginInputArea');
-    if (!overlay || !root) return;
-    // トークン削除
-    localStorage.removeItem('pa_token');
-    localStorage.removeItem('pa_staffName');
-    this._authenticated = false;
-    overlay.style.display = 'flex';
-    overlay.classList.remove('fade-out');
-    root.setAttribute('data-phase','input');
-    if (intro) intro.style.display='none';
-    if (inputArea) inputArea.style.display='flex';
-    // 既存データはクリア任意 (ここでは保持) / 必要なら this.currentStaff=[] など
-    if (reason) console.log('Re-login reason:', reason);
-};
+// forceRelogin 削除
 
 // ページが非表示→再表示 / フォーカス時に再ログイン要求
-document.addEventListener('visibilitychange', ()=>{
-    if (document.visibilityState === 'visible') {
-        if (paManager && paManager._authenticated) {
-            paManager.forceRelogin('visibility return');
-        }
-    }
-});
-window.addEventListener('focus', ()=>{
-    if (paManager && paManager._authenticated) {
-        paManager.forceRelogin('window focus');
-    }
-});
+// 可視性/フォーカス時の再ログイン処理削除
 
 // アイドルタイムアウト (例: 10分無操作で再ログイン)
-PAManager.prototype._setupIdleTimer = function() {
-    if (this._idleBound) return; this._idleBound = true;
-    let timer; const reset=()=>{
-        clearTimeout(timer);
-        timer = setTimeout(()=>{ if (this._authenticated) this.forceRelogin('idle timeout'); }, 10*60*1000);
-    };
-    ['click','touchstart','keydown'].forEach(ev=> document.addEventListener(ev, reset, {passive:true}));
-    reset();
-};
+// アイドルタイマー削除
 // ログイン成功時に idle タイマー開始 (attemptLogin 内で呼ばれるように追記)
 
 function showAddStaffModal() {
