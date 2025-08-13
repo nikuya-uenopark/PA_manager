@@ -12,10 +12,12 @@ module.exports = async function handler(req, res){
     const { code } = req.body || {};
     const raw = (code||'').toString();
     const sanitized = sanitizeContent(raw).replace(/[^0-9]/g,'');
-    if (!/^\d{3,5}$/.test(sanitized)) {
-      return res.status(400).json({ error: 'code must be 3-5 digits' });
+    // 4桁固定運用
+    if (!/^\d{4}$/.test(sanitized)) {
+      return res.status(400).json({ error: 'code must be exactly 4 digits' });
     }
-    if (sanitized === '99999') {
+    // デバッグコード (9999)
+    if (sanitized === '9999') {
       const token = Buffer.from(JSON.stringify({ sid:-1, debug:true, t:Date.now() })).toString('base64');
       res.status(200).json({ token, staff:{ id:-1, name:'デバッグ' }, debug:true });
       return;

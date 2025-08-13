@@ -27,7 +27,8 @@
                 <div id="loginInputArea" class="login-input-area" style="display:none;">
                     <div id="loginCodeFloating" class="login-code-floating"></div>
                     <div class="login-digit-row" id="loginDigitRow"></div>
-                    <div class="login-hint">3〜5桁入力後 画面をスワイプしてログイン</div>
+                    <div class="login-swipe-track" id="loginSwipeTrack"><div class="login-swipe-thumb" id="loginSwipeThumb">SWIPE</div></div>
+                    <div class="login-hint">4桁入力後 スワイプでログイン</div>
                     <div class="login-error" id="loginError"></div>
                 </div>
             </div>
@@ -165,9 +166,9 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="staffMgmtCode">管理番号 (3〜5桁 任意)</label>
-                                <input type="text" id="staffMgmtCode" inputmode="numeric" pattern="[0-9]{3,5}" placeholder="例: 300" />
-                                <small style="color:#6b7280;">重複不可 / 空欄なら未設定</small>
+                                <label for="staffMgmtCode">管理番号 (4桁 任意)</label>
+                                <input type="text" id="staffMgmtCode" inputmode="numeric" pattern="[0-9]{4}" placeholder="例: 0300" maxlength="4" />
+                                <small style="color:#6b7280;">4桁 / 重複不可 / 空欄なら未設定</small>
                             </div>
                             <div class="form-group">
                                 <label for="staffBirthDate">生年月日</label>

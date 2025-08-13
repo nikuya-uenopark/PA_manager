@@ -53,8 +53,8 @@ module.exports = async function handler(req, res) {
       if (!name) {
         return res.status(400).json({ error: 'name is required' });
       }
-      if (mgmtCode && !/^\d{3,5}$/.test(mgmtCode)) {
-        return res.status(400).json({ error: 'mgmtCode must be 3-5 digits' });
+      if (mgmtCode && !/^\d{4}$/.test(mgmtCode)) {
+        return res.status(400).json({ error: 'mgmtCode must be 4 digits' });
       }
       const created = await prisma.staff.create({
         data: {
@@ -136,8 +136,8 @@ ID：${id} (既に存在しない)`).catch(()=>{});
   kana = kana ? sanitizeContent(kana) : undefined;
   position = position ? sanitizeContent(position) : undefined;
         if (!id) return res.status(400).json({ error: 'id is required' });
-        if (mgmtCode !== undefined && mgmtCode !== null && mgmtCode !== '' && !/^\d{3,5}$/.test(mgmtCode)) {
-          return res.status(400).json({ error: 'mgmtCode must be 3-5 digits' });
+        if (mgmtCode !== undefined && mgmtCode !== null && mgmtCode !== '' && !/^\d{4}$/.test(mgmtCode)) {
+          return res.status(400).json({ error: 'mgmtCode must be 4 digits' });
         }
         const updated = await prisma.staff.update({
           where: { id: Number(id) },

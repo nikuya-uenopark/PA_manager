@@ -617,6 +617,8 @@ PAManager.prototype.initLoginUI = function() {
     const digitRow = document.getElementById('loginDigitRow');
     const codeEl = document.getElementById('loginCodeFloating');
     const errEl = document.getElementById('loginError');
+    const swipeTrack = document.getElementById('loginSwipeTrack');
+    const swipeThumb = document.getElementById('loginSwipeThumb');
     let code = '';
     const digits = ['0','1','2','3','4','5','6','7','8','9'];
     const renderDigits = () => {
@@ -638,33 +640,37 @@ PAManager.prototype.initLoginUI = function() {
     renderDigits();
     const handleDigit = (btnEl)=> {
         if (!btnEl) return;
-        if (code.length >=5) return;
+        if (code.length >=4) return; // 4桁固定
         code += btnEl.getAttribute('data-digit');
         redraw();
     };
     // タップ / クリック両対応 (iPad Safari のゴーストクリック回避で pointer/ touch / click すべて受付)
     const digitHandler = (el)=>{
         if (!el) return;
-        if (code.length >=5) return;
+        if (code.length >=4) return;
         code += el.getAttribute('data-digit');
         redraw();
-        if (code.length >=3) {
-            // 3〜5桁の幅で 400ms 後に自動ログイン (追加タップがあればリセット)
-            clearTimeout(autoLoginTimer);
-            autoLoginTimer = setTimeout(()=> attemptLogin(), 400);
+        if (code.length === 4) {
+            // スワイプ待ち表示強調
+            if (swipeTrack) swipeTrack.classList.add('ready');
         }
     };
-    let autoLoginTimer;
-    ['pointerdown','touchstart','click'].forEach(ev => {
+
+    let _lastPointerTime = 0;
+    ['pointerdown'].forEach(ev => {
         digitRow.addEventListener(ev, (e)=>{
+            const now = performance.now();
+            if (now - _lastPointerTime < 40) return; // 同一イベント多重防止
+            _lastPointerTime = now;
             const t = e.target.closest('button[data-digit]');
             if (!t) return;
             e.preventDefault(); e.stopPropagation();
             digitHandler(t);
-        }, { passive: ev==='touchstart' });
+        });
     });
     // スワイプ不要: 削除
     const attemptLogin = async () => {
+        if (code.length !== 4) return; // 4桁揃っていない
         try {
             const res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code }) });
             if (!res.ok) throw new Error('login');
@@ -680,8 +686,36 @@ PAManager.prototype.initLoginUI = function() {
             setTimeout(()=> root.classList.remove('swipe-fail'), 450);
             code=''; redraw();
             if (errEl) errEl.textContent='管理番号が違います';
+            if (swipeTrack) swipeTrack.classList.remove('ready','swiping','done');
         }
     };
+
+    // スワイプジェスチャー
+    if (swipeTrack && swipeThumb) {
+        let drag = false; let startX = 0; let curX = 0; const maxMove = ()=> swipeTrack.clientWidth - swipeThumb.clientWidth - 8; // padding考慮
+        const resetThumb = ()=> { swipeThumb.style.transform='translateX(0)'; swipeTrack.classList.remove('swiping','done'); };
+        const onPointerDown = (e)=>{
+            if (code.length !== 4) return; // 4桁でないと開始不可
+            drag = true; startX = e.clientX; curX = 0; swipeTrack.classList.add('swiping');
+        };
+        const onPointerMove = (e)=>{
+            if (!drag) return; curX = Math.max(0, Math.min(e.clientX - startX, maxMove()));
+            swipeThumb.style.transform = `translateX(${curX}px)`;
+        };
+        const onPointerUp = ()=>{
+            if (!drag) return; drag = false;
+            const threshold = maxMove() * 0.75;
+            if (curX >= threshold) {
+                swipeTrack.classList.add('done');
+                attemptLogin();
+            } else {
+                resetThumb();
+            }
+        };
+        swipeThumb.addEventListener('pointerdown', onPointerDown);
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+    }
     // 既存トークンがあっても毎回再ログインを要求 (スキップ禁止)
     localStorage.removeItem('pa_token');
     localStorage.removeItem('pa_staffName');
@@ -697,7 +731,7 @@ PAManager.prototype.initLoginUI = function() {
                 requestAnimationFrame(()=> inputArea.style.opacity='1');
             }
         }
-    }, 3000);
+    }, 2000); // フェードアウト後 2s で入力へ
     redraw();
 };
 
