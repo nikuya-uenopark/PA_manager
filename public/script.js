@@ -623,7 +623,7 @@ PAManager.prototype.initLoginUI = function() {
     };
     // イントロ → タップで入力フェーズ
     overlay.addEventListener('click', () => {
-        if (root.getAttribute('data-phase') === 'intro') {
+        if (!this._authenticated && root.getAttribute('data-phase') === 'intro') {
             root.setAttribute('data-phase','input');
             if (intro) intro.style.display='none';
             if (inputArea) inputArea.style.display='flex';
@@ -636,11 +636,7 @@ PAManager.prototype.initLoginUI = function() {
         code += btnEl.getAttribute('data-digit');
         redraw();
     };
-    digitRow.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        const btn = e.target.closest('button[data-digit]');
-        handleDigit(btn);
-    });
+    // タップのみ反応 (click ではなく touchstart 優先)
     digitRow.addEventListener('touchstart', (e)=>{
         const t = e.target.closest('button[data-digit]');
         if (t) {
@@ -663,9 +659,6 @@ PAManager.prototype.initLoginUI = function() {
     };
     overlay.addEventListener('touchstart', e=>{ const t=e.touches[0]; touchStart(t.clientX,t.clientY); }, { passive:true });
     overlay.addEventListener('touchend', e=>{ const t=e.changedTouches[0]; touchEnd(t.clientX,t.clientY); }, { passive:true });
-    // マウスでもテスト可能
-    overlay.addEventListener('mousedown', e=>{ touchStart(e.clientX, e.clientY); });
-    overlay.addEventListener('mouseup', e=>{ touchEnd(e.clientX, e.clientY); });
     const attemptLogin = async () => {
         try {
             const res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code }) });

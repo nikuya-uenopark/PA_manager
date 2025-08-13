@@ -17,10 +17,21 @@ module.exports = async function handler(req, res) {
   if (req.method === 'GET') {
     // スタッフ一覧取得
     try {
-      const result = await prisma.staff.findMany({
-        orderBy: [ { id: 'desc' } ],
-        select: { id:true, name:true, kana:true, position:true, joined:true, birthDate:true, createdAt:true, mgmtCode:true }
-      });
+      let result;
+      try {
+        result = await prisma.staff.findMany({
+          orderBy: [ { id: 'desc' } ],
+          select: { id:true, name:true, kana:true, position:true, joined:true, birthDate:true, createdAt:true, mgmtCode:true }
+        });
+      } catch (e) {
+        // mgmtCode フィールド未生成 (古い DB) 時はフォールバック
+        if (String(e.message||'').includes('mgmtCode')) {
+          result = await prisma.staff.findMany({
+            orderBy: [ { id: 'desc' } ],
+            select: { id:true, name:true, kana:true, position:true, joined:true, birthDate:true, createdAt:true }
+          });
+        } else throw e;
+      }
       res.status(200).json(result);
     } catch (error) {
       console.error('Staff GET error:', error);
