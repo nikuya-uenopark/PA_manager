@@ -478,12 +478,16 @@ PAManager.prototype.loadSharedNote = async function() {
         if (statusEl) statusEl.textContent = '読み込み中...';
         const res = await fetch('/api/shared-note');
         if (!res.ok) throw new Error('failed');
-        const data = await res.json();
-        const opsTa = document.getElementById('sharedNoteOps');
-        const commTa = document.getElementById('sharedNoteComm');
+    const data = await res.json();
+    const opsTa = document.getElementById('sharedNoteOps');
+    const commTa = document.getElementById('sharedNoteComm');
+    const stoveDateInput = document.getElementById('stoveDate');
+    const stoveNumSelect = document.getElementById('stoveNumber');
         if (opsTa) opsTa.value = data?.ops || '';
         if (commTa) commTa.value = data?.comm || '';
-        this._sharedNoteOriginal = JSON.stringify({ ops: opsTa ? opsTa.value : '', comm: commTa ? commTa.value : '' });
+    if (stoveDateInput && data?.stoveDate) stoveDateInput.value = data.stoveDate;
+    if (stoveNumSelect && data?.stoveNumber) stoveNumSelect.value = data.stoveNumber;
+    this._sharedNoteOriginal = JSON.stringify({ ops: opsTa ? opsTa.value : '', comm: commTa ? commTa.value : '', stoveDate: stoveDateInput ? stoveDateInput.value : '', stoveNumber: stoveNumSelect ? stoveNumSelect.value : '' });
         this._sharedNoteLoaded = true;
         if (statusEl) statusEl.textContent = '最新です';
         const upd = document.getElementById('sharedNoteUpdated');
@@ -514,13 +518,17 @@ PAManager.prototype.loadSharedNote = async function() {
                         const d = await r.json();
                         const opsTa2 = document.getElementById('sharedNoteOps');
                         const commTa2 = document.getElementById('sharedNoteComm');
+                        const stoveDate2 = document.getElementById('stoveDate');
+                        const stoveNum2 = document.getElementById('stoveNumber');
                         if (!opsTa2 && !commTa2) return;
-                        const serverObj = { ops: d?.ops || '', comm: d?.comm || '' };
+                        const serverObj = { ops: d?.ops || '', comm: d?.comm || '', stoveDate: d?.stoveDate || '', stoveNumber: d?.stoveNumber || '' };
                         const serverStr = JSON.stringify(serverObj);
-                        const currentStr = JSON.stringify({ ops: opsTa2 ? opsTa2.value : '', comm: commTa2 ? commTa2.value : '' });
+                        const currentStr = JSON.stringify({ ops: opsTa2 ? opsTa2.value : '', comm: commTa2 ? commTa2.value : '', stoveDate: stoveDate2 ? stoveDate2.value : '', stoveNumber: stoveNum2 ? stoveNum2.value : '' });
                         if (serverStr !== this._sharedNoteOriginal && currentStr === this._sharedNoteOriginal) {
                             if (opsTa2) opsTa2.value = serverObj.ops;
                             if (commTa2) commTa2.value = serverObj.comm;
+                            if (stoveDate2) stoveDate2.value = serverObj.stoveDate;
+                            if (stoveNum2) stoveNum2.value = serverObj.stoveNumber;
                             this._sharedNoteOriginal = serverStr;
                             if (st) st.textContent = '同期中...';
                             setTimeout(()=>{ if (st && st.textContent === '同期中...') st.textContent = '最新です'; }, 2000);
@@ -540,11 +548,15 @@ PAManager.prototype.saveSharedNote = async function(force=false) {
     if (this._savingSharedNote) return;
     const opsTa = document.getElementById('sharedNoteOps');
     const commTa = document.getElementById('sharedNoteComm');
-    if (!opsTa && !commTa) return;
+    const stoveDateInput = document.getElementById('stoveDate');
+    const stoveNumSelect = document.getElementById('stoveNumber');
+    if (!opsTa && !commTa && !stoveDateInput && !stoveNumSelect) return;
     const ops = opsTa ? opsTa.value : '';
     const comm = commTa ? commTa.value : '';
-    const currentStr = JSON.stringify({ ops, comm });
-    if (!force && currentStr === this._sharedNoteOriginal && (ops !== '' || comm !== '')) {
+    const stoveDate = stoveDateInput ? stoveDateInput.value : '';
+    const stoveNumber = stoveNumSelect ? stoveNumSelect.value : '';
+    const currentStr = JSON.stringify({ ops, comm, stoveDate, stoveNumber });
+    if (!force && currentStr === this._sharedNoteOriginal && (ops !== '' || comm !== '' || stoveDate !== '' || stoveNumber !== '')) {
         const s = document.getElementById('sharedNoteStatus');
         if (s) s.textContent = '変更なし';
         return;
@@ -556,7 +568,7 @@ PAManager.prototype.saveSharedNote = async function(force=false) {
         const res = await fetch('/api/shared-note', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ops, comm })
+            body: JSON.stringify({ ops, comm, stoveDate, stoveNumber })
         });
         if (!res.ok) throw new Error('save failed');
         this._sharedNoteOriginal = currentStr;
@@ -602,7 +614,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // コンロつけ 日付 & 卓番号
     const dateInput = document.getElementById('stoveDate');
     const numSelect = document.getElementById('stoveNumber');
-    const dateDisp = document.getElementById('stoveDateDisplay');
     const result = document.getElementById('stoveResult');
     const weekdays = ['日','月','火','水','木','金','土'];
     function updateStove() {
@@ -617,7 +628,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 formattedDate = `${y}/${m}/${da}(${w})`;
             }
         }
-        if (dateDisp) dateDisp.textContent = formattedDate;
         const num = numSelect && numSelect.value ? numSelect.value : '';
         if (result) {
             if (formattedDate || num) {

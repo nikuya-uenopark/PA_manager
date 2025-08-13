@@ -55,7 +55,6 @@
 .stove-label { font-weight:600; font-size:14px; }
 .stove-date, .stove-number { padding:4px 6px; border:1px solid #d1d5db; border-radius:6px; background:#fff; font-size:13px; }
 .stove-date:focus, .stove-number:focus { outline:2px solid var(--primary-color); outline-offset:1px; }
-.stove-date-display { font-size:13px; color:#374151; font-weight:500; }
 .stove-result { font-size:14px; font-weight:600; color:#111827; }
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
