@@ -649,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const num = numSelect && numSelect.value ? numSelect.value : '';
         if (result) {
             if (formattedDate || num) {
-                result.textContent = formattedDate + (formattedDate && num ? ' ' : '') + (num ? num + '卓' : '');
+                result.textContent = formattedDate + (formattedDate && num ? ' ' : '') + (num ? num + '' : '');
             } else {
                 result.textContent = '';
             }
