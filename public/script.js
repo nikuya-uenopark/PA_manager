@@ -599,6 +599,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+    // コンロつけ 日付 & 卓番号
+    const dateInput = document.getElementById('stoveDate');
+    const numSelect = document.getElementById('stoveNumber');
+    const dateDisp = document.getElementById('stoveDateDisplay');
+    const result = document.getElementById('stoveResult');
+    const weekdays = ['日','月','火','水','木','金','土'];
+    function updateStove() {
+        let formattedDate = '';
+        if (dateInput && dateInput.value) {
+            const d = new Date(dateInput.value + 'T00:00:00');
+            if (!isNaN(d.getTime())) {
+                const y = d.getFullYear();
+                const m = String(d.getMonth()+1).padStart(2,'0');
+                const da = String(d.getDate()).padStart(2,'0');
+                const w = weekdays[d.getDay()];
+                formattedDate = `${y}/${m}/${da}(${w})`;
+            }
+        }
+        if (dateDisp) dateDisp.textContent = formattedDate;
+        const num = numSelect && numSelect.value ? numSelect.value : '';
+        if (result) {
+            if (formattedDate || num) {
+                result.textContent = formattedDate + (formattedDate && num ? ' ' : '') + (num ? num + '卓' : '');
+            } else {
+                result.textContent = '';
+            }
+        }
+    }
+    if (dateInput) dateInput.addEventListener('change', updateStove);
+    if (numSelect) numSelect.addEventListener('change', updateStove);
 });
 
 // ---- iOSなどでのダブルタップズーム抑止 ----
