@@ -481,13 +481,24 @@ PAManager.prototype.loadSharedNote = async function() {
     const data = await res.json();
     const opsTa = document.getElementById('sharedNoteOps');
     const commTa = document.getElementById('sharedNoteComm');
-    const stoveDateInput = document.getElementById('stoveDate');
-    const stoveNumSelect = document.getElementById('stoveNumber');
+        const stoveDateInput = document.getElementById('stoveDate');
+        const stoveNumSelect = document.getElementById('stoveNumber');
+        const opsFontInput = document.querySelector('.shared-note-font[data-target="sharedNoteOps"]');
+        const commFontInput = document.querySelector('.shared-note-font[data-target="sharedNoteComm"]');
         if (opsTa) opsTa.value = data?.ops || '';
         if (commTa) commTa.value = data?.comm || '';
     if (stoveDateInput && data?.stoveDate) stoveDateInput.value = data.stoveDate;
     if (stoveNumSelect && data?.stoveNumber) stoveNumSelect.value = data.stoveNumber;
-    this._sharedNoteOriginal = JSON.stringify({ ops: opsTa ? opsTa.value : '', comm: commTa ? commTa.value : '', stoveDate: stoveDateInput ? stoveDateInput.value : '', stoveNumber: stoveNumSelect ? stoveNumSelect.value : '' });
+        if (opsFontInput && data?.opsFont) opsFontInput.value = data.opsFont;
+        if (commFontInput && data?.commFont) commFontInput.value = data.commFont;
+        // 反映（既存applySizeロジックがDOMContentLoadedで走るため手動適用）
+        if (opsFontInput) {
+            const size = parseInt(opsFontInput.value,10); if (!isNaN(size)) { const ta=opsTa; if (ta){ ta.style.fontSize=size+'px'; ta.style.lineHeight=Math.round(size*1.4)+'px'; } }
+        }
+        if (commFontInput) {
+            const size = parseInt(commFontInput.value,10); if (!isNaN(size)) { const ta=commTa; if (ta){ ta.style.fontSize=size+'px'; ta.style.lineHeight=Math.round(size*1.4)+'px'; } }
+        }
+        this._sharedNoteOriginal = JSON.stringify({ ops: opsTa ? opsTa.value : '', comm: commTa ? commTa.value : '', stoveDate: stoveDateInput ? stoveDateInput.value : '', stoveNumber: stoveNumSelect ? stoveNumSelect.value : '', opsFont: opsFontInput ? opsFontInput.value : '', commFont: commFontInput ? commFontInput.value : '' });
         this._sharedNoteLoaded = true;
         if (statusEl) statusEl.textContent = '最新です';
         const upd = document.getElementById('sharedNoteUpdated');
@@ -520,15 +531,19 @@ PAManager.prototype.loadSharedNote = async function() {
                         const commTa2 = document.getElementById('sharedNoteComm');
                         const stoveDate2 = document.getElementById('stoveDate');
                         const stoveNum2 = document.getElementById('stoveNumber');
+                        const opsFont2 = document.querySelector('.shared-note-font[data-target="sharedNoteOps"]');
+                        const commFont2 = document.querySelector('.shared-note-font[data-target="sharedNoteComm"]');
                         if (!opsTa2 && !commTa2) return;
-                        const serverObj = { ops: d?.ops || '', comm: d?.comm || '', stoveDate: d?.stoveDate || '', stoveNumber: d?.stoveNumber || '' };
+                        const serverObj = { ops: d?.ops || '', comm: d?.comm || '', stoveDate: d?.stoveDate || '', stoveNumber: d?.stoveNumber || '', opsFont: d?.opsFont || '', commFont: d?.commFont || '' };
                         const serverStr = JSON.stringify(serverObj);
-                        const currentStr = JSON.stringify({ ops: opsTa2 ? opsTa2.value : '', comm: commTa2 ? commTa2.value : '', stoveDate: stoveDate2 ? stoveDate2.value : '', stoveNumber: stoveNum2 ? stoveNum2.value : '' });
+                        const currentStr = JSON.stringify({ ops: opsTa2 ? opsTa2.value : '', comm: commTa2 ? commTa2.value : '', stoveDate: stoveDate2 ? stoveDate2.value : '', stoveNumber: stoveNum2 ? stoveNum2.value : '', opsFont: opsFont2 ? opsFont2.value : '', commFont: commFont2 ? commFont2.value : '' });
                         if (serverStr !== this._sharedNoteOriginal && currentStr === this._sharedNoteOriginal) {
                             if (opsTa2) opsTa2.value = serverObj.ops;
                             if (commTa2) commTa2.value = serverObj.comm;
                             if (stoveDate2) stoveDate2.value = serverObj.stoveDate;
                             if (stoveNum2) stoveNum2.value = serverObj.stoveNumber;
+                            if (opsFont2 && serverObj.opsFont) { opsFont2.value = serverObj.opsFont; const sz=parseInt(serverObj.opsFont,10); if(!isNaN(sz)&&opsTa2){ opsTa2.style.fontSize=sz+'px'; opsTa2.style.lineHeight=Math.round(sz*1.4)+'px'; } }
+                            if (commFont2 && serverObj.commFont) { commFont2.value = serverObj.commFont; const sz=parseInt(serverObj.commFont,10); if(!isNaN(sz)&&commTa2){ commTa2.style.fontSize=sz+'px'; commTa2.style.lineHeight=Math.round(sz*1.4)+'px'; } }
                             this._sharedNoteOriginal = serverStr;
                             if (st) st.textContent = '同期中...';
                             setTimeout(()=>{ if (st && st.textContent === '同期中...') st.textContent = '最新です'; }, 2000);
@@ -550,13 +565,17 @@ PAManager.prototype.saveSharedNote = async function(force=false) {
     const commTa = document.getElementById('sharedNoteComm');
     const stoveDateInput = document.getElementById('stoveDate');
     const stoveNumSelect = document.getElementById('stoveNumber');
-    if (!opsTa && !commTa && !stoveDateInput && !stoveNumSelect) return;
+    const opsFontInput = document.querySelector('.shared-note-font[data-target="sharedNoteOps"]');
+    const commFontInput = document.querySelector('.shared-note-font[data-target="sharedNoteComm"]');
+    if (!opsTa && !commTa && !stoveDateInput && !stoveNumSelect && !opsFontInput && !commFontInput) return;
     const ops = opsTa ? opsTa.value : '';
     const comm = commTa ? commTa.value : '';
     const stoveDate = stoveDateInput ? stoveDateInput.value : '';
     const stoveNumber = stoveNumSelect ? stoveNumSelect.value : '';
-    const currentStr = JSON.stringify({ ops, comm, stoveDate, stoveNumber });
-    if (!force && currentStr === this._sharedNoteOriginal && (ops !== '' || comm !== '' || stoveDate !== '' || stoveNumber !== '')) {
+    const opsFont = opsFontInput ? opsFontInput.value : '';
+    const commFont = commFontInput ? commFontInput.value : '';
+    const currentStr = JSON.stringify({ ops, comm, stoveDate, stoveNumber, opsFont, commFont });
+    if (!force && currentStr === this._sharedNoteOriginal && (ops !== '' || comm !== '' || stoveDate !== '' || stoveNumber !== '' || opsFont !== '' || commFont !== '')) {
         const s = document.getElementById('sharedNoteStatus');
         if (s) s.textContent = '変更なし';
         return;
@@ -568,7 +587,7 @@ PAManager.prototype.saveSharedNote = async function(force=false) {
         const res = await fetch('/api/shared-note', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ops, comm, stoveDate, stoveNumber })
+            body: JSON.stringify({ ops, comm, stoveDate, stoveNumber, opsFont, commFont })
         });
         if (!res.ok) throw new Error('save failed');
         this._sharedNoteOriginal = currentStr;
