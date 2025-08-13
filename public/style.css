@@ -48,7 +48,7 @@
 .shared-note-tools .shared-note-font:focus { outline:2px solid var(--primary-color); outline-offset:1px; }
 .shared-note-section textarea { transition: font-size .2s ease, line-height .2s ease; }
 /* stove selector */
-.stove-inline-block { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:14px; background:#fff; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; }
+.stove-inline-block { display:flex; flex-wrap:wrap; align-items:center; gap:8px; background:#fff; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; }
 .stove-label { font-weight:600; font-size:14px; }
 .stove-date, .stove-number { padding:4px 6px; border:1px solid #d1d5db; border-radius:6px; background:#fff; font-size:13px; }
 .stove-date:focus, .stove-number:focus { outline:2px solid var(--primary-color); outline-offset:1px; }
