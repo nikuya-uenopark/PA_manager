@@ -630,13 +630,24 @@ PAManager.prototype.initLoginUI = function() {
         }
     }, { once:false });
     renderDigits();
-    digitRow.addEventListener('click', (e)=>{
-        const btn = e.target.closest('button[data-digit]');
-        if (!btn) return;
+    const handleDigit = (btnEl)=> {
+        if (!btnEl) return;
         if (code.length >=5) return;
-        code += btn.getAttribute('data-digit');
+        code += btnEl.getAttribute('data-digit');
         redraw();
+    };
+    digitRow.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const btn = e.target.closest('button[data-digit]');
+        handleDigit(btn);
     });
+    digitRow.addEventListener('touchstart', (e)=>{
+        const t = e.target.closest('button[data-digit]');
+        if (t) {
+            e.stopPropagation();
+            handleDigit(t);
+        }
+    }, { passive:true });
     // スワイプ検出（3〜5桁入力後）
     let startX = null, startY=null, startTime=0;
     const touchStart = (x,y)=>{ startX=x; startY=y; startTime=Date.now(); };
