@@ -29,7 +29,9 @@ class PAManager {
     this.setupEventListeners();
     // 認証後に loadData を呼ぶ
     this._authenticated = false;
-    this.initLoginUI();
+    // ログイン機能撤廃: 直接認証済み扱いでデータ読み込み
+    this._authenticated = true;
+    this.loadData();
     }
 
     // イベント登録
