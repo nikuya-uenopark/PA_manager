@@ -54,8 +54,8 @@ class PAManager {
                 const position = document.getElementById('staffPositionType')?.value || null;
                 const mgmtCodeRaw = document.getElementById('staffMgmtCode')?.value?.trim() || '';
                 let mgmtCode = mgmtCodeRaw === '' ? null : mgmtCodeRaw;
-                if (mgmtCode && !/^\d{3,5}$/.test(mgmtCode)) {
-                    this.showNotification('管理番号は3〜5桁の数字', 'error');
+                if (mgmtCode && !/^\d{4}$/.test(mgmtCode)) {
+                    this.showNotification('管理番号は4桁の数字', 'error');
                     return;
                 }
                 const birth_date = document.getElementById('staffBirthDate')?.value || null;
@@ -155,34 +155,6 @@ class PAManager {
     }
 
     // (ログイン廃止に伴い関連メソッド削除)
-                            <span class="position-badge">${staff.position || '未設定'}</span>
-                        </div>
-                        <div class="staff-card-actions">
-                            <button class="btn btn-secondary btn-icon" title="編集" onclick="event.stopPropagation(); editStaff(${staff.id})"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-danger btn-icon" title="削除" onclick="event.stopPropagation(); deleteStaff(${staff.id})"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                    <div class="staff-progress">
-                        <div class="progress-label">
-                            <span>進捗状況</span>
-                            <span class="progress-percent">${p}%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${p}%"></div>
-                        </div>
-                    </div>
-                    <div class="staff-stats">
-                        <div class="stat-item-small">
-                            <span class="stat-value-small">${counts.notStarted}</span>
-                            <span class="stat-label-small">未着手</span>
-                        </div>
-                        <div class="stat-item-small">
-                            <span class="stat-value-small">${counts.learning}</span>
-                            <span class="stat-label-small">学習中</span>
-                        </div>
-                        <div class="stat-item-small">
-                            <span class="stat-value-small">${counts.done}</span>
-                            // (ログインロジック削除済)
 
     async loadLogs() {
         try {
