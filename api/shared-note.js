@@ -16,10 +16,10 @@ module.exports = async function handler(req, res) {
       });
       let ops = '';
       let comm = '';
-  let stoveDate = null;
-  let stoveNumber = null;
-  let opsFont = null;
-  let commFont = null;
+      let stoveDate = null;
+      let stoveNumber = null;
+      let opsFont = null;
+      let commFont = null;
       if (latest && typeof latest.message === 'string') {
         const prefix = 'メモ更新\n';
         let body = latest.message.startsWith(prefix) ? latest.message.slice(prefix.length) : latest.message;
@@ -56,9 +56,9 @@ module.exports = async function handler(req, res) {
           ops = body;
         }
       }
-  res.status(200).json({ ops, comm, stoveDate, stoveNumber, opsFont, commFont, updatedAt: latest?.createdAt });
+    res.status(200).json({ ops, comm, stoveDate, stoveNumber, opsFont, commFont, updatedAt: latest?.createdAt });
     } else if (req.method === 'POST') {
-  const { content, ops, comm, stoveDate, stoveNumber, opsFont, commFont } = req.body || {};
+      const { content, ops, comm, stoveDate, stoveNumber, opsFont, commFont } = req.body || {};
       // 後方互換: content があればそれを ops として扱う
       const rawOps = (ops !== undefined ? ops : content) || '';
       const rawComm = comm || '';
@@ -67,12 +67,12 @@ module.exports = async function handler(req, res) {
       const sanitizedComm = sanitizeContent(clip(rawComm.toString()));
       // 先頭にJSONメタデータ行（空の場合は付与しない）
       let metaLine = '';
-  const metaObj = {};
-  if (stoveDate) metaObj.stoveDate = stoveDate;
-  if (stoveNumber) metaObj.stoveNumber = stoveNumber;
-  if (opsFont) metaObj.opsFont = opsFont;
-  if (commFont) metaObj.commFont = commFont;
-  if (Object.keys(metaObj).length) metaLine = JSON.stringify(metaObj) + '\n';
+      const metaObj = {};
+      if (stoveDate) metaObj.stoveDate = stoveDate;
+      if (stoveNumber) metaObj.stoveNumber = stoveNumber;
+      if (opsFont) metaObj.opsFont = opsFont;
+      if (commFont) metaObj.commFont = commFont;
+      if (Object.keys(metaObj).length) metaLine = JSON.stringify(metaObj) + '\n';
       // ログ出力フォーマット
       const logBody = `${metaLine}[業務]\n${sanitizedOps}\n---\n[連絡]\n${sanitizedComm}`;
       await addLog('shared-note', `メモ更新\n${logBody}`).catch(()=>{});

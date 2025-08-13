@@ -1,19 +1,16 @@
-// PA評価管理システム - メインJavaScript
-
 class PAManager {
     constructor() {
         this.currentStaff = [];
         this.currentCriteria = [];
-    this.currentTab = 'sharedNote';
-    this.editingCriteriaId = null;
-    this._chart = null;
-    this._staffEvalCache = new Map(); // key: `${staffId}:${criteriaId}` -> status
-    this.criteriaFilter = '';
-    this.editingStaffId = null;
-    this._savingEvals = new Set(); // `${staffId}:${criteriaId}` while saving
-    this._isSavingStaff = false;
-    this._isSavingCriteria = false;
-        
+        this.currentTab = 'sharedNote';
+        this.editingCriteriaId = null;
+        this._chart = null;
+        this._staffEvalCache = new Map(); // key: `${staffId}:${criteriaId}` -> status
+        this.criteriaFilter = '';
+        this.editingStaffId = null;
+        this._savingEvals = new Set(); // `${staffId}:${criteriaId}` while saving
+        this._isSavingStaff = false;
+        this._isSavingCriteria = false;
         this.init();
     }
 
@@ -412,21 +409,21 @@ class PAManager {
 
     closeModal(modalId) {
         if (modalId === 'staffDetailModal') {
-        const hasStatus = this._pendingEvalChanges && this._pendingEvalChanges.size > 0;
-        const hasTester = this._pendingEvalTests && this._pendingEvalTests.size > 0;
-        if (hasStatus || hasTester) {
-            const changer = document.getElementById('evaluationChangedBy');
-            const changedByVal = changer ? changer.value : '';
-            if (!changedByVal) {
-                if (changer) {
-                    changer.classList.add('input-error');
-                    changer.focus();
+            const hasStatus = this._pendingEvalChanges && this._pendingEvalChanges.size > 0;
+            const hasTester = this._pendingEvalTests && this._pendingEvalTests.size > 0;
+            if (hasStatus || hasTester) {
+                const changer = document.getElementById('evaluationChangedBy');
+                const changedByVal = changer ? changer.value : '';
+                if (!changedByVal) {
+                    if (changer) {
+                        changer.classList.add('input-error');
+                        changer.focus();
+                    }
+                    this.showNotification('進捗変更者を選択してください', 'error');
+                    return; // abort close
                 }
-                this.showNotification('進捗変更者を選択してください', 'error');
-                return; // abort close
             }
         }
-    }
         const el = document.getElementById(modalId);
         if (el) el.style.display = 'none';
         document.body.style.overflow = 'auto';
@@ -467,8 +464,6 @@ class PAManager {
             console.error('ログ取得エラー', e);
         }
     }
-
-    // 旧: カテゴリ順並び替えは廃止
 }
 
 // --- 共有メモ機能 ---
@@ -478,17 +473,17 @@ PAManager.prototype.loadSharedNote = async function() {
         if (statusEl) statusEl.textContent = '読み込み中...';
         const res = await fetch('/api/shared-note');
         if (!res.ok) throw new Error('failed');
-    const data = await res.json();
-    const opsTa = document.getElementById('sharedNoteOps');
-    const commTa = document.getElementById('sharedNoteComm');
+        const data = await res.json();
+        const opsTa = document.getElementById('sharedNoteOps');
+        const commTa = document.getElementById('sharedNoteComm');
         const stoveDateInput = document.getElementById('stoveDate');
         const stoveNumSelect = document.getElementById('stoveNumber');
         const opsFontInput = document.querySelector('.shared-note-font[data-target="sharedNoteOps"]');
         const commFontInput = document.querySelector('.shared-note-font[data-target="sharedNoteComm"]');
         if (opsTa) opsTa.value = data?.ops || '';
         if (commTa) commTa.value = data?.comm || '';
-    if (stoveDateInput && data?.stoveDate) stoveDateInput.value = data.stoveDate;
-    if (stoveNumSelect && data?.stoveNumber) stoveNumSelect.value = data.stoveNumber;
+        if (stoveDateInput && data?.stoveDate) stoveDateInput.value = data.stoveDate;
+        if (stoveNumSelect && data?.stoveNumber) stoveNumSelect.value = data.stoveNumber;
         if (opsFontInput && data?.opsFont) opsFontInput.value = data.opsFont;
         if (commFontInput && data?.commFont) commFontInput.value = data.commFont;
         // 反映（既存applySizeロジックがDOMContentLoadedで走るため手動適用）

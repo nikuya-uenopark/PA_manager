@@ -61,39 +61,39 @@
                             <button class="btn btn-primary" type="button" onclick="saveSharedNote()"><i class="fas fa-save"></i> 手動保存</button>
                         </div>
                     </div>
-                                                            <div class="shared-note-body">
-                                                                <div class="stove-inline-block">
-                                                                    <label class="stove-label">コンロつけ</label>
-                                                                    <input type="date" id="stoveDate" class="stove-date" />
-                                                                    <select id="stoveNumber" class="stove-number">
-                                                                        <option value="">卓番号</option>
-                                                                        <option>21卓</option><option>22卓</option><option>23卓</option><option>24卓</option><option>25卓</option>
-                                                                        <option>31卓</option><option>32卓</option><option>33卓</option><option>34卓</option><option>35卓</option><option>36卓</option><option>37卓</option><option>38卓</option>
-                                                                        <option>41卓</option><option>42卓</option><option>43卓</option><option>44卓</option><option>45卓</option><option>46卓</option><option>47卓</option><option>48卓</option>
-                                                                        <option>51卓</option><option>52卓</option><option>53卓</option>
-                                                                    </select>
-                                                                    <span id="stoveResult" class="stove-result"></span>
-                                                                </div>
-                                                                        <span id="stoveResult" class="stove-result"></span>
-                                            <div class="shared-note-section">
-                                                <div class="shared-note-section-head-row">
-                                                    <div class="shared-note-section-head">業務メモ</div>
-                                                    <label class="shared-note-tools">文字サイズ
-                                                        <input type="number" class="shared-note-font" data-target="sharedNoteOps" value="16" min="10" max="40" step="1" style="width:60px;" /> px
-                                                    </label>
-                                                </div>
-                                                <textarea id="sharedNoteOps" rows="15" placeholder="業務に関する共有事項を記入してください"></textarea>
-                                            </div>
-                                            <div class="shared-note-section">
-                                                <div class="shared-note-section-head-row">
-                                                    <div class="shared-note-section-head">連絡メモ</div>
-                                                    <label class="shared-note-tools">文字サイズ
-                                                        <input type="number" class="shared-note-font" data-target="sharedNoteComm" value="16" min="10" max="40" step="1" style="width:60px;" /> px
-                                                    </label>
-                                                </div>
-                                                <textarea id="sharedNoteComm" rows="15" placeholder="連絡事項・周知事項を記入してください"></textarea>
-                                            </div>
-                                        </div>
+                    <div class="shared-note-body">
+                        <div class="stove-inline-block">
+                            <label class="stove-label">コンロつけ</label>
+                            <input type="date" id="stoveDate" class="stove-date" />
+                            <select id="stoveNumber" class="stove-number">
+                                <option value="">卓番号</option>
+                                <option>21卓</option><option>22卓</option><option>23卓</option><option>24卓</option><option>25卓</option>
+                                <option>31卓</option><option>32卓</option><option>33卓</option><option>34卓</option><option>35卓</option><option>36卓</option><option>37卓</option><option>38卓</option>
+                                <option>41卓</option><option>42卓</option><option>43卓</option><option>44卓</option><option>45卓</option><option>46卓</option><option>47卓</option><option>48卓</option>
+                                <option>51卓</option><option>52卓</option><option>53卓</option>
+                            </select>
+                            <span id="stoveResult" class="stove-result"></span>
+                        </div>
+                        <span id="stoveResult" class="stove-result"></span>
+                        <div class="shared-note-section">
+                            <div class="shared-note-section-head-row">
+                                <div class="shared-note-section-head">業務メモ</div>
+                                <label class="shared-note-tools">文字サイズ
+                                    <input type="number" class="shared-note-font" data-target="sharedNoteOps" value="16" min="10" max="40" step="1" style="width:60px;" /> px
+                                </label>
+                            </div>
+                            <textarea id="sharedNoteOps" rows="15" placeholder="業務に関する共有事項を記入してください"></textarea>
+                        </div>
+                        <div class="shared-note-section">
+                            <div class="shared-note-section-head-row">
+                                <div class="shared-note-section-head">連絡メモ</div>
+                                <label class="shared-note-tools">文字サイズ
+                                    <input type="number" class="shared-note-font" data-target="sharedNoteComm" value="16" min="10" max="40" step="1" style="width:60px;" /> px
+                                </label>
+                            </div>
+                            <textarea id="sharedNoteComm" rows="15" placeholder="連絡事項・周知事項を記入してください"></textarea>
+                        </div>
+                    </div>
                 </div>
                 <!-- スタッフ管理タブ -->
                 <div id="staffPanel" class="tab-panel">
