@@ -642,29 +642,28 @@ PAManager.prototype.initLoginUI = function() {
         code += btnEl.getAttribute('data-digit');
         redraw();
     };
-    // タップのみ反応 (click ではなく touchstart 優先)
-    digitRow.addEventListener('touchstart', (e)=>{
-        const t = e.target.closest('button[data-digit]');
-        if (t) {
-            e.stopPropagation();
-            handleDigit(t);
+    // タップ / クリック両対応 (iPad Safari のゴーストクリック回避で pointer/ touch / click すべて受付)
+    const digitHandler = (el)=>{
+        if (!el) return;
+        if (code.length >=5) return;
+        code += el.getAttribute('data-digit');
+        redraw();
+        if (code.length >=3) {
+            // 3〜5桁の幅で 400ms 後に自動ログイン (追加タップがあればリセット)
+            clearTimeout(autoLoginTimer);
+            autoLoginTimer = setTimeout(()=> attemptLogin(), 400);
         }
-    }, { passive:true });
-    // スワイプ検出（3〜5桁入力後）
-    let startX = null, startY=null, startTime=0;
-    const touchStart = (x,y)=>{ startX=x; startY=y; startTime=Date.now(); };
-    const touchEnd = (x,y)=>{
-        if (!(code.length>=3 && code.length<=5)) return;
-        if (startX===null) return;
-        const dx = x - startX; const dy = y - startY; const dist = Math.hypot(dx,dy);
-        const dur = Date.now()-startTime;
-        if (dist >= window.innerWidth * 0.1 && dur < 1500) { // 約画面幅10% (≒3cm相当目安)
-            attemptLogin();
-        }
-        startX = startY = null;
     };
-    overlay.addEventListener('touchstart', e=>{ const t=e.touches[0]; touchStart(t.clientX,t.clientY); }, { passive:true });
-    overlay.addEventListener('touchend', e=>{ const t=e.changedTouches[0]; touchEnd(t.clientX,t.clientY); }, { passive:true });
+    let autoLoginTimer;
+    ['pointerdown','touchstart','click'].forEach(ev => {
+        digitRow.addEventListener(ev, (e)=>{
+            const t = e.target.closest('button[data-digit]');
+            if (!t) return;
+            e.preventDefault(); e.stopPropagation();
+            digitHandler(t);
+        }, { passive: ev==='touchstart' });
+    });
+    // スワイプ不要: 削除
     const attemptLogin = async () => {
         try {
             const res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code }) });
