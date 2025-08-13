@@ -18,6 +18,20 @@
     <meta name="theme-color" content="#74b9ff" />
 </head>
 <body>
+    <!-- ログイン画面 -->
+    <div id="loginOverlay" class="login-overlay" style="display:flex;">
+        <div class="login-panel">
+            <div class="login-welcome" id="loginWelcome">ようこそ</div>
+            <div class="login-instruction">管理番号 (3-5桁) を入力してください</div>
+            <div class="login-code" id="loginCodeDisplay"></div>
+            <div class="keypad" id="loginKeypad"></div>
+            <div class="login-actions">
+                <button id="loginClearBtn" class="btn btn-secondary btn-small" type="button">クリア</button>
+                <button id="loginEnterBtn" class="btn btn-primary btn-small" type="button" disabled>ログイン</button>
+            </div>
+            <div class="login-error" id="loginError"></div>
+        </div>
+    </div>
     <!-- ローディング画面 -->
     <div id="loadingScreen">
         <div class="loading-center">

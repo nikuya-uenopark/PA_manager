@@ -26,8 +26,10 @@ class PAManager {
     }
     // 初期セットアップ
     setup() {
-        this.setupEventListeners();
-        this.loadData();
+    this.setupEventListeners();
+    // 認証後に loadData を呼ぶ
+    this._authenticated = false;
+    this.initLoginUI();
     }
 
     // イベント登録
@@ -200,6 +202,7 @@ class PAManager {
 
     async loadData() {
         try {
+            if (!this._authenticated) return; // ガード
             await Promise.all([
                 this.loadStaff(),
                 this.loadCriteria(),
@@ -597,6 +600,69 @@ document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, { 
 function switchTab(tabName) {
     paManager.switchTab(tabName);
 }
+
+// === Login Logic ===
+PAManager.prototype.initLoginUI = function() {
+    const overlay = document.getElementById('loginOverlay');
+    if (!overlay) { this._authenticated = true; this.loadData(); return; }
+    const keypad = document.getElementById('loginKeypad');
+    const display = document.getElementById('loginCodeDisplay');
+    const enterBtn = document.getElementById('loginEnterBtn');
+    const clearBtn = document.getElementById('loginClearBtn');
+    const errEl = document.getElementById('loginError');
+    const welcome = document.getElementById('loginWelcome');
+    const digits = ['1','2','3','4','5','6','7','8','9','0'];
+    let code = '';
+    const redraw = () => {
+        if (display) display.textContent = code.split('').map(()=> '•').join('');
+        if (enterBtn) enterBtn.disabled = !(code.length >=3 && code.length <=5);
+        if (errEl) errEl.textContent='';
+    };
+    if (keypad) {
+        keypad.innerHTML = digits.map(d=>`<button type="button" data-digit="${d}">${d}</button>`).join('');
+        keypad.addEventListener('click', (e)=>{
+            const btn = e.target.closest('button[data-digit]');
+            if (!btn) return;
+            if (code.length >=5) return;
+            code += btn.getAttribute('data-digit');
+            redraw();
+        });
+    }
+    if (clearBtn) clearBtn.addEventListener('click', ()=>{ code=''; redraw(); });
+    if (enterBtn) enterBtn.addEventListener('click', async ()=>{
+        if (!(code.length >=3 && code.length <=5)) return;
+        enterBtn.disabled = true;
+        errEl.textContent = '';
+        try {
+            const res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code }) });
+            if (!res.ok) {
+                throw new Error((await res.json()).error || 'login failed');
+            }
+            const data = await res.json();
+            // 簡易トークン localStorage 保存
+            localStorage.setItem('pa_token', data.token);
+            localStorage.setItem('pa_staffName', data.staff.name);
+            this._authenticated = true;
+            if (welcome) welcome.textContent = `${data.staff.name} さん、お帰りなさい！`;
+            welcome.classList.add('login-success');
+            overlay.classList.add('fade-out');
+            setTimeout(()=>{ overlay.style.display='none'; this.loadData(); }, 600);
+        } catch(err) {
+            code=''; redraw();
+            errEl.textContent = '管理番号が正しくありません';
+        } finally {
+            enterBtn.disabled = false;
+        }
+    });
+    // 既存トークンがあればスキップ（簡易）
+    const existing = localStorage.getItem('pa_token');
+    if (existing) {
+        this._authenticated = true;
+        overlay.style.display='none';
+        this.loadData();
+    }
+    redraw();
+};
 
 function showAddStaffModal() {
     // 追加モードに初期化

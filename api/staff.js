@@ -18,9 +18,8 @@ module.exports = async function handler(req, res) {
     // スタッフ一覧取得
     try {
       const result = await prisma.staff.findMany({
-        orderBy: [
-          { id: 'desc' }
-        ]
+        orderBy: [ { id: 'desc' } ],
+        select: { id:true, name:true, kana:true, position:true, joined:true, birthDate:true, createdAt:true, mgmtCode:true }
       });
       res.status(200).json(result);
     } catch (error) {
@@ -30,12 +29,16 @@ module.exports = async function handler(req, res) {
   } else if (req.method === 'POST') {
     // スタッフ追加
     try {
-  let { name, kana, position, birth_date, avatar_url, hire_date } = req.body || {};
+  let { name, kana, position, birth_date, avatar_url, hire_date, mgmtCode } = req.body || {};
+  mgmtCode = mgmtCode ? sanitizeContent(mgmtCode) : null;
   name = sanitizeContent(name);
   kana = kana ? sanitizeContent(kana) : null;
   position = position ? sanitizeContent(position) : null;
       if (!name) {
         return res.status(400).json({ error: 'name is required' });
+      }
+      if (mgmtCode && !/^\d{3,5}$/.test(mgmtCode)) {
+        return res.status(400).json({ error: 'mgmtCode must be 3-5 digits' });
       }
       const created = await prisma.staff.create({
         data: {
@@ -44,6 +47,7 @@ module.exports = async function handler(req, res) {
           position: position || null,
           joined: hire_date ? new Date(hire_date) : null,
           birthDate: birth_date ? new Date(birth_date) : null,
+          mgmtCode: mgmtCode || null
         },
         select: { id: true }
       });
@@ -101,11 +105,15 @@ ID：${id} (既に存在しない)`).catch(()=>{});
     if (req.method === 'PUT') {
       try {
         const { id } = req.query || {};
-  let { name, kana, position, birth_date, avatar_url, hire_date } = req.body || {};
+  let { name, kana, position, birth_date, avatar_url, hire_date, mgmtCode } = req.body || {};
+  mgmtCode = mgmtCode ? sanitizeContent(mgmtCode) : undefined;
   name = sanitizeContent(name);
   kana = kana ? sanitizeContent(kana) : undefined;
   position = position ? sanitizeContent(position) : undefined;
         if (!id) return res.status(400).json({ error: 'id is required' });
+        if (mgmtCode !== undefined && mgmtCode !== null && mgmtCode !== '' && !/^\d{3,5}$/.test(mgmtCode)) {
+          return res.status(400).json({ error: 'mgmtCode must be 3-5 digits' });
+        }
         const updated = await prisma.staff.update({
           where: { id: Number(id) },
           data: {
@@ -114,8 +122,9 @@ ID：${id} (既に存在しない)`).catch(()=>{});
             position: position ?? undefined,
             joined: hire_date ? new Date(hire_date) : undefined,
             birthDate: birth_date ? new Date(birth_date) : undefined,
+            mgmtCode: mgmtCode === '' ? null : mgmtCode
           },
-          select: { id: true, name: true, position: true, birthDate: true }
+          select: { id: true, name: true, position: true, birthDate: true, mgmtCode:true }
         });
         const bd = updated.birthDate ? new Date(updated.birthDate) : null;
         const birthText = bd ? `${bd.getFullYear()}/${String(bd.getMonth()+1).padStart(2,'0')}/${String(bd.getDate()).padStart(2,'0')}` : '-';
@@ -123,7 +132,9 @@ ID：${id} (既に存在しない)`).catch(()=>{});
 ID：${updated.id}
 名前：${updated.name}
 役職：${updated.position || '-'}
-生年月日：${birthText}`).catch(()=>{});
+生年月日：${birthText}
+管理番号：${updated.mgmtCode || '-'}
+`).catch(()=>{});
         res.status(200).json({ message: 'スタッフを更新しました' });
       } catch (error) {
         console.error('Staff PUT error:', error);

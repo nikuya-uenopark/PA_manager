@@ -21,6 +21,7 @@ model Staff {
   joined     DateTime? @db.Date
   birthDate  DateTime? @db.Date @map("birth_date")
   createdAt  DateTime  @default(now()) @map("created_at")
+  mgmtCode   String?   @unique @db.VarChar(5) @map("mgmt_code") // 管理番号(3-5桁 数字)
 
   evaluations Evaluation[]
 }
