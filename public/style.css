@@ -258,6 +258,9 @@ body {
 .panel-actions.compact { display:flex; gap:10px; align-items:center; }
 #sharedNoteStatus { font-size:12px; color:#fff; }
 .shared-note-body { display:flex; flex-direction:column; gap:12px; }
+#sharedNoteOps, #sharedNoteComm { width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:10px; font-family:inherit; font-size:16px; line-height:1.6; resize:vertical; background:#ffffffdd; }
+.shared-note-section { display:flex; flex-direction:column; gap:6px; }
+.shared-note-section-head { font-size:13px; font-weight:600; color:#fff; letter-spacing:.05em; }
 #sharedNoteContent { width:100%; padding:14px 16px; border:1px solid #e5e7eb; border-radius:10px; font-family:inherit; font-size:16px; line-height:1.65; resize:vertical; background:#ffffffcc; }
 .shared-note-footer { font-size:11px; color:#9ca3af; display:flex; justify-content:space-between; }
 .shared-note-footer #sharedNoteUpdated { color:#fff; }

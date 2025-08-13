@@ -61,17 +61,20 @@
                             <button class="btn btn-primary" type="button" onclick="saveSharedNote()"><i class="fas fa-save"></i> 手動保存</button>
                         </div>
                     </div>
-                    <div class="shared-note-body">
-                        <textarea id="sharedNoteContent" rows="18" placeholder="ここに共有事項を記入してください！
-（例）
-・新メニュー提供開始が10月からなので、レシピを見ておいてください。
-・チャッカマン発注先の変更 セントラル→リクエ
-・冷蔵庫はお盆明け届く予定です。"></textarea>
-                        <div class="shared-note-footer">
-                            <span>最大約15,000文字。長文は適宜整理してください。</span>
-                            <span id="sharedNoteUpdated"></span>
-                        </div>
-                    </div>
+                                        <div class="shared-note-body">
+                                            <div class="shared-note-section">
+                                                <div class="shared-note-section-head">業務メモ</div>
+                                                <textarea id="sharedNoteOps" rows="10" placeholder="業務に関する共有事項を記入してください"></textarea>
+                                            </div>
+                                            <div class="shared-note-section">
+                                                <div class="shared-note-section-head">連絡メモ</div>
+                                                <textarea id="sharedNoteComm" rows="8" placeholder="連絡事項・周知事項を記入してください"></textarea>
+                                            </div>
+                                            <div class="shared-note-footer">
+                                                <span>各 15,000 文字程度まで。長文は整理推奨。</span>
+                                                <span id="sharedNoteUpdated"></span>
+                                            </div>
+                                        </div>
                 </div>
                 <!-- スタッフ管理タブ -->
                 <div id="staffPanel" class="tab-panel">

@@ -479,9 +479,11 @@ PAManager.prototype.loadSharedNote = async function() {
         const res = await fetch('/api/shared-note');
         if (!res.ok) throw new Error('failed');
         const data = await res.json();
-        const ta = document.getElementById('sharedNoteContent');
-        if (ta) ta.value = data?.content || '';
-        this._sharedNoteOriginal = ta ? ta.value : '';
+        const opsTa = document.getElementById('sharedNoteOps');
+        const commTa = document.getElementById('sharedNoteComm');
+        if (opsTa) opsTa.value = data?.ops || '';
+        if (commTa) commTa.value = data?.comm || '';
+        this._sharedNoteOriginal = JSON.stringify({ ops: opsTa ? opsTa.value : '', comm: commTa ? commTa.value : '' });
         this._sharedNoteLoaded = true;
         if (statusEl) statusEl.textContent = '最新です';
         const upd = document.getElementById('sharedNoteUpdated');
@@ -489,16 +491,16 @@ PAManager.prototype.loadSharedNote = async function() {
             upd.textContent = '最終更新: ' + new Date(data.updatedAt).toLocaleString();
         }
         // イベント1回だけ設定
-        if (!this._sharedNoteBound && ta) {
+        if (!this._sharedNoteBound && (opsTa || commTa)) {
             this._sharedNoteBound = true;
-            ta.addEventListener('input', () => {
+            const handler = () => {
                 const s = document.getElementById('sharedNoteStatus');
                 if (s) s.textContent = '編集中...';
                 clearTimeout(this._sharedNoteTimer);
-                this._sharedNoteTimer = setTimeout(()=>{
-                    this.saveSharedNote();
-                }, 1000); // 1秒後自動保存
-            });
+                this._sharedNoteTimer = setTimeout(()=>{ this.saveSharedNote(); }, 1000);
+            };
+            if (opsTa) opsTa.addEventListener('input', handler);
+            if (commTa) commTa.addEventListener('input', handler);
             // 定期的な外部更新同期 (編集していない時のみ)。既に設定済なら再設定しない
             if (!this._sharedNotePoller) {
                 this._sharedNotePoller = setInterval(async () => {
@@ -510,13 +512,16 @@ PAManager.prototype.loadSharedNote = async function() {
                         const r = await fetch('/api/shared-note');
                         if (!r.ok) return;
                         const d = await r.json();
-                        const currentTa = document.getElementById('sharedNoteContent');
-                        if (!currentTa) return;
-                        const serverVal = d?.content || '';
-                        // 自分が最後に保存した内容と違い、かつ今ローカル未変更なら更新
-                        if (serverVal !== this._sharedNoteOriginal && currentTa.value === this._sharedNoteOriginal) {
-                            currentTa.value = serverVal;
-                            this._sharedNoteOriginal = serverVal;
+                        const opsTa2 = document.getElementById('sharedNoteOps');
+                        const commTa2 = document.getElementById('sharedNoteComm');
+                        if (!opsTa2 && !commTa2) return;
+                        const serverObj = { ops: d?.ops || '', comm: d?.comm || '' };
+                        const serverStr = JSON.stringify(serverObj);
+                        const currentStr = JSON.stringify({ ops: opsTa2 ? opsTa2.value : '', comm: commTa2 ? commTa2.value : '' });
+                        if (serverStr !== this._sharedNoteOriginal && currentStr === this._sharedNoteOriginal) {
+                            if (opsTa2) opsTa2.value = serverObj.ops;
+                            if (commTa2) commTa2.value = serverObj.comm;
+                            this._sharedNoteOriginal = serverStr;
                             if (st) st.textContent = '同期中...';
                             setTimeout(()=>{ if (st && st.textContent === '同期中...') st.textContent = '最新です'; }, 2000);
                         }
@@ -533,11 +538,13 @@ PAManager.prototype.loadSharedNote = async function() {
 
 PAManager.prototype.saveSharedNote = async function(force=false) {
     if (this._savingSharedNote) return;
-    const ta = document.getElementById('sharedNoteContent');
-    if (!ta) return;
-    const content = ta.value;
-    // 空文字は常に保存したいので、同一判定でも content === '' の場合は続行
-    if (!force && content === this._sharedNoteOriginal && content !== '') {
+    const opsTa = document.getElementById('sharedNoteOps');
+    const commTa = document.getElementById('sharedNoteComm');
+    if (!opsTa && !commTa) return;
+    const ops = opsTa ? opsTa.value : '';
+    const comm = commTa ? commTa.value : '';
+    const currentStr = JSON.stringify({ ops, comm });
+    if (!force && currentStr === this._sharedNoteOriginal && (ops !== '' || comm !== '')) {
         const s = document.getElementById('sharedNoteStatus');
         if (s) s.textContent = '変更なし';
         return;
@@ -549,14 +556,13 @@ PAManager.prototype.saveSharedNote = async function(force=false) {
         const res = await fetch('/api/shared-note', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content })
+            body: JSON.stringify({ ops, comm })
         });
         if (!res.ok) throw new Error('save failed');
-        this._sharedNoteOriginal = content;
+        this._sharedNoteOriginal = currentStr;
         if (statusEl) statusEl.textContent = '保存しました';
         const upd = document.getElementById('sharedNoteUpdated');
         if (upd) upd.textContent = '最終更新: ' + new Date().toLocaleString();
-        // ログ更新も反映（バックエンドでログ書き込み想定）
         this.loadLogs();
     } catch (e) {
         console.error('共有メモ保存失敗', e);
@@ -564,10 +570,7 @@ PAManager.prototype.saveSharedNote = async function(force=false) {
         this.showNotification('共有メモの保存に失敗しました', 'error');
     } finally {
         this._savingSharedNote = false;
-        // 2秒後にステータスを落ち着いた表示へ
-        setTimeout(()=>{
-            if (statusEl && statusEl.textContent === '保存しました') statusEl.textContent = '最新です';
-        }, 2000);
+        setTimeout(()=>{ if (statusEl && statusEl.textContent === '保存しました') statusEl.textContent = '最新です'; }, 2000);
     }
 };
 

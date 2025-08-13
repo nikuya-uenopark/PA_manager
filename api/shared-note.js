@@ -14,20 +14,39 @@ module.exports = async function handler(req, res) {
         where: { event: 'shared-note' },
         orderBy: { createdAt: 'desc' }
       });
-      // ログには "メモ更新" を含めて保存しているが、表示用には取り除く
-      let content = '';
+      let ops = '';
+      let comm = '';
       if (latest && typeof latest.message === 'string') {
         const prefix = 'メモ更新\n';
-        content = latest.message.startsWith(prefix) ? latest.message.slice(prefix.length) : latest.message;
+        let body = latest.message.startsWith(prefix) ? latest.message.slice(prefix.length) : latest.message;
+        // 新フォーマット: [業務]\n...\n---\n[連絡]\n...
+        if (body.startsWith('[業務]\n')) {
+          const marker = '\n---\n[連絡]\n';
+            const mid = body.indexOf(marker);
+            if (mid !== -1) {
+              ops = body.slice(4 + 1, mid); // after '[業務]\n'
+              comm = body.slice(mid + marker.length);
+            } else {
+              // '[業務]' プレフィックスのみ（旧→業務扱い）
+              ops = body.replace(/^\[業務\]\n/, '');
+            }
+        } else {
+          // 旧単一メモ -> 業務扱い
+          ops = body;
+        }
       }
-      res.status(200).json({ content });
+      res.status(200).json({ ops, comm, updatedAt: latest?.createdAt });
     } else if (req.method === 'POST') {
-      const { content } = req.body || {};
-      const text = (content || '').toString();
-      const clipped = text.length > 15000 ? text.slice(0,15000) + '\n...[省略]' : text;
-  // 共有メモは改行のみ利用想定のため allowBr=false (デフォルト)
-  const sanitized = sanitizeContent(clipped);
-      await addLog('shared-note', `メモ更新\n${sanitized}`).catch(()=>{});
+      const { content, ops, comm } = req.body || {};
+      // 後方互換: content があればそれを ops として扱う
+      const rawOps = (ops !== undefined ? ops : content) || '';
+      const rawComm = comm || '';
+      const clip = (s)=> s.length > 15000 ? s.slice(0,15000) + '\n...[省略]' : s;
+      const sanitizedOps = sanitizeContent(clip(rawOps.toString()));
+      const sanitizedComm = sanitizeContent(clip(rawComm.toString()));
+      // ログ出力フォーマット（アクティビティログ閲覧性重視, 両方空は許容）
+      const logBody = `[業務]\n${sanitizedOps}\n---\n[連絡]\n${sanitizedComm}`;
+      await addLog('shared-note', `メモ更新\n${logBody}`).catch(()=>{});
       res.status(200).json({ message: 'saved' });
     } else {
       res.status(405).json({ error: 'Method Not Allowed'});
