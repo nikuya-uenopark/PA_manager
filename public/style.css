@@ -47,8 +47,8 @@
 /* Shared note font size selector */
 .shared-note-section-head-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px; }
 .shared-note-tools { font-size:12px; font-weight:500; color:#fff; display:flex; align-items:center; gap:4px; }
-.shared-note-tools select.shared-note-font { padding:4px 6px; font-size:12px; border:1px solid #d1d5db; border-radius:6px; background:#fff; cursor:pointer; }
-.shared-note-tools select.shared-note-font:focus { outline:2px solid var(--primary-color); outline-offset:1px; }
+.shared-note-tools .shared-note-font { padding:4px 6px; font-size:12px; border:1px solid #d1d5db; border-radius:6px; background:#fff; }
+.shared-note-tools .shared-note-font:focus { outline:2px solid var(--primary-color); outline-offset:1px; }
 .shared-note-section textarea { transition: font-size .2s ease, line-height .2s ease; }
 /* stove selector */
 .stove-inline-block { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:14px; background:#fff; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; }

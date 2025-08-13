@@ -79,15 +79,7 @@
                                                 <div class="shared-note-section-head-row">
                                                     <div class="shared-note-section-head">業務メモ</div>
                                                     <label class="shared-note-tools">文字サイズ
-                                                        <select class="shared-note-font" data-target="sharedNoteOps">
-                                                            <option value="14">14px</option>
-                                                            <option value="15">15px</option>
-                                                            <option value="16" selected>16px</option>
-                                                            <option value="18">18px</option>
-                                                            <option value="20">20px</option>
-                                                            <option value="22">22px</option>
-                                                            <option value="24">24px</option>
-                                                        </select>
+                                                        <input type="number" class="shared-note-font" data-target="sharedNoteOps" value="16" min="10" max="40" step="1" style="width:60px;" /> px
                                                     </label>
                                                 </div>
                                                 <textarea id="sharedNoteOps" rows="15" placeholder="業務に関する共有事項を記入してください"></textarea>
@@ -96,15 +88,7 @@
                                                 <div class="shared-note-section-head-row">
                                                     <div class="shared-note-section-head">連絡メモ</div>
                                                     <label class="shared-note-tools">文字サイズ
-                                                        <select class="shared-note-font" data-target="sharedNoteComm">
-                                                            <option value="14">14px</option>
-                                                            <option value="15">15px</option>
-                                                            <option value="16" selected>16px</option>
-                                                            <option value="18">18px</option>
-                                                            <option value="20">20px</option>
-                                                            <option value="22">22px</option>
-                                                            <option value="24">24px</option>
-                                                        </select>
+                                                        <input type="number" class="shared-note-font" data-target="sharedNoteComm" value="16" min="10" max="40" step="1" style="width:60px;" /> px
                                                     </label>
                                                 </div>
                                                 <textarea id="sharedNoteComm" rows="15" placeholder="連絡事項・周知事項を記入してください"></textarea>

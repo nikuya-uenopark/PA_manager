@@ -598,18 +598,22 @@ paManager = new PAManager();
 
 // 共有メモ フォントサイズ切替
 document.addEventListener('DOMContentLoaded', () => {
-    const selects = document.querySelectorAll('.shared-note-font');
-    selects.forEach(sel => {
-        sel.addEventListener('change', () => {
-            const targetId = sel.getAttribute('data-target');
+    const fontInputs = document.querySelectorAll('.shared-note-font');
+    fontInputs.forEach(inp => {
+        const applySize = () => {
+            const targetId = inp.getAttribute('data-target');
             const ta = document.getElementById(targetId);
             if (!ta) return;
-            const size = parseInt(sel.value, 10);
-            if (!isNaN(size) && size >= 12 && size <= 32) {
-                ta.style.fontSize = size + 'px';
-                ta.style.lineHeight = Math.round(size * 1.4) + 'px';
-            }
-        });
+            let size = parseInt(inp.value, 10);
+            if (isNaN(size)) return;
+            if (size < 10) size = 10; else if (size > 40) size = 40;
+            inp.value = size; // normalize
+            ta.style.fontSize = size + 'px';
+            ta.style.lineHeight = Math.round(size * 1.4) + 'px';
+        };
+        inp.addEventListener('change', applySize);
+        inp.addEventListener('input', applySize);
+        applySize();
     });
     // コンロつけ 日付 & 卓番号
     const dateInput = document.getElementById('stoveDate');
