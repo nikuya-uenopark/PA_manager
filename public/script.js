@@ -511,6 +511,8 @@ PAManager.prototype.loadSharedNote = async function() {
             };
             if (opsTa) opsTa.addEventListener('input', handler);
             if (commTa) commTa.addEventListener('input', handler);
+            if (stoveDateInput) stoveDateInput.addEventListener('change', handler);
+            if (stoveNumSelect) stoveNumSelect.addEventListener('change', handler);
             // 定期的な外部更新同期 (編集していない時のみ)。既に設定済なら再設定しない
             if (!this._sharedNotePoller) {
                 this._sharedNotePoller = setInterval(async () => {
@@ -653,6 +655,13 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 result.textContent = '';
             }
+        }
+        // デバウンス保存 (paManager利用可時のみ)
+        if (window.paManager) {
+            const s = document.getElementById('sharedNoteStatus');
+            if (s) s.textContent = '編集中...';
+            clearTimeout(window.paManager._sharedNoteTimer);
+            window.paManager._sharedNoteTimer = setTimeout(()=>{ window.paManager.saveSharedNote(); }, 800);
         }
     }
     if (dateInput) dateInput.addEventListener('change', updateStove);
