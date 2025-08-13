@@ -165,6 +165,11 @@
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label for="staffMgmtCode">管理番号 (3〜5桁 任意)</label>
+                                <input type="text" id="staffMgmtCode" inputmode="numeric" pattern="[0-9]{3,5}" placeholder="例: 300" />
+                                <small style="color:#6b7280;">重複不可 / 空欄なら未設定</small>
+                            </div>
+                            <div class="form-group">
                                 <label for="staffBirthDate">生年月日</label>
                                 <input type="date" id="staffBirthDate" />
                             </div>
@@ -242,6 +247,7 @@
                     <div class="staff-detail-meta">
                         <span id="staffDetailPosition" class="position-badge"></span>
                         <span class="staff-detail-birth">生年月日: <span id="staffDetailBirth"></span></span>
+                        <span class="staff-detail-mgmt">管理番号: <span id="staffDetailMgmt"></span></span>
                     </div>
                 </div>
                 <span class="close" onclick="closeModal('staffDetailModal')">&times;</span>
