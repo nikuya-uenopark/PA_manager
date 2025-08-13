@@ -41,7 +41,12 @@ module.exports = async function handler(req, res) {
     // スタッフ追加
     try {
   let { name, kana, position, birth_date, avatar_url, hire_date, mgmtCode } = req.body || {};
-  mgmtCode = mgmtCode ? sanitizeContent(mgmtCode) : null;
+  // mgmtCode: '' または null -> null / それ以外はサニタイズし 3-5桁チェック
+  if (mgmtCode === '' || mgmtCode === null || mgmtCode === undefined) {
+    mgmtCode = null;
+  } else {
+    mgmtCode = sanitizeContent(String(mgmtCode));
+  }
   name = sanitizeContent(name);
   kana = kana ? sanitizeContent(kana) : null;
   position = position ? sanitizeContent(position) : null;
@@ -117,7 +122,16 @@ ID：${id} (既に存在しない)`).catch(()=>{});
       try {
         const { id } = req.query || {};
   let { name, kana, position, birth_date, avatar_url, hire_date, mgmtCode } = req.body || {};
-  mgmtCode = mgmtCode ? sanitizeContent(mgmtCode) : undefined;
+  let mgmtCodeProvided = Object.prototype.hasOwnProperty.call(req.body || {}, 'mgmtCode');
+  if (mgmtCodeProvided) {
+    if (mgmtCode === '' || mgmtCode === null) {
+      mgmtCode = null; // 明示的にクリア
+    } else if (mgmtCode !== undefined) {
+      mgmtCode = sanitizeContent(String(mgmtCode));
+    }
+  } else {
+    mgmtCode = undefined; // 変更なし
+  }
   name = sanitizeContent(name);
   kana = kana ? sanitizeContent(kana) : undefined;
   position = position ? sanitizeContent(position) : undefined;
@@ -133,7 +147,7 @@ ID：${id} (既に存在しない)`).catch(()=>{});
             position: position ?? undefined,
             joined: hire_date ? new Date(hire_date) : undefined,
             birthDate: birth_date ? new Date(birth_date) : undefined,
-            mgmtCode: mgmtCode === '' ? null : mgmtCode
+            mgmtCode: mgmtCodeProvided ? mgmtCode : undefined
           },
           select: { id: true, name: true, position: true, birthDate: true, mgmtCode:true }
         });

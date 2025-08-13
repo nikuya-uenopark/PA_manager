@@ -674,7 +674,7 @@ PAManager.prototype.initLoginUI = function() {
             localStorage.setItem('pa_staffName', data.staff.name);
             this._authenticated = true;
             overlay.classList.add('fade-out');
-            setTimeout(()=>{ overlay.style.display='none'; this.loadData(); }, 600);
+            setTimeout(()=>{ overlay.style.display='none'; this.loadData(); this._setupIdleTimer(); }, 600);
         } catch(e) {
             // 失敗: シェイク + クリア
             root.classList.add('swipe-fail');
@@ -683,14 +683,9 @@ PAManager.prototype.initLoginUI = function() {
             if (errEl) errEl.textContent='管理番号が違います';
         }
     };
-    // 既存トークン
-    const existing = localStorage.getItem('pa_token');
-    if (existing) {
-        this._authenticated = true;
-        overlay.style.display='none';
-        this.loadData();
-        return;
-    }
+    // 既存トークンがあっても毎回再ログインを要求 (スキップ禁止)
+    localStorage.removeItem('pa_token');
+    localStorage.removeItem('pa_staffName');
     // イントロフェード終了後自動で入力待ちに移行
     setTimeout(()=>{
         if (root.getAttribute('data-phase')==='intro') {
@@ -701,6 +696,52 @@ PAManager.prototype.initLoginUI = function() {
     }, 3200);
     redraw();
 };
+
+// === 再ログイン制御 ===
+PAManager.prototype.forceRelogin = function(reason='') {
+    const overlay = document.getElementById('loginOverlay');
+    const root = document.getElementById('loginRoot');
+    const intro = document.getElementById('loginIntro');
+    const inputArea = document.getElementById('loginInputArea');
+    if (!overlay || !root) return;
+    // トークン削除
+    localStorage.removeItem('pa_token');
+    localStorage.removeItem('pa_staffName');
+    this._authenticated = false;
+    overlay.style.display = 'flex';
+    overlay.classList.remove('fade-out');
+    root.setAttribute('data-phase','input');
+    if (intro) intro.style.display='none';
+    if (inputArea) inputArea.style.display='flex';
+    // 既存データはクリア任意 (ここでは保持) / 必要なら this.currentStaff=[] など
+    if (reason) console.log('Re-login reason:', reason);
+};
+
+// ページが非表示→再表示 / フォーカス時に再ログイン要求
+document.addEventListener('visibilitychange', ()=>{
+    if (document.visibilityState === 'visible') {
+        if (paManager && paManager._authenticated) {
+            paManager.forceRelogin('visibility return');
+        }
+    }
+});
+window.addEventListener('focus', ()=>{
+    if (paManager && paManager._authenticated) {
+        paManager.forceRelogin('window focus');
+    }
+});
+
+// アイドルタイムアウト (例: 10分無操作で再ログイン)
+PAManager.prototype._setupIdleTimer = function() {
+    if (this._idleBound) return; this._idleBound = true;
+    let timer; const reset=()=>{
+        clearTimeout(timer);
+        timer = setTimeout(()=>{ if (this._authenticated) this.forceRelogin('idle timeout'); }, 10*60*1000);
+    };
+    ['click','touchstart','keydown'].forEach(ev=> document.addEventListener(ev, reset, {passive:true}));
+    reset();
+};
+// ログイン成功時に idle タイマー開始 (attemptLogin 内で呼ばれるように追記)
 
 function showAddStaffModal() {
     // 追加モードに初期化
