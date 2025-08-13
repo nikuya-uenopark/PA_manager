@@ -687,13 +687,18 @@ PAManager.prototype.initLoginUI = function() {
     localStorage.removeItem('pa_token');
     localStorage.removeItem('pa_staffName');
     // イントロフェード終了後自動で入力待ちに移行
+    // イントロのアニメーション (3s) 完了後にフェーズ切替しつつフェードイン
     setTimeout(()=>{
         if (root.getAttribute('data-phase')==='intro') {
             root.setAttribute('data-phase','input');
             if (intro) intro.style.display='none';
-            if (inputArea) inputArea.style.display='flex';
+            if (inputArea) {
+                inputArea.style.display='flex';
+                // 1フレーム待って opacity 1 (CSS transition)
+                requestAnimationFrame(()=> inputArea.style.opacity='1');
+            }
         }
-    }, 3200);
+    }, 3000);
     redraw();
 };
 

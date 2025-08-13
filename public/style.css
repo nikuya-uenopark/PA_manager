@@ -68,6 +68,8 @@ body {
 .login-intro { font-size:clamp(42px,7vw,96px); font-weight:700; letter-spacing:.08em; background:linear-gradient(120deg,#fff,#a5b4fc 40%,#fff); -webkit-background-clip:text; background-clip:text; color:transparent; opacity:0; animation:introFade 3s ease forwards; }
 @keyframes introFade { 0% { opacity:0; transform:translateY(20px) scale(.92); } 20% { opacity:1; transform:translateY(0) scale(1); } 80% { opacity:1; } 100% { opacity:0; transform:translateY(-15px) scale(.98); } }
 .login-input-area { width:100%; max-width:1200px; display:flex; flex-direction:column; gap:46px; }
+.login-input-area { opacity:0; transition:opacity .8s ease; }
+.login-root[data-phase="input"] .login-input-area { opacity:1; }
 .login-code-floating { font-size:clamp(56px,10vw,120px); font-weight:700; letter-spacing:.18em; text-align:center; min-height:1.1em; color:#ffffffdd; text-shadow:0 6px 24px rgba(0,0,0,0.6); font-variant-numeric:slashed-zero tabular-nums; }
 .login-digit-row { display:flex; justify-content:center; gap:2.4vw; flex-wrap:nowrap; }
 .login-digit-row button { --btnW:clamp(70px,9vw,130px); width:var(--btnW); height:var(--btnW); border:none; border-radius:28px; background:linear-gradient(160deg,#1e293b,#0f172a); color:#e2e8f0; font-size:clamp(28px,4vw,44px); font-weight:600; cursor:pointer; position:relative; overflow:hidden; box-shadow:none; transition:transform .35s cubic-bezier(.16,.84,.44,1), background .4s; backdrop-filter:blur(6px); outline:none; }
