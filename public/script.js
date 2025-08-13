@@ -584,6 +584,23 @@ let paManager;
 // 初期化
 paManager = new PAManager();
 
+// 共有メモ フォントサイズ切替
+document.addEventListener('DOMContentLoaded', () => {
+    const selects = document.querySelectorAll('.shared-note-font');
+    selects.forEach(sel => {
+        sel.addEventListener('change', () => {
+            const targetId = sel.getAttribute('data-target');
+            const ta = document.getElementById(targetId);
+            if (!ta) return;
+            const size = parseInt(sel.value, 10);
+            if (!isNaN(size) && size >= 12 && size <= 32) {
+                ta.style.fontSize = size + 'px';
+                ta.style.lineHeight = Math.round(size * 1.4) + 'px';
+            }
+        });
+    });
+});
+
 // ---- iOSなどでのダブルタップズーム抑止 ----
 let _lastTouchEnd = 0;
 document.addEventListener('touchend', function(e){

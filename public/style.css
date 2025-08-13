@@ -44,6 +44,12 @@
 .log-time { color: #6b7280; font-size: 12px; display: block; margin-bottom: 2px; }
 .log-message { color: #111827; word-break: break-word; overflow-wrap: anywhere; }
 .log-message { white-space: pre-line; }
+/* Shared note font size selector */
+.shared-note-section-head-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px; }
+.shared-note-tools { font-size:12px; font-weight:500; color:#374151; display:flex; align-items:center; gap:4px; }
+.shared-note-tools select.shared-note-font { padding:4px 6px; font-size:12px; border:1px solid #d1d5db; border-radius:6px; background:#fff; cursor:pointer; }
+.shared-note-tools select.shared-note-font:focus { outline:2px solid var(--primary-color); outline-offset:1px; }
+.shared-note-section textarea { transition: font-size .2s ease, line-height .2s ease; }
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
