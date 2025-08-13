@@ -20,16 +20,17 @@
 <body>
     <!-- ログイン画面 -->
     <div id="loginOverlay" class="login-overlay" style="display:flex;">
-        <div class="login-panel">
-            <div class="login-welcome" id="loginWelcome">ようこそ</div>
-            <div class="login-instruction">管理番号 (3-5桁) を入力してください</div>
-            <div class="login-code" id="loginCodeDisplay"></div>
-            <div class="keypad" id="loginKeypad"></div>
-            <div class="login-actions">
-                <button id="loginClearBtn" class="btn btn-secondary btn-small" type="button">クリア</button>
-                <button id="loginEnterBtn" class="btn btn-primary btn-small" type="button" disabled>ログイン</button>
+        <div class="login-root" id="loginRoot" data-phase="intro">
+            <div class="login-animated-bg"></div>
+            <div class="login-center">
+                <div id="loginIntro" class="login-intro">ようこそ</div>
+                <div id="loginInputArea" class="login-input-area" style="display:none;">
+                    <div id="loginCodeFloating" class="login-code-floating"></div>
+                    <div class="login-digit-row" id="loginDigitRow"></div>
+                    <div class="login-hint">3〜5桁入力後 画面をスワイプしてログイン</div>
+                    <div class="login-error" id="loginError"></div>
+                </div>
             </div>
-            <div class="login-error" id="loginError"></div>
         </div>
     </div>
     <!-- ローディング画面 -->

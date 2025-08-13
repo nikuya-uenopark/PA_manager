@@ -605,62 +605,90 @@ function switchTab(tabName) {
 PAManager.prototype.initLoginUI = function() {
     const overlay = document.getElementById('loginOverlay');
     if (!overlay) { this._authenticated = true; this.loadData(); return; }
-    const keypad = document.getElementById('loginKeypad');
-    const display = document.getElementById('loginCodeDisplay');
-    const enterBtn = document.getElementById('loginEnterBtn');
-    const clearBtn = document.getElementById('loginClearBtn');
+    const root = document.getElementById('loginRoot');
+    const intro = document.getElementById('loginIntro');
+    const inputArea = document.getElementById('loginInputArea');
+    const digitRow = document.getElementById('loginDigitRow');
+    const codeEl = document.getElementById('loginCodeFloating');
     const errEl = document.getElementById('loginError');
-    const welcome = document.getElementById('loginWelcome');
-    const digits = ['1','2','3','4','5','6','7','8','9','0'];
     let code = '';
+    const digits = ['0','1','2','3','4','5','6','7','8','9'];
+    const renderDigits = () => {
+        if (!digitRow) return;
+        digitRow.innerHTML = digits.map(d=>`<button type="button" data-digit="${d}">${d}</button>`).join('');
+    };
     const redraw = () => {
-        if (display) display.textContent = code.split('').map(()=> '•').join('');
-        if (enterBtn) enterBtn.disabled = !(code.length >=3 && code.length <=5);
+        if (codeEl) codeEl.textContent = code || '';
         if (errEl) errEl.textContent='';
     };
-    if (keypad) {
-        keypad.innerHTML = digits.map(d=>`<button type="button" data-digit="${d}">${d}</button>`).join('');
-        keypad.addEventListener('click', (e)=>{
-            const btn = e.target.closest('button[data-digit]');
-            if (!btn) return;
-            if (code.length >=5) return;
-            code += btn.getAttribute('data-digit');
-            redraw();
-        });
-    }
-    if (clearBtn) clearBtn.addEventListener('click', ()=>{ code=''; redraw(); });
-    if (enterBtn) enterBtn.addEventListener('click', async ()=>{
-        if (!(code.length >=3 && code.length <=5)) return;
-        enterBtn.disabled = true;
-        errEl.textContent = '';
+    // イントロ → タップで入力フェーズ
+    overlay.addEventListener('click', () => {
+        if (root.getAttribute('data-phase') === 'intro') {
+            root.setAttribute('data-phase','input');
+            if (intro) intro.style.display='none';
+            if (inputArea) inputArea.style.display='flex';
+        }
+    }, { once:false });
+    renderDigits();
+    digitRow.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button[data-digit]');
+        if (!btn) return;
+        if (code.length >=5) return;
+        code += btn.getAttribute('data-digit');
+        redraw();
+    });
+    // スワイプ検出（3〜5桁入力後）
+    let startX = null, startY=null, startTime=0;
+    const touchStart = (x,y)=>{ startX=x; startY=y; startTime=Date.now(); };
+    const touchEnd = (x,y)=>{
+        if (!(code.length>=3 && code.length<=5)) return;
+        if (startX===null) return;
+        const dx = x - startX; const dy = y - startY; const dist = Math.hypot(dx,dy);
+        const dur = Date.now()-startTime;
+        if (dist >= window.innerWidth * 0.1 && dur < 1500) { // 約画面幅10% (≒3cm相当目安)
+            attemptLogin();
+        }
+        startX = startY = null;
+    };
+    overlay.addEventListener('touchstart', e=>{ const t=e.touches[0]; touchStart(t.clientX,t.clientY); }, { passive:true });
+    overlay.addEventListener('touchend', e=>{ const t=e.changedTouches[0]; touchEnd(t.clientX,t.clientY); }, { passive:true });
+    // マウスでもテスト可能
+    overlay.addEventListener('mousedown', e=>{ touchStart(e.clientX, e.clientY); });
+    overlay.addEventListener('mouseup', e=>{ touchEnd(e.clientX, e.clientY); });
+    const attemptLogin = async () => {
         try {
             const res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code }) });
-            if (!res.ok) {
-                throw new Error((await res.json()).error || 'login failed');
-            }
+            if (!res.ok) throw new Error('login');
             const data = await res.json();
-            // 簡易トークン localStorage 保存
             localStorage.setItem('pa_token', data.token);
             localStorage.setItem('pa_staffName', data.staff.name);
             this._authenticated = true;
-            if (welcome) welcome.textContent = `${data.staff.name} さん、お帰りなさい！`;
-            welcome.classList.add('login-success');
             overlay.classList.add('fade-out');
             setTimeout(()=>{ overlay.style.display='none'; this.loadData(); }, 600);
-        } catch(err) {
+        } catch(e) {
+            // 失敗: シェイク + クリア
+            root.classList.add('swipe-fail');
+            setTimeout(()=> root.classList.remove('swipe-fail'), 450);
             code=''; redraw();
-            errEl.textContent = '管理番号が正しくありません';
-        } finally {
-            enterBtn.disabled = false;
+            if (errEl) errEl.textContent='管理番号が違います';
         }
-    });
-    // 既存トークンがあればスキップ（簡易）
+    };
+    // 既存トークン
     const existing = localStorage.getItem('pa_token');
     if (existing) {
         this._authenticated = true;
         overlay.style.display='none';
         this.loadData();
+        return;
     }
+    // イントロフェード終了後自動で入力待ちに移行
+    setTimeout(()=>{
+        if (root.getAttribute('data-phase')==='intro') {
+            root.setAttribute('data-phase','input');
+            if (intro) intro.style.display='none';
+            if (inputArea) inputArea.style.display='flex';
+        }
+    }, 3200);
     redraw();
 };
 

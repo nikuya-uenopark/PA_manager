@@ -56,23 +56,31 @@ body {
     touch-action: manipulation; /* ダブルタップズーム無効化 */
 }
 
-/* === Login Overlay === */
-.login-overlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; backdrop-filter:blur(14px); background:rgba(20,20,35,0.55); z-index:10000; animation:fadeIn 0.6s ease; }
-.login-panel { width: min(420px, 90%); background:#111827e6; color:#fff; padding:40px 32px 32px; border-radius:24px; box-shadow:0 8px 40px -4px rgba(0,0,0,0.4); position:relative; overflow:hidden; }
-.login-panel:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 20% 20%, rgba(103,149,255,0.25), transparent 70%), radial-gradient(circle at 80% 70%, rgba(255,149,211,0.2), transparent 70%); pointer-events:none; }
-.login-welcome { font-size:40px; font-weight:700; letter-spacing:2px; text-align:center; margin-bottom:8px; animation: slideDown .8s cubic-bezier(.16,.84,.44,1); }
-.login-instruction { text-align:center; font-size:14px; opacity:.85; margin-bottom:20px; }
-.login-code { height:56px; display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:600; letter-spacing:6px; background:#1f2937; border:1px solid #374151; border-radius:14px; margin-bottom:22px; box-shadow:inset 0 0 0 1px #000; }
-.keypad { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
-.keypad button { aspect-ratio:1 / 1; border:none; border-radius:18px; background:linear-gradient(145deg,#334155,#1e293b); color:#fff; font-size:22px; font-weight:600; cursor:pointer; position:relative; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.4); transition:transform .18s, box-shadow .18s; }
-.keypad button:after { content:""; position:absolute; inset:0; background:linear-gradient(140deg,rgba(255,255,255,0.15),rgba(255,255,255,0)); mix-blend-mode:overlay; }
-.keypad button:hover { transform:translateY(-4px); box-shadow:0 8px 18px -4px rgba(0,0,0,0.55); }
-.keypad button:active { transform:translateY(0); box-shadow:0 4px 10px rgba(0,0,0,0.4); }
-.login-actions { display:flex; justify-content:space-between; align-items:center; gap:12px; }
-.login-actions .btn-small { padding:10px 16px; font-size:14px; }
-.login-error { margin-top:14px; min-height:20px; font-size:13px; color:#f87171; text-align:center; }
-.login-success { animation: fadeIn .6s ease, popIn .5s ease; color:#34d399; }
-.login-panel.fade-out { animation: fadeAway .5s forwards; }
+/* === Login Overlay (Landscape / Animated) === */
+.login-overlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:#060b18; overflow:hidden; z-index:10000; }
+.login-root { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-family:'Inter',sans-serif; }
+.login-root[data-phase="intro"] .login-intro { opacity:1; }
+.login-animated-bg { position:absolute; inset:0; overflow:hidden; }
+.login-animated-bg:before, .login-animated-bg:after { content:""; position:absolute; width:160vmax; height:160vmax; top:50%; left:50%; transform:translate(-50%,-50%); background:conic-gradient(from 0deg, rgba(100,149,255,0.25), rgba(255,149,213,0.25), rgba(100,149,255,0.25)); animation: spinSlow 18s linear infinite; filter:blur(120px); opacity:.55; }
+.login-animated-bg:after { animation-direction:reverse; animation-duration:26s; opacity:.35; }
+@keyframes spinSlow { to { transform:translate(-50%,-50%) rotate(360deg); } }
+.login-center { position:relative; z-index:2; width:100%; padding:4vw 5vw; display:flex; flex-direction:column; align-items:center; gap:40px; }
+.login-intro { font-size:clamp(42px,7vw,96px); font-weight:700; letter-spacing:.08em; background:linear-gradient(120deg,#fff,#a5b4fc 40%,#fff); -webkit-background-clip:text; color:transparent; opacity:0; animation:introFade 3s ease forwards; }
+@keyframes introFade { 0% { opacity:0; transform:translateY(20px) scale(.92); } 20% { opacity:1; transform:translateY(0) scale(1); } 80% { opacity:1; } 100% { opacity:0; transform:translateY(-15px) scale(.98); } }
+.login-input-area { width:100%; max-width:1200px; display:flex; flex-direction:column; gap:46px; }
+.login-code-floating { font-size:clamp(56px,10vw,120px); font-weight:700; letter-spacing:.18em; text-align:center; min-height:1.1em; color:#ffffffdd; text-shadow:0 6px 24px rgba(0,0,0,0.6); font-variant-numeric:slashed-zero tabular-nums; }
+.login-digit-row { display:flex; justify-content:center; gap:2.4vw; flex-wrap:nowrap; }
+.login-digit-row button { --btnW:clamp(70px,9vw,130px); width:var(--btnW); height:var(--btnW); border:none; border-radius:28px; background:linear-gradient(160deg,#1e293b,#0f172a); color:#e2e8f0; font-size:clamp(28px,4vw,44px); font-weight:600; cursor:pointer; position:relative; overflow:hidden; box-shadow:0 12px 40px -10px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06); transition:transform .35s cubic-bezier(.16,.84,.44,1), background .4s; backdrop-filter:blur(6px); }
+.login-digit-row button:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.18),rgba(255,255,255,0)); mix-blend-mode:overlay; }
+.login-digit-row button:hover { transform:translateY(-8px) scale(1.04); }
+.login-digit-row button:active { transform:translateY(2px) scale(.96); }
+.login-hint { text-align:center; color:#94a3b8; font-size:clamp(12px,1.2vw,16px); letter-spacing:.08em; }
+.login-error { text-align:center; color:#f87171; font-size:14px; min-height:20px; }
+.login-root.swipe-valid .login-code-floating { color:#34d399; }
+.login-root.swipe-fail .login-code-floating { animation: shake .4s; }
+@keyframes shake { 0%,100% { transform:translateX(0); } 25% { transform:translateX(-12px); } 50% { transform:translateX(10px); } 75% { transform:translateX(-6px); } }
+.login-overlay.fade-out { animation: fadeAway .6s forwards; }
+@keyframes fadeAway { 0% { opacity:1; } 100% { opacity:0; } }
 @keyframes popIn { 0% { transform:scale(.85); opacity:0; } 100% { transform:scale(1); opacity:1; } }
 @keyframes fadeAway { 0% { opacity:1; transform:scale(1); } 100% { opacity:0; transform:scale(.96); } }
 @keyframes slideDown { 0% { transform:translateY(-20px); opacity:0; } 100% { transform:translateY(0); opacity:1; } }
