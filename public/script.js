@@ -74,9 +74,6 @@ class PAManager {
         area.addEventListener('click', e => {
             const btn = e.target.closest('.login-digit');
             if (!btn) return;
-            const del = btn.getAttribute('data-action');
-            if (del === 'del') { this._loginPin = this._loginPin.slice(0,-1); updateDisplay(); return; }
-            if (del === 'clear') { this._loginPin = ''; updateDisplay(); return; }
             const val = btn.getAttribute('data-val');
             if (val && this._loginPin.length < maxLen) { this._loginPin += val; updateDisplay(); }
         });
