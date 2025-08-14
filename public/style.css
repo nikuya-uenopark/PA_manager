@@ -47,11 +47,21 @@
 .shared-note-tools .shared-note-font { padding:4px 6px; font-size:12px; border:1px solid #d1d5db; border-radius:6px; background:#fff; }
 .shared-note-tools .shared-note-font:focus { outline:2px solid var(--primary-color); outline-offset:1px; }
 .shared-note-section textarea { transition: font-size .2s ease, line-height .2s ease; }
+/* Font wheel picker */
+.font-wheel { position:relative; width:60px; height:90px; overflow:hidden; border:1px solid #d1d5db; border-radius:8px; background:#fff; display:flex; flex-direction:column; scroll-behavior:smooth; }
+.font-wheel::-webkit-scrollbar { width:0; height:0; }
+.font-wheel-item { flex:0 0 30px; height:30px; display:flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer; user-select:none; color:#374151; }
+.font-wheel-item.active { background:#6366f1; color:#fff; font-weight:600; }
+.font-wheel:before, .font-wheel:after { content:""; position:absolute; left:0; width:100%; height:30px; pointer-events:none; }
+.font-wheel:before { top:0; background:linear-gradient(#fff,rgba(255,255,255,0)); }
+.font-wheel:after { bottom:0; background:linear-gradient(rgba(255,255,255,0),#fff); }
+.font-wheel-value { font-size:12px; margin-left:6px; font-weight:600; }
 /* stove selector */
 .stove-inline-block { display:flex; flex-wrap:wrap; align-items:center; gap:8px; background:#fff; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; }
 .stove-label { font-weight:600; font-size:14px; }
 .stove-date, .stove-number { padding:4px 6px; border:1px solid #d1d5db; border-radius:6px; background:#fff; font-size:13px; }
 .stove-date:focus, .stove-number:focus { outline:2px solid var(--primary-color); outline-offset:1px; }
+.stove-result { font-size:14px; font-weight:600; color:#111827; }
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));

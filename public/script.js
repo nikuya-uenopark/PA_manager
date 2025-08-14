@@ -478,22 +478,28 @@ PAManager.prototype.loadSharedNote = async function() {
         const commTa = document.getElementById('sharedNoteComm');
         const stoveDateInput = document.getElementById('stoveDate');
         const stoveNumSelect = document.getElementById('stoveNumber');
-        const opsFontInput = document.querySelector('.shared-note-font[data-target="sharedNoteOps"]');
-        const commFontInput = document.querySelector('.shared-note-font[data-target="sharedNoteComm"]');
+    const opsFontWheel = document.querySelector('.font-wheel[data-target="sharedNoteOps"]');
+    const commFontWheel = document.querySelector('.font-wheel[data-target="sharedNoteComm"]');
         if (opsTa) opsTa.value = data?.ops || '';
         if (commTa) commTa.value = data?.comm || '';
         if (stoveDateInput && data?.stoveDate) stoveDateInput.value = data.stoveDate;
         if (stoveNumSelect && data?.stoveNumber) stoveNumSelect.value = data.stoveNumber;
-        if (opsFontInput && data?.opsFont) opsFontInput.value = data.opsFont;
-        if (commFontInput && data?.commFont) commFontInput.value = data.commFont;
-        // 反映（既存applySizeロジックがDOMContentLoadedで走るため手動適用）
-        if (opsFontInput) {
-            const size = parseInt(opsFontInput.value,10); if (!isNaN(size)) { const ta=opsTa; if (ta){ ta.style.fontSize=size+'px'; ta.style.lineHeight=Math.round(size*1.4)+'px'; } }
+        if (opsFontWheel && data?.opsFont) {
+            opsFontWheel.setAttribute('data-default', data.opsFont);
         }
-        if (commFontInput) {
-            const size = parseInt(commFontInput.value,10); if (!isNaN(size)) { const ta=commTa; if (ta){ ta.style.fontSize=size+'px'; ta.style.lineHeight=Math.round(size*1.4)+'px'; } }
+        if (commFontWheel && data?.commFont) {
+            commFontWheel.setAttribute('data-default', data.commFont);
         }
-        this._sharedNoteOriginal = JSON.stringify({ ops: opsTa ? opsTa.value : '', comm: commTa ? commTa.value : '', stoveDate: stoveDateInput ? stoveDateInput.value : '', stoveNumber: stoveNumSelect ? stoveNumSelect.value : '', opsFont: opsFontInput ? opsFontInput.value : '', commFont: commFontInput ? commFontInput.value : '' });
+        // build wheels after values set (if not already built)
+        if (!this._fontWheelInitialized) {
+            this._fontWheelInitialized = true;
+            document.querySelectorAll('.font-wheel').forEach(w => {
+                // 再構築用にトリガを発火
+                const evt = new Event('rebuild-font-wheel');
+                w.dispatchEvent(evt);
+            });
+        }
+        this._sharedNoteOriginal = JSON.stringify({ ops: opsTa ? opsTa.value : '', comm: commTa ? commTa.value : '', stoveDate: stoveDateInput ? stoveDateInput.value : '', stoveNumber: stoveNumSelect ? stoveNumSelect.value : '', opsFont: data?.opsFont || '', commFont: data?.commFont || '' });
         this._sharedNoteLoaded = true;
         if (statusEl) statusEl.textContent = '最新です';
         const upd = document.getElementById('sharedNoteUpdated');
@@ -528,19 +534,19 @@ PAManager.prototype.loadSharedNote = async function() {
                         const commTa2 = document.getElementById('sharedNoteComm');
                         const stoveDate2 = document.getElementById('stoveDate');
                         const stoveNum2 = document.getElementById('stoveNumber');
-                        const opsFont2 = document.querySelector('.shared-note-font[data-target="sharedNoteOps"]');
-                        const commFont2 = document.querySelector('.shared-note-font[data-target="sharedNoteComm"]');
+                        const opsFont2 = document.querySelector('.font-wheel[data-target="sharedNoteOps"]');
+                        const commFont2 = document.querySelector('.font-wheel[data-target="sharedNoteComm"]');
                         if (!opsTa2 && !commTa2) return;
                         const serverObj = { ops: d?.ops || '', comm: d?.comm || '', stoveDate: d?.stoveDate || '', stoveNumber: d?.stoveNumber || '', opsFont: d?.opsFont || '', commFont: d?.commFont || '' };
                         const serverStr = JSON.stringify(serverObj);
-                        const currentStr = JSON.stringify({ ops: opsTa2 ? opsTa2.value : '', comm: commTa2 ? commTa2.value : '', stoveDate: stoveDate2 ? stoveDate2.value : '', stoveNumber: stoveNum2 ? stoveNum2.value : '', opsFont: opsFont2 ? opsFont2.value : '', commFont: commFont2 ? commFont2.value : '' });
+                        const currentStr = JSON.stringify({ ops: opsTa2 ? opsTa2.value : '', comm: commTa2 ? commTa2.value : '', stoveDate: stoveDate2 ? stoveDate2.value : '', stoveNumber: stoveNum2 ? stoveNum2.value : '', opsFont: d?.opsFont || '', commFont: d?.commFont || '' });
                         if (serverStr !== this._sharedNoteOriginal && currentStr === this._sharedNoteOriginal) {
                             if (opsTa2) opsTa2.value = serverObj.ops;
                             if (commTa2) commTa2.value = serverObj.comm;
                             if (stoveDate2) stoveDate2.value = serverObj.stoveDate;
                             if (stoveNum2) stoveNum2.value = serverObj.stoveNumber;
-                            if (opsFont2 && serverObj.opsFont) { opsFont2.value = serverObj.opsFont; const sz=parseInt(serverObj.opsFont,10); if(!isNaN(sz)&&opsTa2){ opsTa2.style.fontSize=sz+'px'; opsTa2.style.lineHeight=Math.round(sz*1.4)+'px'; } }
-                            if (commFont2 && serverObj.commFont) { commFont2.value = serverObj.commFont; const sz=parseInt(serverObj.commFont,10); if(!isNaN(sz)&&commTa2){ commTa2.style.fontSize=sz+'px'; commTa2.style.lineHeight=Math.round(sz*1.4)+'px'; } }
+                            if (opsFont2 && serverObj.opsFont) { const sz=parseInt(serverObj.opsFont,10); if(!isNaN(sz)&&opsTa2){ opsTa2.style.fontSize=sz+'px'; opsTa2.style.lineHeight=Math.round(sz*1.4)+'px'; document.querySelector(`.font-wheel-value[data-target-display="sharedNoteOps"]`).textContent=sz+'px'; } }
+                            if (commFont2 && serverObj.commFont) { const sz=parseInt(serverObj.commFont,10); if(!isNaN(sz)&&commTa2){ commTa2.style.fontSize=sz+'px'; commTa2.style.lineHeight=Math.round(sz*1.4)+'px'; document.querySelector(`.font-wheel-value[data-target-display="sharedNoteComm"]`).textContent=sz+'px'; } }
                             this._sharedNoteOriginal = serverStr;
                             if (st) st.textContent = '同期中...';
                             setTimeout(()=>{ if (st && st.textContent === '同期中...') st.textContent = '最新です'; }, 2000);
@@ -562,15 +568,15 @@ PAManager.prototype.saveSharedNote = async function(force=false) {
     const commTa = document.getElementById('sharedNoteComm');
     const stoveDateInput = document.getElementById('stoveDate');
     const stoveNumSelect = document.getElementById('stoveNumber');
-    const opsFontInput = document.querySelector('.shared-note-font[data-target="sharedNoteOps"]');
-    const commFontInput = document.querySelector('.shared-note-font[data-target="sharedNoteComm"]');
-    if (!opsTa && !commTa && !stoveDateInput && !stoveNumSelect && !opsFontInput && !commFontInput) return;
+    const opsFontVal = document.querySelector('.font-wheel-value[data-target-display="sharedNoteOps"]');
+    const commFontVal = document.querySelector('.font-wheel-value[data-target-display="sharedNoteComm"]');
+    if (!opsTa && !commTa && !stoveDateInput && !stoveNumSelect && !opsFontVal && !commFontVal) return;
     const ops = opsTa ? opsTa.value : '';
     const comm = commTa ? commTa.value : '';
     const stoveDate = stoveDateInput ? stoveDateInput.value : '';
     const stoveNumber = stoveNumSelect ? stoveNumSelect.value : '';
-    const opsFont = opsFontInput ? opsFontInput.value : '';
-    const commFont = commFontInput ? commFontInput.value : '';
+    const opsFont = opsFontVal ? (opsFontVal.textContent||'').replace('px','') : '';
+    const commFont = commFontVal ? (commFontVal.textContent||'').replace('px','') : '';
     const currentStr = JSON.stringify({ ops, comm, stoveDate, stoveNumber, opsFont, commFont });
     if (!force && currentStr === this._sharedNoteOriginal && (ops !== '' || comm !== '' || stoveDate !== '' || stoveNumber !== '' || opsFont !== '' || commFont !== '')) {
         const s = document.getElementById('sharedNoteStatus');
@@ -614,22 +620,58 @@ paManager = new PAManager();
 
 // 共有メモ フォントサイズ切替
 document.addEventListener('DOMContentLoaded', () => {
-    const fontInputs = document.querySelectorAll('.shared-note-font');
-    fontInputs.forEach(inp => {
-        const applySize = () => {
-            const targetId = inp.getAttribute('data-target');
-            const ta = document.getElementById(targetId);
-            if (!ta) return;
-            let size = parseInt(inp.value, 10);
-            if (isNaN(size)) return;
-            if (size < 10) size = 10; else if (size > 40) size = 40;
-            inp.value = size; // normalize
-            ta.style.fontSize = size + 'px';
-            ta.style.lineHeight = Math.round(size * 1.4) + 'px';
+    // フォントサイズ ホイールピッカー
+    const buildWheel = (wheel) => {
+        const target = wheel.getAttribute('data-target');
+        const def = parseInt(wheel.getAttribute('data-default')||'16',10);
+        const values = [];
+        for (let v=10; v<=40; v++) values.push(v);
+        wheel.innerHTML = values.map(v=>`<div class="font-wheel-item" data-v="${v}">${v}</div>`).join('');
+        const ta = document.getElementById(target);
+        const display = document.querySelector(`.font-wheel-value[data-target-display="${target}"]`);
+        const apply = (val, scroll=false) => {
+            if (ta) { ta.style.fontSize = val+'px'; ta.style.lineHeight = Math.round(val*1.4)+'px'; }
+            if (display) display.textContent = val + 'px';
+            // 保存差分トラッキング更新
+            if (window.paManager) {
+                clearTimeout(window.paManager._sharedNoteTimer);
+                const s = document.getElementById('sharedNoteStatus'); if (s) s.textContent = '編集中...';
+                window.paManager._sharedNoteTimer = setTimeout(()=>window.paManager.saveSharedNote(), 600);
+            }
+            wheel.querySelectorAll('.font-wheel-item').forEach(it=>{
+                it.classList.toggle('active', parseInt(it.getAttribute('data-v'),10)===val);
+            });
+            if (scroll) {
+                const idx = values.indexOf(val);
+                if (idx!==-1) wheel.scrollTo({ top: idx*30 - 30, behavior:'instant' });
+            }
         };
-        inp.addEventListener('change', applySize);
-        inp.addEventListener('input', applySize);
-        applySize();
+        wheel.addEventListener('click', e=>{
+            const item = e.target.closest('.font-wheel-item');
+            if (!item) return;
+            const val = parseInt(item.getAttribute('data-v'),10);
+            apply(val, false);
+        });
+        // ホイールスクロールでスナップ
+        let scrollTimer;
+        wheel.addEventListener('scroll', ()=>{
+            clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(()=>{
+                const pos = wheel.scrollTop;
+                const idx = Math.round(pos/30);
+                const val = values[Math.min(values.length-1, Math.max(0, idx+1))];
+                if (val) apply(val,false);
+            }, 120);
+        });
+        // 初期値
+        apply(def, true);
+    };
+    document.querySelectorAll('.font-wheel').forEach(buildWheel);
+    document.addEventListener('rebuild-font-wheel-all', () => {
+        document.querySelectorAll('.font-wheel').forEach(buildWheel);
+    });
+    document.querySelectorAll('.font-wheel').forEach(w => {
+        w.addEventListener('rebuild-font-wheel', ()=> buildWheel(w));
     });
     // コンロつけ 日付 & 卓番号
     const dateInput = document.getElementById('stoveDate');
@@ -647,7 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formattedDate = `${y}/${m}/${da}(${w})`;
             }
         }
-    // 表示要素削除済みのため結果テキストはUIに反映しない
+        const num = numSelect && numSelect.value ? numSelect.value : '';
         // デバウンス保存 (paManager利用可時のみ)
         if (window.paManager) {
             const s = document.getElementById('sharedNoteStatus');
