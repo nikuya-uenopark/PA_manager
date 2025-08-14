@@ -610,12 +610,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const applyBtn = document.getElementById('fontSizePickerApplyBtn');
     let currentTarget = null;
     let tempValue = 16;
-    const values = Array.from({length:31}, (_,i)=> i+10); // 10-40
+    const values = Array.from({length:31}, (_,i)=> i+10); // 10-40 (正順)
+    // ドラムロール用: 末尾と先頭を番兵として複製 [40,10..40,10]
     function buildList(selected) {
-        list.innerHTML = values.map(v=>`<div class="picker-item ${v===selected?'active':''}" data-v="${v}" role="option" aria-selected="${v===selected}">${v}px</div>`).join('');
-        // スクロール中央
+        const ext = [values[values.length-1], ...values, values[0]];
+        list.innerHTML = ext.map((v,i)=>`<div class="picker-item ${v===selected && i===values.indexOf(selected)+1?'active':''}" data-v="${v}" data-idx="${i}" role="option" aria-selected="${v===selected && i===values.indexOf(selected)+1}">${v}px</div>`).join('');
+        // 中央(実値)行へスクロール (番兵+1 オフセット)
         const idx = values.indexOf(selected);
-    setTimeout(()=>{ list.parentElement.scrollTo({ top: idx*48 - (list.parentElement.clientHeight/2 - 24), behavior:'auto' }); }, 0);
+        const extIdx = idx >= 0 ? idx+1 : 1; // デフォルト番兵後
+        setTimeout(()=>{ list.parentElement.scrollTo({ top: extIdx*48 - (list.parentElement.clientHeight/2 - 24), behavior:'auto' }); }, 0);
     }
     function openPicker(targetId) {
         currentTarget = targetId;
@@ -633,22 +636,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     list.parentElement.addEventListener('scroll', ()=>{
         const pos = list.parentElement.scrollTop;
-        const idx = Math.round((pos + 24)/48); // 48px item height
-        const v = values[Math.min(values.length-1, Math.max(0, idx))];
+        // 拡張配列 index 推定 (番兵含む) -> 実インデックス(rawIdx)
+        let extIdx = Math.round((pos + 24)/48); // 0..values.length+1
+        let rawIdx = extIdx - 1; // -1 => 末尾番兵, values.length => 先頭番兵
+        if (rawIdx < 0) rawIdx = values.length -1; // 40
+        if (rawIdx >= values.length) rawIdx = 0;   // 10
+        // シームレス補正: 番兵領域に入ったら同値の中央位置へ瞬時移動
+        if (extIdx === 0) { // 上端番兵(=40)
+            const targetTop = (values.length)*48 - (list.parentElement.clientHeight/2 - 24); // 40 の中央位置 (extIdx=values.length)
+            list.parentElement.scrollTo({ top: targetTop, behavior:'auto' });
+            return; // 再計算は次イベント
+        }
+        if (extIdx === values.length+1) { // 下端番兵(=10)
+            const targetTop = 48 - (list.parentElement.clientHeight/2 - 24); // 10 の中央位置 (extIdx=1)
+            list.parentElement.scrollTo({ top: targetTop, behavior:'auto' });
+            return;
+        }
+        const v = values[rawIdx];
         if (v && v !== tempValue) {
             tempValue = v;
+            const targetExtIdx = rawIdx + 1; // 中央(実値)の ext インデックス
             list.querySelectorAll('.picker-item').forEach(el=>{
-                const val = parseInt(el.getAttribute('data-v'),10);
-                el.classList.toggle('active', val===v);
-                el.setAttribute('aria-selected', val===v);
+                const i = parseInt(el.getAttribute('data-idx'),10);
+                const isActive = i === targetExtIdx;
+                el.classList.toggle('active', isActive);
+                el.setAttribute('aria-selected', isActive);
             });
         }
     });
     list.addEventListener('click', e=>{
         const it = e.target.closest('.picker-item');
         if (!it) return;
-        tempValue = parseInt(it.getAttribute('data-v'),10);
-        list.parentElement.scrollTo({ top: values.indexOf(tempValue)*48 - (list.parentElement.clientHeight/2 - 24), behavior:'smooth' });
+        const val = parseInt(it.getAttribute('data-v'),10);
+        if (isNaN(val)) return;
+        tempValue = val;
+        const centerIdx = values.indexOf(val)+1; // 番兵+1
+        list.parentElement.scrollTo({ top: centerIdx*48 - (list.parentElement.clientHeight/2 - 24), behavior:'smooth' });
     });
     applyBtn.addEventListener('click', ()=>{
         if (!currentTarget) { closePicker(); return; }

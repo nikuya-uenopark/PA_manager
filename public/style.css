@@ -58,7 +58,11 @@
 /* active時: 以前は font-size:18px で高さ48px内で上下位置が微妙にズレたのでサイズ固定にし、強調は色・太字・背景・僅かなスケールで表現 */
 .picker-item.active { color:var(--primary-color); font-weight:600; background:#eef2ff; transform:scale(1.04); border-radius:8px; }
 .picker-item:active { background:#e2e8f7; }
-.picker-center-line { position:absolute; top:50%; left:0; width:100%; height:48px; margin-top:-24px; border-top:1px solid #6366f1; border-bottom:1px solid #6366f1; pointer-events:none; box-shadow:0 0 0 9999px rgba(255,255,255,0.35) inset; }
+/* 中央ラインをactiveアイテム自身に描画 */
+.picker-center-line { display:none; }
+.picker-item.active::before, .picker-item.active::after { content:""; position:absolute; left:12px; right:12px; height:0; border-top:1px solid #6366f1; }
+.picker-item.active::before { top:0; }
+.picker-item.active::after { bottom:0; }
 .picker-list-wrapper::-webkit-scrollbar { width:0; height:0; }
 .font-size-trigger { padding:2px 8px; background:#f3f4f6; border:1px solid #d1d5db; border-radius:6px; cursor:pointer; font-size:12px; display:inline-flex; align-items:center; gap:4px; }
 .font-size-trigger:active { background:#e5e7eb; }
