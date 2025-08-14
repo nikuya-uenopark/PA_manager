@@ -611,18 +611,29 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTarget = null;
     let tempValue = 16;
     const values = Array.from({length:31}, (_,i)=> i+10); // 10-40 (正順)
-    // ドラムロール用: 末尾と先頭を番兵として複製 [40,10..40,10]
+    const itemHeight = 48;
+    const repeats = 5; // 十分な繰り返しで滑らか無限風
+    const middleBlock = Math.floor(repeats/2); // 2 (0..4)
+    let framePending = false;
     function buildList(selected) {
-        const ext = [values[values.length-1], ...values, values[0]];
-        list.innerHTML = ext.map((v,i)=>`<div class="picker-item ${v===selected && i===values.indexOf(selected)+1?'active':''}" data-v="${v}" data-idx="${i}" role="option" aria-selected="${v===selected && i===values.indexOf(selected)+1}">${v}px</div>`).join('');
-        // 中央(実値)行へスクロール (番兵+1 オフセット)
-        const idx = values.indexOf(selected);
-        const extIdx = idx >= 0 ? idx+1 : 1; // デフォルト番兵後
+        const parts = [];
+        for (let r=0;r<repeats;r++) {
+            values.forEach((v,vi)=>{
+                const globalIdx = r*values.length + vi; // 0..(values.length*repeats-1)
+                // active 初期判定: 中央ブロック内かつ値一致
+                const isActive = (r===middleBlock && v===selected);
+                parts.push(`<div class="picker-item ${isActive?'active':''}" data-v="${v}" data-gidx="${globalIdx}" role="option" aria-selected="${isActive}">${v}px</div>`);
+            });
+        }
+        list.innerHTML = parts.join('');
+        // 中央ブロックの該当値位置へ
+        const vi = Math.max(0, values.indexOf(selected));
+        const targetGlobalIdx = middleBlock*values.length + vi;
         setTimeout(()=>{
             const container = list.parentElement;
-            const centerOffset = container.clientHeight/2 - 24; // アイテム高さ48pxの中央位置
-            container.scrollTop = extIdx*48 - centerOffset;
-        }, 0);
+            const centerOffset = container.clientHeight/2 - itemHeight/2;
+            container.scrollTop = targetGlobalIdx*itemHeight - centerOffset;
+        },0);
     }
     function openPicker(targetId) {
         currentTarget = targetId;
@@ -639,48 +650,49 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTarget = null;
     }
     list.parentElement.addEventListener('scroll', ()=>{
-        const pos = list.parentElement.scrollTop;
-        // 拡張配列 index 推定 (番兵含む) -> 実インデックス(rawIdx)
-    const container = list.parentElement;
-    const centerOffset = container.clientHeight/2 - 24;
-    // 現在スクロール位置 + 中央オフセットで中央に来ているアイテムの上端を推定
-    let extIdx = Math.round((pos + centerOffset)/48); // 0..values.length+1
-        let rawIdx = extIdx - 1; // -1 => 末尾番兵, values.length => 先頭番兵
-        if (rawIdx < 0) rawIdx = values.length -1; // 40
-        if (rawIdx >= values.length) rawIdx = 0;   // 10
-        // シームレス補正: 番兵領域に入ったら同値の中央位置へ瞬時移動
-        if (extIdx === 0) { // 上端番兵(=40)
-            const targetTop = (values.length)*48 - centerOffset; // 40 の中央位置 (extIdx=values.length)
-            container.scrollTop = targetTop;
-            return; // 再計算は次イベント
-        }
-        if (extIdx === values.length+1) { // 下端番兵(=10)
-            const targetTop = 48 - centerOffset; // 10 の中央位置 (extIdx=1)
-            container.scrollTop = targetTop;
-            return;
-        }
-        const v = values[rawIdx];
-        if (v && v !== tempValue) {
-            tempValue = v;
-            const targetExtIdx = rawIdx + 1; // 中央(実値)の ext インデックス
-            list.querySelectorAll('.picker-item').forEach(el=>{
-                const i = parseInt(el.getAttribute('data-idx'),10);
-                const isActive = i === targetExtIdx;
-                el.classList.toggle('active', isActive);
-                el.setAttribute('aria-selected', isActive);
-            });
-        }
+        if (framePending) return; // rAFで負荷軽減
+        framePending = true;
+        requestAnimationFrame(()=>{
+            framePending = false;
+            const container = list.parentElement;
+            const centerOffset = container.clientHeight/2 - itemHeight/2;
+            const pos = container.scrollTop;
+            const approxIdx = Math.round((pos + centerOffset)/itemHeight); // 拡張配列内インデックス
+            const totalItems = values.length * repeats;
+            // 端付近なら中央ブロックへ再配置（シームレス）
+            const blockSizePx = values.length * itemHeight;
+            const minPx = values.length * itemHeight * (middleBlock-1); // 1ブロック上端許容
+            const maxPx = values.length * itemHeight * (middleBlock+1); // 1ブロック下端許容
+            if (pos < minPx || pos > maxPx + (blockSizePx - itemHeight)) {
+                // 現在値推定
+                const rawIdx = ((approxIdx % values.length) + values.length) % values.length;
+                const targetIdx = middleBlock*values.length + rawIdx;
+                container.scrollTop = targetIdx*itemHeight - centerOffset;
+                return;
+            }
+            // active 更新
+            const rawIdx = ((approxIdx % values.length) + values.length) % values.length;
+            const value = values[rawIdx];
+            if (value !== tempValue) tempValue = value;
+            const desiredGlobalIdx = middleBlock*values.length + rawIdx;
+            // すべてのactive外して対象に付与
+            const activeEls = list.querySelectorAll('.picker-item.active');
+            activeEls.forEach(a=>{ a.classList.remove('active'); a.setAttribute('aria-selected','false'); });
+            const targetEl = list.querySelector(`.picker-item[data-gidx="${desiredGlobalIdx}"]`);
+            if (targetEl) { targetEl.classList.add('active'); targetEl.setAttribute('aria-selected','true'); }
+        });
     });
     list.addEventListener('click', e=>{
         const it = e.target.closest('.picker-item');
         if (!it) return;
     const val = parseInt(it.getAttribute('data-v'),10);
         if (isNaN(val)) return;
-        tempValue = val;
-    const centerIdx = values.indexOf(val)+1; // 番兵+1
+    tempValue = val;
     const container = list.parentElement;
-    const centerOffset = container.clientHeight/2 - 24;
-    container.scrollTo({ top: centerIdx*48 - centerOffset, behavior:'smooth' });
+    const centerOffset = container.clientHeight/2 - itemHeight/2;
+    const rawIdx = values.indexOf(val);
+    const targetIdx = middleBlock*values.length + rawIdx;
+    container.scrollTo({ top: targetIdx*itemHeight - centerOffset, behavior:'smooth' });
     });
     applyBtn.addEventListener('click', ()=>{
         if (!currentTarget) { closePicker(); return; }

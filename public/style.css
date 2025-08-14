@@ -52,7 +52,7 @@
 /* Font size picker modal */
 .font-size-picker-modal .modal-content.picker { width:320px; max-width:90%; }
 .picker-body { padding:10px 16px 20px; }
-.picker-list-wrapper { position:relative; height:240px; overflow-y:scroll; overflow-x:hidden; overscroll-behavior:contain; scroll-snap-type:y mandatory; border:1px solid #e5e7eb; border-radius:10px; background:#fff; scrollbar-width:none; }
+.picker-list-wrapper { position:relative; height:240px; overflow-y:scroll; overflow-x:hidden; overscroll-behavior:contain; border:1px solid #e5e7eb; border-radius:10px; background:#fff; scrollbar-width:none; }
 .picker-list-wrapper::-webkit-scrollbar { display:none; }
 .picker-list { display:flex; flex-direction:column; }
 .picker-item { height:48px; display:flex; align-items:center; justify-content:center; font-size:16px; color:#374151; scroll-snap-align:center; user-select:none; cursor:pointer; position:relative; transition:color .18s ease, background-color .18s ease, transform .18s ease; }
