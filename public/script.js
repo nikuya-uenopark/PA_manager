@@ -673,6 +673,35 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.font-wheel').forEach(w => {
         w.addEventListener('rebuild-font-wheel', ()=> buildWheel(w));
     });
+    // Up/Down buttons (tap)
+    const adjustFont = (targetId, delta) => {
+        const display = document.querySelector(`.font-wheel-value[data-target-display="${targetId}"]`);
+        if (!display) return;
+        let val = parseInt((display.textContent||'').replace('px',''),10);
+        if (isNaN(val)) val = 16;
+        val += delta;
+        if (val < 10) val = 10; else if (val > 40) val = 40;
+        display.textContent = val + 'px';
+        const ta = document.getElementById(targetId);
+        if (ta) { ta.style.fontSize = val+'px'; ta.style.lineHeight = Math.round(val*1.4)+'px'; }
+        // wheel active highlight
+        const wheel = document.querySelector(`.font-wheel[data-target="${targetId}"]`);
+        if (wheel) {
+            wheel.querySelectorAll('.font-wheel-item').forEach(it=> it.classList.toggle('active', parseInt(it.getAttribute('data-v'),10)===val));
+        }
+        if (window.paManager) {
+            const s = document.getElementById('sharedNoteStatus'); if (s) s.textContent = '編集中...';
+            clearTimeout(window.paManager._sharedNoteTimer);
+            window.paManager._sharedNoteTimer = setTimeout(()=>window.paManager.saveSharedNote(), 500);
+        }
+    };
+    document.querySelectorAll('.font-wheel-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-target-btn');
+            const step = parseInt(btn.getAttribute('data-step'),10) || 0;
+            adjustFont(target, step);
+        });
+    });
     // コンロつけ 日付 & 卓番号
     const dateInput = document.getElementById('stoveDate');
     const numSelect = document.getElementById('stoveNumber');

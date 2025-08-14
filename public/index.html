@@ -76,8 +76,11 @@
                         <div class="shared-note-section">
                             <div class="shared-note-section-head-row">
                                 <div class="shared-note-section-head">業務メモ</div>
-                                <div class="shared-note-tools">文字サイズ
-                                    <div class="font-wheel" data-target="sharedNoteOps" data-default="16"></div><span class="font-wheel-value" data-target-display="sharedNoteOps">16px</span>
+                                <div class="shared-note-tools font-wheel-wrapper" data-target-group="sharedNoteOps">文字サイズ
+                                    <button type="button" class="font-wheel-btn up" aria-label="フォントサイズを小さく" data-step="-1" data-target-btn="sharedNoteOps">▲</button>
+                                    <div class="font-wheel" data-target="sharedNoteOps" data-default="16"></div>
+                                    <button type="button" class="font-wheel-btn down" aria-label="フォントサイズを大きく" data-step="1" data-target-btn="sharedNoteOps">▼</button>
+                                    <span class="font-wheel-value" data-target-display="sharedNoteOps">16px</span>
                                 </div>
                             </div>
                             <textarea id="sharedNoteOps" rows="15" placeholder="業務に関する共有事項を記入してください"></textarea>
@@ -85,8 +88,11 @@
                         <div class="shared-note-section">
                             <div class="shared-note-section-head-row">
                                 <div class="shared-note-section-head">連絡メモ</div>
-                                <div class="shared-note-tools">文字サイズ
-                                    <div class="font-wheel" data-target="sharedNoteComm" data-default="16"></div><span class="font-wheel-value" data-target-display="sharedNoteComm">16px</span>
+                                <div class="shared-note-tools font-wheel-wrapper" data-target-group="sharedNoteComm">文字サイズ
+                                    <button type="button" class="font-wheel-btn up" aria-label="フォントサイズを小さく" data-step="-1" data-target-btn="sharedNoteComm">▲</button>
+                                    <div class="font-wheel" data-target="sharedNoteComm" data-default="16"></div>
+                                    <button type="button" class="font-wheel-btn down" aria-label="フォントサイズを大きく" data-step="1" data-target-btn="sharedNoteComm">▼</button>
+                                    <span class="font-wheel-value" data-target-display="sharedNoteComm">16px</span>
                                 </div>
                             </div>
                             <textarea id="sharedNoteComm" rows="15" placeholder="連絡事項・周知事項を記入してください"></textarea>
