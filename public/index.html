@@ -76,11 +76,8 @@
                         <div class="shared-note-section">
                             <div class="shared-note-section-head-row">
                                 <div class="shared-note-section-head">業務メモ</div>
-                                <div class="shared-note-tools font-wheel-wrapper" data-target-group="sharedNoteOps">文字サイズ
-                                    <button type="button" class="font-wheel-btn up" aria-label="フォントサイズを小さく" data-step="-1" data-target-btn="sharedNoteOps">▲</button>
-                                    <div class="font-wheel" data-target="sharedNoteOps" data-default="16"></div>
-                                    <button type="button" class="font-wheel-btn down" aria-label="フォントサイズを大きく" data-step="1" data-target-btn="sharedNoteOps">▼</button>
-                                    <span class="font-wheel-value" data-target-display="sharedNoteOps">16px</span>
+                                <div class="shared-note-tools" data-target-group="sharedNoteOps">文字サイズ
+                                    <span class="font-size-trigger font-wheel-value" data-target-display="sharedNoteOps" data-target="sharedNoteOps" role="button" tabindex="0">16px</span>
                                 </div>
                             </div>
                             <textarea id="sharedNoteOps" rows="15" placeholder="業務に関する共有事項を記入してください"></textarea>
@@ -88,11 +85,8 @@
                         <div class="shared-note-section">
                             <div class="shared-note-section-head-row">
                                 <div class="shared-note-section-head">連絡メモ</div>
-                                <div class="shared-note-tools font-wheel-wrapper" data-target-group="sharedNoteComm">文字サイズ
-                                    <button type="button" class="font-wheel-btn up" aria-label="フォントサイズを小さく" data-step="-1" data-target-btn="sharedNoteComm">▲</button>
-                                    <div class="font-wheel" data-target="sharedNoteComm" data-default="16"></div>
-                                    <button type="button" class="font-wheel-btn down" aria-label="フォントサイズを大きく" data-step="1" data-target-btn="sharedNoteComm">▼</button>
-                                    <span class="font-wheel-value" data-target-display="sharedNoteComm">16px</span>
+                                <div class="shared-note-tools" data-target-group="sharedNoteComm">文字サイズ
+                                    <span class="font-size-trigger font-wheel-value" data-target-display="sharedNoteComm" data-target="sharedNoteComm" role="button" tabindex="0">16px</span>
                                 </div>
                             </div>
                             <textarea id="sharedNoteComm" rows="15" placeholder="連絡事項・周知事項を記入してください"></textarea>
@@ -313,6 +307,25 @@
     <div id="savingOverlay" class="saving-overlay">
         <div class="saving-spinner"></div>
         <div class="saving-text">保存中...</div>
+    </div>
+    <!-- フォントサイズピッカーモーダル -->
+    <div id="fontSizePickerModal" class="modal font-size-picker-modal">
+        <div class="modal-content picker">
+            <div class="modal-header">
+                <h3>文字サイズを選択</h3>
+                <span class="close" onclick="closeFontSizePicker()">&times;</span>
+            </div>
+            <div class="modal-body picker-body">
+                <div class="picker-list-wrapper">
+                    <div id="fontSizePickerList" class="picker-list" role="listbox" aria-label="文字サイズ"></div>
+                    <div class="picker-center-line"></div>
+                </div>
+            </div>
+            <div class="modal-footer picker-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeFontSizePicker()">キャンセル</button>
+                <button type="button" class="btn btn-primary" id="fontSizePickerApplyBtn">適用</button>
+            </div>
+        </div>
     </div>
     <!-- 外部ライブラリ（Chart.js 依存削除） -->
     <script src="script.js"></script>

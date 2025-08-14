@@ -478,27 +478,12 @@ PAManager.prototype.loadSharedNote = async function() {
         const commTa = document.getElementById('sharedNoteComm');
         const stoveDateInput = document.getElementById('stoveDate');
         const stoveNumSelect = document.getElementById('stoveNumber');
-    const opsFontWheel = document.querySelector('.font-wheel[data-target="sharedNoteOps"]');
-    const commFontWheel = document.querySelector('.font-wheel[data-target="sharedNoteComm"]');
+    // 旧 font-wheel 要素は廃止（モーダルピッカーに移行）
         if (opsTa) opsTa.value = data?.ops || '';
         if (commTa) commTa.value = data?.comm || '';
         if (stoveDateInput && data?.stoveDate) stoveDateInput.value = data.stoveDate;
         if (stoveNumSelect && data?.stoveNumber) stoveNumSelect.value = data.stoveNumber;
-        if (opsFontWheel && data?.opsFont) {
-            opsFontWheel.setAttribute('data-default', data.opsFont);
-        }
-        if (commFontWheel && data?.commFont) {
-            commFontWheel.setAttribute('data-default', data.commFont);
-        }
-        // build wheels after values set (if not already built)
-        if (!this._fontWheelInitialized) {
-            this._fontWheelInitialized = true;
-            document.querySelectorAll('.font-wheel').forEach(w => {
-                // 再構築用にトリガを発火
-                const evt = new Event('rebuild-font-wheel');
-                w.dispatchEvent(evt);
-            });
-        }
+    // 旧 font-wheel 初期化処理削除
         this._sharedNoteOriginal = JSON.stringify({ ops: opsTa ? opsTa.value : '', comm: commTa ? commTa.value : '', stoveDate: stoveDateInput ? stoveDateInput.value : '', stoveNumber: stoveNumSelect ? stoveNumSelect.value : '', opsFont: data?.opsFont || '', commFont: data?.commFont || '' });
         this._sharedNoteLoaded = true;
         if (statusEl) statusEl.textContent = '最新です';
@@ -534,8 +519,7 @@ PAManager.prototype.loadSharedNote = async function() {
                         const commTa2 = document.getElementById('sharedNoteComm');
                         const stoveDate2 = document.getElementById('stoveDate');
                         const stoveNum2 = document.getElementById('stoveNumber');
-                        const opsFont2 = document.querySelector('.font-wheel[data-target="sharedNoteOps"]');
-                        const commFont2 = document.querySelector('.font-wheel[data-target="sharedNoteComm"]');
+                        // font-wheel は存在しない（モーダル制御に統一）
                         if (!opsTa2 && !commTa2) return;
                         const serverObj = { ops: d?.ops || '', comm: d?.comm || '', stoveDate: d?.stoveDate || '', stoveNumber: d?.stoveNumber || '', opsFont: d?.opsFont || '', commFont: d?.commFont || '' };
                         const serverStr = JSON.stringify(serverObj);
@@ -545,8 +529,8 @@ PAManager.prototype.loadSharedNote = async function() {
                             if (commTa2) commTa2.value = serverObj.comm;
                             if (stoveDate2) stoveDate2.value = serverObj.stoveDate;
                             if (stoveNum2) stoveNum2.value = serverObj.stoveNumber;
-                            if (opsFont2 && serverObj.opsFont) { const sz=parseInt(serverObj.opsFont,10); if(!isNaN(sz)&&opsTa2){ opsTa2.style.fontSize=sz+'px'; opsTa2.style.lineHeight=Math.round(sz*1.4)+'px'; document.querySelector(`.font-wheel-value[data-target-display="sharedNoteOps"]`).textContent=sz+'px'; } }
-                            if (commFont2 && serverObj.commFont) { const sz=parseInt(serverObj.commFont,10); if(!isNaN(sz)&&commTa2){ commTa2.style.fontSize=sz+'px'; commTa2.style.lineHeight=Math.round(sz*1.4)+'px'; document.querySelector(`.font-wheel-value[data-target-display="sharedNoteComm"]`).textContent=sz+'px'; } }
+                            if (serverObj.opsFont) { const sz=parseInt(serverObj.opsFont,10); if(!isNaN(sz)&&opsTa2){ opsTa2.style.fontSize=sz+'px'; opsTa2.style.lineHeight=Math.round(sz*1.4)+'px'; const el=document.querySelector(`.font-wheel-value[data-target-display="sharedNoteOps"]`); if(el) el.textContent=sz+'px'; } }
+                            if (serverObj.commFont) { const sz=parseInt(serverObj.commFont,10); if(!isNaN(sz)&&commTa2){ commTa2.style.fontSize=sz+'px'; commTa2.style.lineHeight=Math.round(sz*1.4)+'px'; const el=document.querySelector(`.font-wheel-value[data-target-display="sharedNoteComm"]`); if(el) el.textContent=sz+'px'; } }
                             this._sharedNoteOriginal = serverStr;
                             if (st) st.textContent = '同期中...';
                             setTimeout(()=>{ if (st && st.textContent === '同期中...') st.textContent = '最新です'; }, 2000);
@@ -620,88 +604,73 @@ paManager = new PAManager();
 
 // 共有メモ フォントサイズ切替
 document.addEventListener('DOMContentLoaded', () => {
-    // フォントサイズ ホイールピッカー
-    const buildWheel = (wheel) => {
-        const target = wheel.getAttribute('data-target');
-        const def = parseInt(wheel.getAttribute('data-default')||'16',10);
-        const values = [];
-        for (let v=10; v<=40; v++) values.push(v);
-        wheel.innerHTML = values.map(v=>`<div class="font-wheel-item" data-v="${v}">${v}</div>`).join('');
-        const ta = document.getElementById(target);
-        const display = document.querySelector(`.font-wheel-value[data-target-display="${target}"]`);
-        const apply = (val, scroll=false) => {
-            if (ta) { ta.style.fontSize = val+'px'; ta.style.lineHeight = Math.round(val*1.4)+'px'; }
-            if (display) display.textContent = val + 'px';
-            // 保存差分トラッキング更新
-            if (window.paManager) {
-                clearTimeout(window.paManager._sharedNoteTimer);
-                const s = document.getElementById('sharedNoteStatus'); if (s) s.textContent = '編集中...';
-                window.paManager._sharedNoteTimer = setTimeout(()=>window.paManager.saveSharedNote(), 600);
-            }
-            wheel.querySelectorAll('.font-wheel-item').forEach(it=>{
-                it.classList.toggle('active', parseInt(it.getAttribute('data-v'),10)===val);
+    // フォントサイズピッカーモーダル
+    const modal = document.getElementById('fontSizePickerModal');
+    const list = document.getElementById('fontSizePickerList');
+    const applyBtn = document.getElementById('fontSizePickerApplyBtn');
+    let currentTarget = null;
+    let tempValue = 16;
+    const values = Array.from({length:31}, (_,i)=> i+10); // 10-40
+    function buildList(selected) {
+        list.innerHTML = values.map(v=>`<div class="picker-item ${v===selected?'active':''}" data-v="${v}" role="option" aria-selected="${v===selected}">${v}px</div>`).join('');
+        // スクロール中央
+        const idx = values.indexOf(selected);
+        setTimeout(()=>{ list.parentElement.scrollTo({ top: idx*48 - (list.parentElement.clientHeight/2 - 24), behavior:'instant' }); }, 0);
+    }
+    function openPicker(targetId) {
+        currentTarget = targetId;
+        const disp = document.querySelector(`.font-size-trigger[data-target="${targetId}"]`);
+        const base = disp ? parseInt(disp.textContent.replace('px',''),10) : 16;
+        tempValue = isNaN(base) ? 16 : base;
+        buildList(tempValue);
+        modal.style.display='block';
+        document.body.style.overflow='hidden';
+    }
+    function closePicker() {
+        modal.style.display='none';
+        document.body.style.overflow='auto';
+        currentTarget = null;
+    }
+    list.parentElement.addEventListener('scroll', ()=>{
+        const pos = list.parentElement.scrollTop;
+        const idx = Math.round((pos + 24)/48); // 48px item height
+        const v = values[Math.min(values.length-1, Math.max(0, idx))];
+        if (v && v !== tempValue) {
+            tempValue = v;
+            list.querySelectorAll('.picker-item').forEach(el=>{
+                const val = parseInt(el.getAttribute('data-v'),10);
+                el.classList.toggle('active', val===v);
+                el.setAttribute('aria-selected', val===v);
             });
-            if (scroll) {
-                const idx = values.indexOf(val);
-                if (idx!==-1) wheel.scrollTo({ top: idx*30 - 30, behavior:'instant' });
-            }
-        };
-        wheel.addEventListener('click', e=>{
-            const item = e.target.closest('.font-wheel-item');
-            if (!item) return;
-            const val = parseInt(item.getAttribute('data-v'),10);
-            apply(val, false);
-        });
-        // ホイールスクロールでスナップ
-        let scrollTimer;
-        wheel.addEventListener('scroll', ()=>{
-            clearTimeout(scrollTimer);
-            scrollTimer = setTimeout(()=>{
-                const pos = wheel.scrollTop;
-                const idx = Math.round(pos/30);
-                const val = values[Math.min(values.length-1, Math.max(0, idx+1))];
-                if (val) apply(val,false);
-            }, 120);
-        });
-        // 初期値
-        apply(def, true);
-    };
-    document.querySelectorAll('.font-wheel').forEach(buildWheel);
-    document.addEventListener('rebuild-font-wheel-all', () => {
-        document.querySelectorAll('.font-wheel').forEach(buildWheel);
-    });
-    document.querySelectorAll('.font-wheel').forEach(w => {
-        w.addEventListener('rebuild-font-wheel', ()=> buildWheel(w));
-    });
-    // Up/Down buttons (tap)
-    const adjustFont = (targetId, delta) => {
-        const display = document.querySelector(`.font-wheel-value[data-target-display="${targetId}"]`);
-        if (!display) return;
-        let val = parseInt((display.textContent||'').replace('px',''),10);
-        if (isNaN(val)) val = 16;
-        val += delta;
-        if (val < 10) val = 10; else if (val > 40) val = 40;
-        display.textContent = val + 'px';
-        const ta = document.getElementById(targetId);
-        if (ta) { ta.style.fontSize = val+'px'; ta.style.lineHeight = Math.round(val*1.4)+'px'; }
-        // wheel active highlight
-        const wheel = document.querySelector(`.font-wheel[data-target="${targetId}"]`);
-        if (wheel) {
-            wheel.querySelectorAll('.font-wheel-item').forEach(it=> it.classList.toggle('active', parseInt(it.getAttribute('data-v'),10)===val));
         }
+    });
+    list.addEventListener('click', e=>{
+        const it = e.target.closest('.picker-item');
+        if (!it) return;
+        tempValue = parseInt(it.getAttribute('data-v'),10);
+        list.parentElement.scrollTo({ top: values.indexOf(tempValue)*48 - (list.parentElement.clientHeight/2 - 24), behavior:'smooth' });
+    });
+    applyBtn.addEventListener('click', ()=>{
+        if (!currentTarget) { closePicker(); return; }
+        const disp = document.querySelector(`.font-size-trigger[data-target="${currentTarget}"]`);
+        const ta = document.getElementById(currentTarget);
+        if (disp) disp.textContent = tempValue + 'px';
+        if (ta) { ta.style.fontSize = tempValue + 'px'; ta.style.lineHeight = Math.round(tempValue*1.4)+'px'; }
+        // 保存トリガ
         if (window.paManager) {
-            const s = document.getElementById('sharedNoteStatus'); if (s) s.textContent = '編集中...';
+            const s = document.getElementById('sharedNoteStatus'); if (s) s.textContent='編集中...';
             clearTimeout(window.paManager._sharedNoteTimer);
-            window.paManager._sharedNoteTimer = setTimeout(()=>window.paManager.saveSharedNote(), 500);
+            window.paManager._sharedNoteTimer = setTimeout(()=>window.paManager.saveSharedNote(), 400);
         }
-    };
-    document.querySelectorAll('.font-wheel-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.getAttribute('data-target-btn');
-            const step = parseInt(btn.getAttribute('data-step'),10) || 0;
-            adjustFont(target, step);
-        });
+        closePicker();
     });
+    window.closeFontSizePicker = closePicker;
+    document.querySelectorAll('.font-size-trigger').forEach(el=>{
+        el.addEventListener('click', ()=> openPicker(el.getAttribute('data-target')));
+        el.addEventListener('keydown', (e)=>{ if (e.key==='Enter' || e.key===' ') { e.preventDefault(); openPicker(el.getAttribute('data-target')); } });
+    });
+    // 背景クリックで閉じる
+    modal.addEventListener('click', (e)=>{ if (e.target === modal) closePicker(); });
     // コンロつけ 日付 & 卓番号
     const dateInput = document.getElementById('stoveDate');
     const numSelect = document.getElementById('stoveNumber');
