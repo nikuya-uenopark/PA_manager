@@ -63,7 +63,12 @@ class PAManager {
         const maxLen = 4;
         const updateDisplay = () => {
             const masked = this._loginPin.padEnd(maxLen,'_');
-            pinDisplay.textContent = masked;
+            const chars = masked.split('').map((ch, idx) => {
+                const filled = idx < this._loginPin.length;
+                const isNew = filled && idx === this._loginPin.length - 1; // 直近入力桁
+                return `<span class="pin-char ${filled ? 'filled-char' : 'empty-char'} ${isNew ? 'animate-in' : ''}" data-i="${idx}">${filled ? ch : '_'}</span>`;
+            }).join('');
+            pinDisplay.innerHTML = chars;
             pinDisplay.classList.toggle('filled', this._loginPin.length === maxLen);
             area.classList.toggle('swipe-ready', this._loginPin.length === maxLen);
             if (pinError) pinError.textContent = '';
@@ -112,6 +117,11 @@ class PAManager {
                 if (pinError) pinError.textContent = 'コードが一致しません。入力をリセットしました。';
                 // PINをリセット
                 this._resetPin();
+                const digitsRow = document.getElementById('loginDigitsRow');
+                if (digitsRow) {
+                    digitsRow.classList.add('shake');
+                    setTimeout(()=> digitsRow.classList.remove('shake'), 480);
+                }
                 root.classList.add('swipe-fail');
                 setTimeout(()=> root.classList.remove('swipe-fail'),420);
             }
@@ -119,6 +129,11 @@ class PAManager {
             console.error('login error', e);
             if (pinError) pinError.textContent = '通信エラー。再試行してください';
             this._resetPin();
+            const digitsRow = document.getElementById('loginDigitsRow');
+            if (digitsRow) {
+                digitsRow.classList.add('shake');
+                setTimeout(()=> digitsRow.classList.remove('shake'), 480);
+            }
         }
     }
 
