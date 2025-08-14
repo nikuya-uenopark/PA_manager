@@ -113,8 +113,9 @@ class PAManager {
                 const birth_date = document.getElementById('staffBirthDate')?.value || null;
                 let mgmtCode = document.getElementById('staffMgmtCode')?.value?.trim();
                 if (mgmtCode === '') mgmtCode = null;
-                if (mgmtCode && !/^\d{0,4}$/.test(mgmtCode)) {
-                    this.showNotification('管理番号は数字のみ最大4桁です', 'error');
+                // mgmtCode: null か 4桁数字のみ許可（空なら送らない）
+                if (mgmtCode && !/^\d{4}$/.test(mgmtCode)) {
+                    this.showNotification('管理番号は4桁の数字で入力してください (例 0123)', 'error');
                     return;
                 }
                 if (!name) {
