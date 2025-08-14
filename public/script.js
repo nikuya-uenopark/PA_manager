@@ -635,6 +635,39 @@ document.addEventListener('DOMContentLoaded', () => {
             container.scrollTop = targetGlobalIdx*itemHeight - centerOffset;
         },0);
     }
+    let pickerLoopId = null;
+    function startPickerLoop() {
+        stopPickerLoop();
+        const container = list.parentElement;
+        const blockSizePx = values.length * itemHeight;
+        const run = () => {
+            const centerOffset = container.clientHeight/2 - itemHeight/2;
+            let pos = container.scrollTop;
+            const minPx = (middleBlock-1)*blockSizePx;
+            const maxPx = (middleBlock+1)*blockSizePx;
+            if (pos < minPx || pos > (maxPx + blockSizePx - itemHeight)) {
+                const approxIdx = Math.round((pos + centerOffset)/itemHeight);
+                const rawIdx = ((approxIdx % values.length)+values.length)%values.length;
+                const targetIdx = middleBlock*values.length + rawIdx;
+                container.scrollTop = targetIdx*itemHeight - centerOffset;
+                pos = container.scrollTop;
+            }
+            const approxIdx2 = Math.round((pos + centerOffset)/itemHeight);
+            const rawIdx2 = ((approxIdx2 % values.length)+values.length)%values.length;
+            const value = values[rawIdx2];
+            if (value !== tempValue) {
+                tempValue = value;
+                const desiredGlobalIdx = middleBlock*values.length + rawIdx2;
+                const prev = list.querySelector('.picker-item.active');
+                if (prev) { prev.classList.remove('active'); prev.setAttribute('aria-selected','false'); }
+                const next = list.querySelector(`.picker-item[data-gidx="${desiredGlobalIdx}"]`);
+                if (next) { next.classList.add('active'); next.setAttribute('aria-selected','true'); }
+            }
+            pickerLoopId = requestAnimationFrame(run);
+        };
+        run();
+    }
+    function stopPickerLoop(){ if (pickerLoopId) { cancelAnimationFrame(pickerLoopId); pickerLoopId=null; } }
     function openPicker(targetId) {
         currentTarget = targetId;
         const disp = document.querySelector(`.font-size-trigger[data-target="${targetId}"]`);
@@ -643,45 +676,14 @@ document.addEventListener('DOMContentLoaded', () => {
         buildList(tempValue);
         modal.style.display='block';
         document.body.style.overflow='hidden';
+        startPickerLoop();
     }
     function closePicker() {
         modal.style.display='none';
         document.body.style.overflow='auto';
         currentTarget = null;
+        stopPickerLoop();
     }
-    list.parentElement.addEventListener('scroll', ()=>{
-        if (framePending) return; // rAFで負荷軽減
-        framePending = true;
-        requestAnimationFrame(()=>{
-            framePending = false;
-            const container = list.parentElement;
-            const centerOffset = container.clientHeight/2 - itemHeight/2;
-            const pos = container.scrollTop;
-            const approxIdx = Math.round((pos + centerOffset)/itemHeight); // 拡張配列内インデックス
-            const totalItems = values.length * repeats;
-            // 端付近なら中央ブロックへ再配置（シームレス）
-            const blockSizePx = values.length * itemHeight;
-            const minPx = values.length * itemHeight * (middleBlock-1); // 1ブロック上端許容
-            const maxPx = values.length * itemHeight * (middleBlock+1); // 1ブロック下端許容
-            if (pos < minPx || pos > maxPx + (blockSizePx - itemHeight)) {
-                // 現在値推定
-                const rawIdx = ((approxIdx % values.length) + values.length) % values.length;
-                const targetIdx = middleBlock*values.length + rawIdx;
-                container.scrollTop = targetIdx*itemHeight - centerOffset;
-                return;
-            }
-            // active 更新
-            const rawIdx = ((approxIdx % values.length) + values.length) % values.length;
-            const value = values[rawIdx];
-            if (value !== tempValue) tempValue = value;
-            const desiredGlobalIdx = middleBlock*values.length + rawIdx;
-            // すべてのactive外して対象に付与
-            const activeEls = list.querySelectorAll('.picker-item.active');
-            activeEls.forEach(a=>{ a.classList.remove('active'); a.setAttribute('aria-selected','false'); });
-            const targetEl = list.querySelector(`.picker-item[data-gidx="${desiredGlobalIdx}"]`);
-            if (targetEl) { targetEl.classList.add('active'); targetEl.setAttribute('aria-selected','true'); }
-        });
-    });
     list.addEventListener('click', e=>{
         const it = e.target.closest('.picker-item');
         if (!it) return;
