@@ -483,6 +483,25 @@ PAManager.prototype.loadSharedNote = async function() {
         if (commTa) commTa.value = data?.comm || '';
         if (stoveDateInput && data?.stoveDate) stoveDateInput.value = data.stoveDate;
         if (stoveNumSelect && data?.stoveNumber) stoveNumSelect.value = data.stoveNumber;
+        // 保存されているフォントサイズを初期反映 (従来はポーラー内のみだったため初回表示が16px固定になる問題を修正)
+        if (data?.opsFont && opsTa) {
+            const sz = parseInt(data.opsFont, 10);
+            if (!isNaN(sz)) {
+                opsTa.style.fontSize = sz + 'px';
+                opsTa.style.lineHeight = Math.round(sz * 1.4) + 'px';
+                const disp = document.querySelector('.font-wheel-value[data-target-display="sharedNoteOps"]');
+                if (disp) disp.textContent = sz + 'px';
+            }
+        }
+        if (data?.commFont && commTa) {
+            const sz = parseInt(data.commFont, 10);
+            if (!isNaN(sz)) {
+                commTa.style.fontSize = sz + 'px';
+                commTa.style.lineHeight = Math.round(sz * 1.4) + 'px';
+                const disp = document.querySelector('.font-wheel-value[data-target-display="sharedNoteComm"]');
+                if (disp) disp.textContent = sz + 'px';
+            }
+        }
     // 旧 font-wheel 初期化処理削除
         this._sharedNoteOriginal = JSON.stringify({ ops: opsTa ? opsTa.value : '', comm: commTa ? commTa.value : '', stoveDate: stoveDateInput ? stoveDateInput.value : '', stoveNumber: stoveNumSelect ? stoveNumSelect.value : '', opsFont: data?.opsFont || '', commFont: data?.commFont || '' });
         this._sharedNoteLoaded = true;
