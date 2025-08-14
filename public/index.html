@@ -23,11 +23,26 @@
         <div class="login-root" data-phase="intro">
             <div class="login-animated-bg"></div>
             <div class="login-center">
-                <div class="login-intro">ようこそ</div>
-                <div class="login-input-area" id="loginSwipeArea">
-                    <div class="login-code-floating" id="loginSwipeHint">右へスワイプして開始 ▶</div>
-                    <div class="login-hint">画面のどこでも右に大きくスワイプしてください</div>
-                    <div class="login-error" id="loginSwipeError"></div>
+                <div class="login-intro" aria-live="polite">ようこそ</div>
+                <!-- PIN フェーズ -->
+                <div class="login-pin-area" id="loginSwipeArea" aria-label="ログインコード入力領域">
+                    <div class="login-pin-display" id="loginPinDisplay" aria-live="polite" aria-label="入力コード">____</div>
+                    <div class="login-digits-row" id="loginDigitsRow" role="list" aria-label="数字キー">
+                        <button type="button" class="login-digit" data-val="0" role="listitem">0</button>
+                        <button type="button" class="login-digit" data-val="1" role="listitem">1</button>
+                        <button type="button" class="login-digit" data-val="2" role="listitem">2</button>
+                        <button type="button" class="login-digit" data-val="3" role="listitem">3</button>
+                        <button type="button" class="login-digit" data-val="4" role="listitem">4</button>
+                        <button type="button" class="login-digit" data-val="5" role="listitem">5</button>
+                        <button type="button" class="login-digit" data-val="6" role="listitem">6</button>
+                        <button type="button" class="login-digit" data-val="7" role="listitem">7</button>
+                        <button type="button" class="login-digit" data-val="8" role="listitem">8</button>
+                        <button type="button" class="login-digit" data-val="9" role="listitem">9</button>
+                        <button type="button" class="login-digit login-digit-del" data-action="del" aria-label="一文字削除">⌫</button>
+                        <button type="button" class="login-digit login-digit-clear" data-action="clear" aria-label="全削除">CLR</button>
+                    </div>
+                    <div class="login-hint" id="loginSwipeHint">4桁入力後、右へ大きくスワイプ</div>
+                    <div class="login-error" id="loginPinError" aria-live="assertive"></div>
                 </div>
             </div>
         </div>

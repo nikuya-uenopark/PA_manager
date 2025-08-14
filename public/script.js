@@ -54,42 +54,80 @@ class PAManager {
     }
     initLoginOverlay() {
         const root = document.querySelector('#loginOverlay .login-root');
-        const swipeArea = document.getElementById('loginSwipeArea');
-        if (!root || !swipeArea) return;
-        // intro から input へ遷移
-        setTimeout(()=> root.setAttribute('data-phase','input'), 2400);
-        let startX=null, startY=null, moved=false;
-        const threshold = 120; // 横方向距離
-        const restraint = 80; // 縦の許容
-        const onStart = e => {
-            const t = e.touches ? e.touches[0] : e;
-            startX = t.clientX; startY = t.clientY; moved=false;
+        const area = document.getElementById('loginSwipeArea');
+        const pinDisplay = document.getElementById('loginPinDisplay');
+        const pinError = document.getElementById('loginPinError') || document.getElementById('loginPinError');
+        if (!root || !area || !pinDisplay) return;
+        // PIN状態
+        this._loginPin = '';
+        const maxLen = 4;
+        const updateDisplay = () => {
+            const masked = this._loginPin.padEnd(maxLen,'_');
+            pinDisplay.textContent = masked;
+            pinDisplay.classList.toggle('filled', this._loginPin.length === maxLen);
+            area.classList.toggle('swipe-ready', this._loginPin.length === maxLen);
+            if (pinError) pinError.textContent = '';
         };
+        this._loginPinUpdateDisplay = updateDisplay;
+        updateDisplay();
+        // 数字ボタン
+        area.addEventListener('click', e => {
+            const btn = e.target.closest('.login-digit');
+            if (!btn) return;
+            const del = btn.getAttribute('data-action');
+            if (del === 'del') { this._loginPin = this._loginPin.slice(0,-1); updateDisplay(); return; }
+            if (del === 'clear') { this._loginPin = ''; updateDisplay(); return; }
+            const val = btn.getAttribute('data-val');
+            if (val && this._loginPin.length < maxLen) { this._loginPin += val; updateDisplay(); }
+        });
+        // スワイプ判定 (4桁入力後のみ)
+        let startX=null,startY=null,moved=false; const threshold=110, restraint=80;
+        const onStart = e => { const t = e.touches? e.touches[0]: e; startX=t.clientX; startY=t.clientY; moved=false; };
         const onMove = e => {
-            if (startX===null) return;
-            const t = e.touches ? e.touches[0] : e;
-            const dx = t.clientX - startX;
-            const dy = Math.abs(t.clientY - startY);
-            if (dy > restraint) return;
-            if (dx > 10) moved = true;
-            if (dx > threshold) {
+            if (startX===null) return; if (this._loginPin.length !== maxLen) return; // 4桁未入力なら無効
+            const t = e.touches? e.touches[0]: e; const dx = t.clientX - startX; const dy = Math.abs(t.clientY - startY); if (dy>restraint) return; if (dx>10) moved=true; if (dx>threshold) { this._attemptLogin(this._loginPin, root, pinDisplay, pinError); startX=null; startY=null; }};
+        const onEnd = () => { if (!moved && this._loginPin.length===maxLen) { root.classList.add('swipe-fail'); setTimeout(()=> root.classList.remove('swipe-fail'),420); } startX=null; startY=null; moved=false; };
+        ['touchstart','mousedown'].forEach(ev=> area.addEventListener(ev,onStart,{passive:true}));
+        ['touchmove','mousemove'].forEach(ev=> area.addEventListener(ev,onMove,{passive:true}));
+        ['touchend','mouseup','mouseleave'].forEach(ev=> area.addEventListener(ev,onEnd));
+        // バックスペース(物理)対応
+        window.addEventListener('keydown', e=>{
+            if (document.body.classList.contains('prelogin')) {
+                if (/^[0-9]$/.test(e.key) && this._loginPin.length<maxLen) { this._loginPin+=e.key; updateDisplay(); }
+                else if (e.key==='Backspace') { this._loginPin=this._loginPin.slice(0,-1); updateDisplay(); }
+            }
+        });
+    }
+
+    async _attemptLogin(pin, root, pinDisplay, pinError) {
+        try {
+            // DBの mgmtCode 一覧を取得しクライアント側で一致判定 (件数少を想定)
+            const res = await fetch('/api/staff');
+            if (!res.ok) throw new Error('staff list fetch failed');
+            const list = await res.json();
+            const found = Array.isArray(list) ? list.some(s => s.mgmtCode === pin) : false;
+            if (found) {
                 root.classList.add('swipe-valid');
                 this.setLoggedIn();
                 this.hideLoginOverlay();
                 this.loadData();
-                startX=null; startY=null;
-            }
-        };
-        const onEnd = () => {
-            if (!moved) {
+            } else {
+                if (pinError) pinError.textContent = 'コードが一致しません。入力をリセットしました。';
+                // PINをリセット
+                this._resetPin();
                 root.classList.add('swipe-fail');
-                setTimeout(()=> root.classList.remove('swipe-fail'), 420);
+                setTimeout(()=> root.classList.remove('swipe-fail'),420);
             }
-            startX=null; startY=null; moved=false;
-        };
-        ['touchstart','mousedown'].forEach(ev=> swipeArea.addEventListener(ev,onStart,{passive:true}));
-        ['touchmove','mousemove'].forEach(ev=> swipeArea.addEventListener(ev,onMove,{passive:true}));
-        ['touchend','mouseup','mouseleave'].forEach(ev=> swipeArea.addEventListener(ev,onEnd));
+        } catch (e) {
+            console.error('login error', e);
+            if (pinError) pinError.textContent = '通信エラー。再試行してください';
+            this._resetPin();
+        }
+    }
+
+    _resetPin() {
+    this._loginPin = '';
+    if (this._loginPinUpdateDisplay) this._loginPinUpdateDisplay();
     }
 
     // イベント登録
