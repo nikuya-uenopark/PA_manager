@@ -9,7 +9,7 @@
     "vercel-build": "prisma generate",
     "deploy": "vercel --prod",
     "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push",
+  "prisma:push": "prisma db push",
   "prisma:deploy": "prisma migrate deploy",
   "prisma:migrate": "prisma migrate dev --name sync-mgmt-code",
   "prisma:seed": "prisma db seed",
