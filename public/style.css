@@ -48,7 +48,7 @@
 .shared-note-tools .shared-note-font:focus { outline:2px solid var(--primary-color); outline-offset:1px; }
 .shared-note-section textarea { transition: font-size .2s ease, line-height .2s ease; }
 /* (旧) font wheel styles removed; replaced by modal picker */
-.font-wheel-value { font-size:12px; margin-left:6px; font-weight:600; } /* retained as value label class reused in JS */
+.font-wheel-value { font-size:12px; margin-left:6px; font-weight:600; color: #fff; } /* retained as value label class reused in JS */
 /* Font size picker modal */
 .font-size-picker-modal .modal-content.picker { width:320px; max-width:90%; }
 .picker-body { padding:10px 16px 20px; }
