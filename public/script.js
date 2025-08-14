@@ -23,8 +23,75 @@ class PAManager {
     }
     // 初期セットアップ
     setup() {
+        this.initLoginOverlay();
         this.setupEventListeners();
-        this.loadData();
+        if (this.isLoggedIn()) {
+            this.hideLoginOverlay(true);
+            this.loadData();
+        } else {
+            this.showLoginOverlay();
+        }
+    }
+
+    // ====== 簡易スワイプログイン ======
+    isLoggedIn() { try { return !!localStorage.getItem('pa_swipe_login'); } catch(_) { return false; } }
+    setLoggedIn() { try { localStorage.setItem('pa_swipe_login', String(Date.now())); } catch(_) {} }
+    clearLogin() { try { localStorage.removeItem('pa_swipe_login'); } catch(_) {} }
+    showLoginOverlay() {
+        const ov = document.getElementById('loginOverlay');
+        if (ov) { ov.style.display='flex'; ov.setAttribute('aria-hidden','false'); }
+        document.body.style.overflow='hidden';
+    }
+    hideLoginOverlay(immediate=false) {
+        const ov = document.getElementById('loginOverlay');
+        if (!ov) return;
+        if (immediate) {
+            ov.style.display='none';
+        } else {
+            ov.classList.add('fade-out');
+            setTimeout(()=>{ ov.style.display='none'; ov.classList.remove('fade-out'); }, 600);
+        }
+        ov.setAttribute('aria-hidden','true');
+        document.body.style.overflow='auto';
+    }
+    initLoginOverlay() {
+        const root = document.querySelector('#loginOverlay .login-root');
+        const swipeArea = document.getElementById('loginSwipeArea');
+        if (!root || !swipeArea) return;
+        // intro から input へ遷移
+        setTimeout(()=> root.setAttribute('data-phase','input'), 2400);
+        let startX=null, startY=null, moved=false;
+        const threshold = 120; // 横方向距離
+        const restraint = 80; // 縦の許容
+        const onStart = e => {
+            const t = e.touches ? e.touches[0] : e;
+            startX = t.clientX; startY = t.clientY; moved=false;
+        };
+        const onMove = e => {
+            if (startX===null) return;
+            const t = e.touches ? e.touches[0] : e;
+            const dx = t.clientX - startX;
+            const dy = Math.abs(t.clientY - startY);
+            if (dy > restraint) return;
+            if (dx > 10) moved = true;
+            if (dx > threshold) {
+                root.classList.add('swipe-valid');
+                this.setLoggedIn();
+                this.hideLoginOverlay();
+                this.loadData();
+                startX=null; startY=null;
+            }
+        };
+        const onEnd = () => {
+            if (!moved) {
+                root.classList.add('swipe-fail');
+                setTimeout(()=> root.classList.remove('swipe-fail'), 420);
+            }
+            startX=null; startY=null; moved=false;
+        };
+        ['touchstart','mousedown'].forEach(ev=> swipeArea.addEventListener(ev,onStart,{passive:true}));
+        ['touchmove','mousemove'].forEach(ev=> swipeArea.addEventListener(ev,onMove,{passive:true}));
+        ['touchend','mouseup','mouseleave'].forEach(ev=> swipeArea.addEventListener(ev,onEnd));
     }
 
     // イベント登録
@@ -288,6 +355,7 @@ class PAManager {
             const prog = this._progressMap?.get(staff.id) || { progressPercent: 0, counts: { done: 0, learning: 0, notStarted: (this.currentCriteria?.length || 0) } };
             const p = prog.progressPercent || 0;
             const counts = prog.counts || { done: 0, learning: 0, notStarted: 0 };
+            const mgmt = staff.mgmtCode || '-';
             return `
                 <div class="staff-card">
                     <div class="staff-header" onclick="showStaffDetail(${staff.id})">
@@ -295,6 +363,7 @@ class PAManager {
                             <div style="color:#6b7280; font-size:12px;">${staff.kana || ''}</div>
                             <h3>${staff.name}</h3>
                             <span class="position-badge">${staff.position || '未設定'}</span>
+                            <div style=\"font-size:11px; color:#555; margin-top:4px;\">管理番号: <span style=\"font-weight:600;\">${mgmt}</span></div>
                         </div>
                         <div class="staff-card-actions">
                             <button class="btn btn-secondary btn-icon" title="編集" onclick="event.stopPropagation(); editStaff(${staff.id})"><i class="fas fa-edit"></i></button>
@@ -871,6 +940,8 @@ function editStaff(id) {
     } else {
         document.getElementById('staffBirthDate').value = '';
     }
+    const mgmtDisp = document.getElementById('staffMgmtCodeDisplay');
+    if (mgmtDisp) mgmtDisp.textContent = s.mgmtCode || '-（未設定）';
     paManager.showModal('staffModal');
 }
 
@@ -911,6 +982,8 @@ PAManager.prototype.openStaffDetail = async function (staffId) {
     document.getElementById('staffDetailPosition').textContent = staff.position || '未設定';
     document.getElementById('staffDetailKana').textContent = staff.kana || '';
     document.getElementById('staffDetailBirth').textContent = staff.birth_date || (staff.birthDate ? new Date(staff.birthDate).toLocaleDateString() : '-');
+    const mgmtEl = document.getElementById('staffDetailMgmtCode');
+    if (mgmtEl) mgmtEl.textContent = staff.mgmtCode || '-';
     const changer = document.getElementById('evaluationChangedBy');
     if (changer) {
         const options = (this.currentStaff || []).map(s => `<option value="${s.id}">${s.name}</option>`).join('');

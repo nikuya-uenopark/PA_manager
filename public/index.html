@@ -18,6 +18,20 @@
     <meta name="theme-color" content="#74b9ff" />
 </head>
 <body>
+    <!-- ログイン（スワイプ）オーバーレイ：未ログイン時のみ表示 -->
+    <div id="loginOverlay" class="login-overlay" aria-hidden="true">
+        <div class="login-root" data-phase="intro">
+            <div class="login-animated-bg"></div>
+            <div class="login-center">
+                <div class="login-intro">ようこそ</div>
+                <div class="login-input-area" id="loginSwipeArea">
+                    <div class="login-code-floating" id="loginSwipeHint">右へスワイプして開始 ▶</div>
+                    <div class="login-hint">画面のどこでも右に大きくスワイプしてください</div>
+                    <div class="login-error" id="loginSwipeError"></div>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- ローディング画面 -->
     <div id="loadingScreen">
         <div class="loading-center">
@@ -173,6 +187,10 @@
                                 <label for="staffBirthDate">生年月日</label>
                                 <input type="date" id="staffBirthDate" />
                             </div>
+                            <div class="form-group">
+                                <label>管理番号 (mgmtCode)</label>
+                                <div id="staffMgmtCodeDisplay" style="padding:12px 16px; border:2px dashed #e5e7eb; border-radius:8px; background:#f8fafc; font-size:0.95rem; color:#555;">-（未設定）</div>
+                            </div>
                         </div>
                     </div>
                     <div class="form-actions">
@@ -247,6 +265,7 @@
                     <div class="staff-detail-meta">
                         <span id="staffDetailPosition" class="position-badge"></span>
                         <span class="staff-detail-birth">生年月日: <span id="staffDetailBirth"></span></span>
+                        <span class="staff-detail-birth" style="background:#fff3; border-color:#fff3;">管理番号: <span id="staffDetailMgmtCode">-</span></span>
                     </div>
                 </div>
                 <span class="close" onclick="closeModal('staffDetailModal')">&times;</span>
