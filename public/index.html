@@ -21,7 +21,16 @@
     <!-- ログイン（スワイプ）オーバーレイ：未ログイン時のみ表示 -->
     <div id="loginOverlay" class="login-overlay" aria-hidden="true">
         <div class="login-root" data-phase="intro">
-            <div class="login-animated-bg"></div>
+            <div class="login-animated-bg">
+                <span class="bg-shape s1"></span>
+                <span class="bg-shape s2"></span>
+                <span class="bg-shape s3"></span>
+                <span class="bg-shape s4"></span>
+                <span class="bg-shape s5"></span>
+                <span class="bg-shape s6"></span>
+                <span class="bg-shape s7"></span>
+                <span class="bg-shape s8"></span>
+            </div>
             <div class="login-center">
                 <div class="login-intro" aria-live="polite">ようこそ</div>
                 <!-- PIN フェーズ -->
@@ -39,7 +48,7 @@
                         <button type="button" class="login-digit" data-val="8" role="listitem">8</button>
                         <button type="button" class="login-digit" data-val="9" role="listitem">9</button>
                     </div>
-                    <div class="login-hint" id="loginSwipeHint"></div>
+                    <div class="login-hint" id="loginSwipeHint">スワイプ</div>
                     <div class="login-error" id="loginPinError" aria-live="assertive"></div>
                 </div>
             </div>

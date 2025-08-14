@@ -90,10 +90,22 @@ body.prelogin #app { filter: blur(6px) brightness(.6); pointer-events:none; user
 
 /* === Login Overlay (Landscape / Animated) === */
 /* === Login Overlay (軽量アニメ iPad向け) === */
-.login-overlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:radial-gradient(circle at 30% 30%, #1e3a8a, #0f172a 70%); z-index:10000; overflow:hidden; }
+.login-overlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:linear-gradient(140deg,#0f172a 0%,#1e3a8a 30%,#4338ca 55%,#7e22ce 75%,#0f172a 100%); z-index:10000; overflow:hidden; }
 .login-root { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-family:'Inter',sans-serif; padding:8vw 4vw; flex-direction:column; }
 .login-animated-bg { position:absolute; inset:0; pointer-events:none; }
-.login-animated-bg:before { content:""; position:absolute; width:140%; height:140%; top:-20%; left:-20%; background:linear-gradient(125deg, rgba(255,255,255,0.06), rgba(255,255,255,0)); animation: bgPan 14s linear infinite; }
+.login-animated-bg:before { content:""; position:absolute; width:160%; height:160%; top:-30%; left:-30%; background:radial-gradient(circle at 25% 30%, rgba(255,255,255,0.10), rgba(255,255,255,0) 60%), radial-gradient(circle at 75% 70%, rgba(255,255,255,0.08), rgba(255,255,255,0) 65%); animation: bgPan 22s linear infinite; filter:blur(2px); }
+/* 浮遊図形 */
+.bg-shape { position:absolute; display:block; width:140px; height:140px; background:linear-gradient(135deg,rgba(255,255,255,0.18),rgba(255,255,255,0.02)); border:1px solid rgba(255,255,255,0.12); backdrop-filter:blur(6px); border-radius:32px; mix-blend-mode:overlay; animation: floatY 9s ease-in-out infinite, pulse 6s ease-in-out infinite; opacity:.55; }
+.bg-shape.s1 { top:8%; left:6%; animation-delay:0s,0s; }
+.bg-shape.s2 { top:16%; right:12%; animation-delay:1.2s,.4s; }
+.bg-shape.s3 { bottom:14%; left:18%; animation-delay:2.4s,.8s; }
+.bg-shape.s4 { bottom:10%; right:8%; animation-delay:3.6s,1.2s; }
+.bg-shape.s5 { top:40%; left:-4%; width:220px; height:220px; border-radius:50%; animation: floatY 14s ease-in-out infinite reverse, pulse 10s ease-in-out infinite; opacity:.30; }
+.bg-shape.s6 { top:55%; right:-6%; width:260px; height:260px; border-radius:50%; animation: floatY 18s ease-in-out infinite, pulse 11s ease-in-out infinite; opacity:.25; }
+.bg-shape.s7 { top:8%; right:38%; width:90px; height:90px; animation: floatY 7s ease-in-out infinite reverse, pulse 5s ease-in-out infinite; }
+.bg-shape.s8 { bottom:6%; left:42%; width:110px; height:110px; animation: floatY 11s ease-in-out infinite reverse, pulse 8s ease-in-out infinite; }
+@keyframes floatY { 0%,100% { transform:translateY(-18px) rotate(0deg); } 50% { transform:translateY(18px) rotate(6deg); } }
+@keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.18); } }
 @keyframes bgPan { 0% { transform:translate(0,0) rotate(0deg); } 50% { transform:translate(5%,4%) rotate(180deg); } 100% { transform:translate(0,0) rotate(360deg); } }
 .login-center { position:relative; z-index:2; width:100%; max-width:960px; display:flex; flex-direction:column; align-items:center; gap:42px; }
 .login-intro { font-size:clamp(46px,8vw,88px); font-weight:700; letter-spacing:.08em; color:#fff; opacity:0; animation:introFadeLite 1.4s ease forwards; text-align:center; }
@@ -104,10 +116,12 @@ body.prelogin #app { filter: blur(6px) brightness(.6); pointer-events:none; user
 .login-pin-area { width:100%; max-width:760px; display:flex; flex-direction:column; gap:22px; opacity:0; animation:areaIn .9s ease .9s forwards; align-items:center; }
 .login-pin-display { font-size: clamp(40px,7vw,70px); font-weight:700; letter-spacing:.25em; color:#e2e8f0; text-align:center; min-height:1em; text-shadow:0 4px 18px rgba(0,0,0,0.4); }
 .login-pin-display.filled { color:#fff; }
-.login-digits-row { display:flex; flex-direction:row; justify-content:center; gap:10px; width:100%; flex-wrap:nowrap; overflow-x:auto; padding:4px 2px; }
+.login-digits-row { display:flex; flex-direction:row; justify-content:center; gap:clamp(10px,1.4vw,28px); width:100%; flex-wrap:nowrap; overflow:hidden; padding:4px 2px; }
 .login-digits-row.one-line::-webkit-scrollbar { display:none; }
-.login-digit { flex:0 0 clamp(44px,8vw,70px); width:clamp(44px,8vw,70px); height:clamp(44px,8vw,70px); background:rgba(255,255,255,0.10); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.25); border-radius:16px; color:#fff; font-size:clamp(18px,3.5vw,34px); font-weight:600; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .25s, transform .25s; touch-action:manipulation; }
-.login-digit:active { background:rgba(255,255,255,0.25); transform:scale(.9); }
+.login-digit { flex:0 0 auto; width:auto; height:auto; background:transparent; border:none; border-radius:0; color:#ffffff; font-size:clamp(34px,5.8vw,68px); font-weight:600; line-height:1; padding:.1em .15em; cursor:pointer; transition:color .25s, transform .25s; position:relative; }
+.login-digit:before { content:""; position:absolute; left:0; right:0; bottom:0; height:3px; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.7),rgba(255,255,255,0)); transform:scaleX(0); transform-origin:center; transition:transform .35s ease; }
+.login-digit:hover:before, .login-digit:active:before { transform:scaleX(1); }
+.login-digit:active { transform:translateY(4px) scale(.92); color:#a5b4fc; }
 .login-pin-area.swipe-ready .login-hint { color:#34d399; }
 .login-pin-error { color:#f87171; font-size:14px; min-height:20px; }
 .login-pin-shake { animation: shake .4s; }
