@@ -25,18 +25,15 @@ class PAManager {
     setup() {
         this.initLoginOverlay();
         this.setupEventListeners();
-        if (this.isLoggedIn()) {
-            this.hideLoginOverlay(true);
-            this.loadData();
-        } else {
-            this.showLoginOverlay();
-        }
+        // 常にログイン必須: 毎回オーバーレイ表示
+        document.body.classList.add('prelogin');
+        this.showLoginOverlay();
     }
 
     // ====== 簡易スワイプログイン ======
-    isLoggedIn() { try { return !!localStorage.getItem('pa_swipe_login'); } catch(_) { return false; } }
-    setLoggedIn() { try { localStorage.setItem('pa_swipe_login', String(Date.now())); } catch(_) {} }
-    clearLogin() { try { localStorage.removeItem('pa_swipe_login'); } catch(_) {} }
+    isLoggedIn() { return !!this._loginDone; }
+    setLoggedIn() { this._loginDone = true; }
+    clearLogin() { this._loginDone = false; }
     showLoginOverlay() {
         const ov = document.getElementById('loginOverlay');
         if (ov) { ov.style.display='flex'; ov.setAttribute('aria-hidden','false'); }
@@ -53,6 +50,7 @@ class PAManager {
         }
         ov.setAttribute('aria-hidden','true');
         document.body.style.overflow='auto';
+    document.body.classList.remove('prelogin');
     }
     initLoginOverlay() {
         const root = document.querySelector('#loginOverlay .login-root');
