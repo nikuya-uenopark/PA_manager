@@ -111,6 +111,12 @@ class PAManager {
                 const kana = document.getElementById('staffKana')?.value?.trim() || null;
                 const position = document.getElementById('staffPositionType')?.value || null;
                 const birth_date = document.getElementById('staffBirthDate')?.value || null;
+                let mgmtCode = document.getElementById('staffMgmtCode')?.value?.trim();
+                if (mgmtCode === '') mgmtCode = null;
+                if (mgmtCode && !/^\d{4}$/.test(mgmtCode)) {
+                    this.showNotification('管理番号は4桁の数字で入力してください', 'error');
+                    return;
+                }
                 if (!name) {
                     this.showNotification('名前は必須です', 'error');
                     return;
@@ -126,7 +132,7 @@ class PAManager {
                     const res = await fetch(url, {
                         method,
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, kana, position, birth_date })
+                        body: JSON.stringify({ name, kana, position, birth_date, mgmtCode })
                     });
                     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                     this.showNotification(isEdit ? 'スタッフを更新しました' : 'スタッフを追加しました');
@@ -857,6 +863,8 @@ function showAddStaffModal() {
     const form = document.getElementById('staffForm');
     if (form) form.reset();
     document.getElementById('staffPositionType').value = 'バイト';
+    const mgmtInput = document.getElementById('staffMgmtCode');
+    if (mgmtInput) mgmtInput.value = '';
     paManager.showModal('staffModal');
 }
 
@@ -927,6 +935,8 @@ function editStaff(id) {
     document.getElementById('staffName').value = s.name || '';
     document.getElementById('staffKana').value = s.kana || '';
     document.getElementById('staffPositionType').value = s.position || 'バイト';
+    const mgmtInput = document.getElementById('staffMgmtCode');
+    if (mgmtInput) mgmtInput.value = s.mgmtCode || '';
     // birth_date: APIは birthDate(DB側), クライアントは birth_date(YYYY-MM-DD)
     const bd = s.birth_date || (s.birthDate ? new Date(s.birthDate) : null);
     if (bd) {
@@ -938,8 +948,6 @@ function editStaff(id) {
     } else {
         document.getElementById('staffBirthDate').value = '';
     }
-    const mgmtDisp = document.getElementById('staffMgmtCodeDisplay');
-    if (mgmtDisp) mgmtDisp.textContent = s.mgmtCode || '-（未設定）';
     paManager.showModal('staffModal');
 }
 

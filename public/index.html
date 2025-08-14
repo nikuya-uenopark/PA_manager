@@ -188,8 +188,9 @@
                                 <input type="date" id="staffBirthDate" />
                             </div>
                             <div class="form-group">
-                                <label>管理番号 (mgmtCode)</label>
-                                <div id="staffMgmtCodeDisplay" style="padding:12px 16px; border:2px dashed #e5e7eb; border-radius:8px; background:#f8fafc; font-size:0.95rem; color:#555;">-（未設定）</div>
+                                <label for="staffMgmtCode">管理番号 (mgmtCode)</label>
+                                <input type="text" id="staffMgmtCode" inputmode="numeric" maxlength="4" pattern="\\d{4}" placeholder="4桁 (例 0123)" style="letter-spacing:.2em;" />
+                                <small style="display:block; margin-top:4px; color:#666; font-size:11px;">※ 空欄または4桁数字のみ。重複不可 / 変更すると関連機能に影響します。</small>
                             </div>
                         </div>
                     </div>
