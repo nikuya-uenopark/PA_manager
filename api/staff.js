@@ -53,8 +53,9 @@ module.exports = async function handler(req, res) {
       if (!name) {
         return res.status(400).json({ error: 'name is required' });
       }
+      // mgmtCode が指定されている場合は 4 桁数字のみ (重複許容)
       if (mgmtCode && !/^\d{4}$/.test(mgmtCode)) {
-        return res.status(400).json({ error: 'mgmtCode must be 4 digits' });
+        return res.status(400).json({ error: 'mgmtCode は4桁の数字で入力してください' });
       }
       const created = await prisma.staff.create({
         data: {
@@ -137,7 +138,7 @@ ID：${id} (既に存在しない)`).catch(()=>{});
   position = position ? sanitizeContent(position) : undefined;
         if (!id) return res.status(400).json({ error: 'id is required' });
         if (mgmtCode !== undefined && mgmtCode !== null && mgmtCode !== '' && !/^\d{4}$/.test(mgmtCode)) {
-          return res.status(400).json({ error: 'mgmtCode must be 4 digits' });
+          return res.status(400).json({ error: 'mgmtCode は4桁の数字で入力してください' });
         }
         const updated = await prisma.staff.update({
           where: { id: Number(id) },

@@ -113,8 +113,8 @@ class PAManager {
                 const birth_date = document.getElementById('staffBirthDate')?.value || null;
                 let mgmtCode = document.getElementById('staffMgmtCode')?.value?.trim();
                 if (mgmtCode === '') mgmtCode = null;
-                if (mgmtCode && !/^\d{4}$/.test(mgmtCode)) {
-                    this.showNotification('管理番号は4桁の数字で入力してください', 'error');
+                if (mgmtCode && !/^\d{0,4}$/.test(mgmtCode)) {
+                    this.showNotification('管理番号は数字のみ最大4桁です', 'error');
                     return;
                 }
                 if (!name) {
@@ -210,6 +210,15 @@ class PAManager {
                 this.renderCriteria();
             });
         }
+
+        // 数字のみ入力フィルタ (管理番号)
+        document.querySelectorAll('input[data-digit-only="true"]').forEach(inp => {
+            inp.addEventListener('input', () => {
+                const before = inp.value;
+                const only = before.replace(/[^0-9]/g,'').slice(0,4);
+                if (before !== only) inp.value = only;
+            });
+        });
     }
 
     showNotification(message, type = 'success') {
