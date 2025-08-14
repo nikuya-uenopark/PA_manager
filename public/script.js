@@ -218,8 +218,23 @@ class PAManager {
                 const before = inp.value;
                 const only = before.replace(/[^0-9]/g,'').slice(0,4);
                 if (before !== only) inp.value = only;
+                // スタッフフォームの保存ボタン活性/非活性
+                if (inp.id === 'staffMgmtCode') {
+                    const saveBtn = document.querySelector('#staffForm button[type="submit"]');
+                    if (saveBtn) {
+                        const nameVal = document.getElementById('staffName')?.value?.trim();
+                        const mg = inp.value;
+                        // 条件: 名前必須 & (mgmtCode が空 または 4桁)
+                        const ok = !!nameVal && (mg === '' || /^\d{4}$/.test(mg));
+                        saveBtn.disabled = !ok;
+                    }
+                }
             });
         });
+
+        // 初期ロード時にも状態反映 (名前未入力でdisabled)
+        const staffSaveBtn = document.querySelector('#staffForm button[type="submit"]');
+        if (staffSaveBtn) staffSaveBtn.disabled = true;
     }
 
     showNotification(message, type = 'success') {
