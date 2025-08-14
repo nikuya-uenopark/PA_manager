@@ -615,7 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
         list.innerHTML = values.map(v=>`<div class="picker-item ${v===selected?'active':''}" data-v="${v}" role="option" aria-selected="${v===selected}">${v}px</div>`).join('');
         // スクロール中央
         const idx = values.indexOf(selected);
-        setTimeout(()=>{ list.parentElement.scrollTo({ top: idx*48 - (list.parentElement.clientHeight/2 - 24), behavior:'instant' }); }, 0);
+    setTimeout(()=>{ list.parentElement.scrollTo({ top: idx*48 - (list.parentElement.clientHeight/2 - 24), behavior:'auto' }); }, 0);
     }
     function openPicker(targetId) {
         currentTarget = targetId;
