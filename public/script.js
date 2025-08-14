@@ -618,7 +618,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // 中央(実値)行へスクロール (番兵+1 オフセット)
         const idx = values.indexOf(selected);
         const extIdx = idx >= 0 ? idx+1 : 1; // デフォルト番兵後
-        setTimeout(()=>{ list.parentElement.scrollTo({ top: extIdx*48 - (list.parentElement.clientHeight/2 - 24), behavior:'auto' }); }, 0);
+        setTimeout(()=>{
+            const container = list.parentElement;
+            const centerOffset = container.clientHeight/2 - 24; // アイテム高さ48pxの中央位置
+            container.scrollTop = extIdx*48 - centerOffset;
+        }, 0);
     }
     function openPicker(targetId) {
         currentTarget = targetId;
@@ -637,19 +641,22 @@ document.addEventListener('DOMContentLoaded', () => {
     list.parentElement.addEventListener('scroll', ()=>{
         const pos = list.parentElement.scrollTop;
         // 拡張配列 index 推定 (番兵含む) -> 実インデックス(rawIdx)
-        let extIdx = Math.round((pos + 24)/48); // 0..values.length+1
+    const container = list.parentElement;
+    const centerOffset = container.clientHeight/2 - 24;
+    // 現在スクロール位置 + 中央オフセットで中央に来ているアイテムの上端を推定
+    let extIdx = Math.round((pos + centerOffset)/48); // 0..values.length+1
         let rawIdx = extIdx - 1; // -1 => 末尾番兵, values.length => 先頭番兵
         if (rawIdx < 0) rawIdx = values.length -1; // 40
         if (rawIdx >= values.length) rawIdx = 0;   // 10
         // シームレス補正: 番兵領域に入ったら同値の中央位置へ瞬時移動
         if (extIdx === 0) { // 上端番兵(=40)
-            const targetTop = (values.length)*48 - (list.parentElement.clientHeight/2 - 24); // 40 の中央位置 (extIdx=values.length)
-            list.parentElement.scrollTo({ top: targetTop, behavior:'auto' });
+            const targetTop = (values.length)*48 - centerOffset; // 40 の中央位置 (extIdx=values.length)
+            container.scrollTop = targetTop;
             return; // 再計算は次イベント
         }
         if (extIdx === values.length+1) { // 下端番兵(=10)
-            const targetTop = 48 - (list.parentElement.clientHeight/2 - 24); // 10 の中央位置 (extIdx=1)
-            list.parentElement.scrollTo({ top: targetTop, behavior:'auto' });
+            const targetTop = 48 - centerOffset; // 10 の中央位置 (extIdx=1)
+            container.scrollTop = targetTop;
             return;
         }
         const v = values[rawIdx];
@@ -667,11 +674,13 @@ document.addEventListener('DOMContentLoaded', () => {
     list.addEventListener('click', e=>{
         const it = e.target.closest('.picker-item');
         if (!it) return;
-        const val = parseInt(it.getAttribute('data-v'),10);
+    const val = parseInt(it.getAttribute('data-v'),10);
         if (isNaN(val)) return;
         tempValue = val;
-        const centerIdx = values.indexOf(val)+1; // 番兵+1
-        list.parentElement.scrollTo({ top: centerIdx*48 - (list.parentElement.clientHeight/2 - 24), behavior:'smooth' });
+    const centerIdx = values.indexOf(val)+1; // 番兵+1
+    const container = list.parentElement;
+    const centerOffset = container.clientHeight/2 - 24;
+    container.scrollTo({ top: centerIdx*48 - centerOffset, behavior:'smooth' });
     });
     applyBtn.addEventListener('click', ()=>{
         if (!currentTarget) { closePicker(); return; }
