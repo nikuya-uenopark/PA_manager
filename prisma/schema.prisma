@@ -59,3 +59,20 @@ model Log {
   message   String
   createdAt DateTime @default(now()) @map("created_at")
 }
+
+// ゲームスコア / 進行状況
+model GameScore {
+  id        Int      @id @default(autoincrement())
+  staff     Staff    @relation(fields: [staffId], references: [id])
+  staffId   Int
+  game      String   @db.VarChar(50) // 'reaction' | 'twenty' | 'rpg'
+  value     Int?     // 主指標 (reaction: 反応ms / twenty: 差分ms(小さい程良) / rpg: level )
+  extra     Int?     // 補助 (twenty: 実測ms, rpg: 所持金等別用途可)
+  meta      Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([game])
+  @@index([staffId])
+  @@unique([game, staffId]) // rpg は常に1件, 他ゲームは最新の結果を保持 (最小値更新時に上書き)
+}

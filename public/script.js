@@ -1298,3 +1298,74 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
         container.innerHTML = '<div class="empty-state">評価一覧の取得に失敗しました</div>';
     }
 }
+
+// ====== ゲームセンター機能 ======
+document.addEventListener('DOMContentLoaded', () => {
+    const header = document.getElementById('mainHeader');
+    const gameHub = document.getElementById('gameHub');
+    const backBtn = document.getElementById('backToMain');
+    const playerSelect = document.getElementById('gamePlayerSelect');
+    const rankingEls = {
+        reaction: document.getElementById('rankingReaction'),
+        twenty: document.getElementById('rankingTwenty'),
+        rpg: document.getElementById('rankingRpg')
+    };
+    let reactionState = { timerId:null, startWait:0, started:false, reacted:false, startTime:0 };
+    let twentyState = { startTime:0, running:false };
+    const reactionStartBtn = document.getElementById('reactionStartBtn');
+    const reactionStopBtn = document.getElementById('reactionStopBtn');
+    const reactionStatus = document.getElementById('reactionStatus');
+    const reactionBest = document.getElementById('reactionBest');
+    const twentyStartBtn = document.getElementById('twentyStartBtn');
+    const twentyStopBtn = document.getElementById('twentyStopBtn');
+    const twentyStatus = document.getElementById('twentyStatus');
+    const twentyBest = document.getElementById('twentyBest');
+    const rpgStateEl = document.getElementById('rpgState');
+    const rpgLogEl = document.getElementById('rpgLog');
+    const rpgBtns = {
+        battle: document.getElementById('rpgBattleBtn'),
+        heal: document.getElementById('rpgHealBtn'),
+        sword: document.getElementById('rpgEquipSwordBtn'),
+        armor: document.getElementById('rpgEquipArmorBtn'),
+        boss: document.getElementById('rpgBossBtn')
+    };
+
+    function showGameHub(){ if(!gameHub) return; gameHub.style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); refreshPlayerSelect(); loadRankingsAll(); initRpg(true); }
+    function hideGameHub(){ if(!gameHub) return; gameHub.style.display='none'; }
+    if (header) {
+        header.addEventListener('click', ()=> showGameHub());
+        header.addEventListener('keydown', e=>{ if (e.key==='Enter' || e.key===' ') { e.preventDefault(); showGameHub(); } });
+    }
+    if (backBtn) backBtn.addEventListener('click', ()=> hideGameHub());
+
+    function refreshPlayerSelect(){ if(!playerSelect) return; const staff = (window.paManager?.currentStaff)||[]; playerSelect.innerHTML = staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join(''); }
+    // Rankings
+    async function loadRanking(game){ const el = rankingEls[game]; if(!el) return; try { el.innerHTML='<li>読み込み中...</li>'; const res = await fetch(`/api/games/scores?game=${game}`); if(!res.ok) throw 0; const data = await res.json(); if(!Array.isArray(data)||!data.length){ el.innerHTML='<li>なし</li>'; return; } el.innerHTML = data.map((r,i)=>{ let v = r.value; if(game==='twenty'){ v = `${v}ms (実 ${r.extra||''}ms)`; } if(game==='reaction'){ v = v+'ms'; } if(game==='rpg'){ v = 'Lv'+v+(r.meta?.bossDefeated?' ⭐':'' ); } return `<li><span>${i+1}. ${r.staff?.name||'?'}</span><span>${v}</span></li>`; }).join(''); } catch{ el.innerHTML='<li>取得失敗</li>'; } }
+    function loadRankingsAll(){ ['reaction','twenty','rpg'].forEach(g=> loadRanking(g)); }
+
+    // Reaction Game
+    if (reactionStartBtn) reactionStartBtn.addEventListener('click', ()=>{
+        if (!playerSelect.value){ alert('プレイヤーを選択してください'); return; }
+        if (reactionState.timerId) clearTimeout(reactionState.timerId);
+        reactionState = { timerId:null, startWait: Date.now(), started:false, reacted:false, startTime:0 };
+        reactionStatus.textContent='ランダム待ち...'; reactionStopBtn.disabled=true; reactionStartBtn.disabled=true; reactionStatus.style.color='';
+        const wait = 800 + Math.random()*2200; reactionState.timerId = setTimeout(()=>{ reactionState.started=true; reactionState.startTime=performance.now(); reactionStatus.textContent='今！ストップ！'; reactionStopBtn.disabled=false; reactionStatus.style.color='#dc2626'; }, wait);
+    });
+    if (reactionStopBtn) reactionStopBtn.addEventListener('click', async ()=>{
+        if (!reactionState.started || reactionState.reacted) return; reactionState.reacted=true; const elapsed = Math.round(performance.now()-reactionState.startTime); reactionStatus.textContent=`結果: ${elapsed}ms`; reactionStartBtn.disabled=false; reactionStopBtn.disabled=true; submitScore('reaction', elapsed, null); const curBest = reactionBest.getAttribute('data-best'); if (!curBest || elapsed < Number(curBest)) { reactionBest.setAttribute('data-best', elapsed); reactionBest.textContent='自己ベスト: '+elapsed+'ms'; } loadRanking('reaction'); });
+
+    // Twenty Game
+    if (twentyStartBtn) twentyStartBtn.addEventListener('click', ()=>{ if(!playerSelect.value){ alert('プレイヤーを選択してください'); return; } twentyState.startTime=performance.now(); twentyState.running=true; twentyStartBtn.disabled=true; twentyStopBtn.disabled=false; twentyStatus.textContent='カウント中...'; });
+    if (twentyStopBtn) twentyStopBtn.addEventListener('click', ()=>{ if(!twentyState.running) return; twentyState.running=false; const actual = Math.round(performance.now()-twentyState.startTime); twentyStartBtn.disabled=false; twentyStopBtn.disabled=true; const diff = Math.abs(actual-20000); twentyStatus.textContent=`差: ${diff}ms (実 ${actual}ms)`; submitScore('twenty', diff, actual); const curBest = twentyBest.getAttribute('data-best'); if (!curBest || diff < Number(curBest)) { twentyBest.setAttribute('data-best', diff); twentyBest.textContent='自己ベスト: 差 '+diff+'ms'; } loadRanking('twenty'); });
+
+    async function submitScore(game, value, extra){ try { const sid = Number(playerSelect.value); if(!sid) return; await fetch('/api/games/scores',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ game, staffId:sid, value, extra }) }); } catch(e){ console.warn('score submit failed', e); } }
+
+    // RPG
+    async function initRpg(skipIfExists=false){ if(!playerSelect.value){ rpgStateEl.textContent='プレイヤーを選択してください'; return; } try { const sid=Number(playerSelect.value); const res = await fetch(`/api/games/rpg?staffId=${sid}`); if(!res.ok) throw 0; const data = await res.json(); if(skipIfExists && data.meta){ renderRpg(data.meta, 'ロード済'); return; } if(!data.meta){ const r2 = await fetch('/api/games/rpg',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'init', staffId:sid })}); const d2 = await r2.json(); renderRpg(d2.meta,'新規開始'); } else { renderRpg(data.meta,'続き'); } } catch{ rpgStateEl.textContent='取得失敗'; } }
+    function renderRpg(meta, note){ if(!meta){ rpgStateEl.textContent='データなし'; return; } const { level,hp,maxHp,gold,exp,nextExp,atk,def,items,bossDefeated } = meta; rpgStateEl.innerHTML = `[${note}] Lv${level} HP ${hp}/${maxHp} exp ${exp}/${nextExp} G:${gold} Atk:${atk} Def:${def} 装備:${items?.join(',')||'-'} ${bossDefeated?'(Boss✓)':''}`; }
+    async function rpgAction(action, extra){ const sid = Number(playerSelect.value); if(!sid) { alert('プレイヤー先選択'); return; } try { const body = { action, staffId:sid, ...(extra||{}) }; const res = await fetch('/api/games/rpg',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) }); if(!res.ok) throw 0; const data = await res.json(); renderRpg(data.meta, action); logRpg(data.message||action); if(action==='battle'||action==='boss'){ loadRanking('rpg'); } } catch{ logRpg(action+'失敗'); }
+    }
+    function logRpg(msg){ if(!rpgLogEl) return; const line = document.createElement('div'); line.textContent = new Date().toLocaleTimeString()+' '+msg; rpgLogEl.prepend(line); while(rpgLogEl.children.length>60) rpgLogEl.removeChild(rpgLogEl.lastChild); }
+    Object.entries(rpgBtns).forEach(([k,btn])=>{ if(!btn) return; btn.addEventListener('click', ()=>{ if(k==='battle') rpgAction('battle'); else if(k==='heal') rpgAction('heal'); else if(k==='sword') rpgAction('equip',{item:'sword'}); else if(k==='armor') rpgAction('equip',{item:'armor'}); else if(k==='boss') rpgAction('boss'); }); });
+    if(playerSelect) playerSelect.addEventListener('change', ()=>{ loadRankingsAll(); initRpg(); });
+});

@@ -64,11 +64,72 @@
 
     <div id="app">
         <div class="container">
-            <header class="main-header">
+            <header class="main-header" id="mainHeader" role="button" tabindex="0" aria-label="ゲーム一覧へ">
                 <div class="header-content">
                     <h1>肉屋の台所 宮益坂店<br />新人教育用システム</h1>
                 </div>
             </header>
+            <section id="gameHub" style="display:none;" class="game-hub">
+                <div class="game-hub-head">
+                    <h2>ゲームセンター</h2>
+                    <button class="btn btn-secondary" id="backToMain" type="button">メインへ戻る</button>
+                </div>
+                <div class="game-player-select">
+                    <label>プレイヤー: <select id="gamePlayerSelect"></select></label>
+                </div>
+                <div class="game-list" id="gameList">
+                    <div class="game-card" data-game="reaction">
+                        <h3>反射神経ゲーム</h3>
+                        <p>赤に変わったら即ストップ！最速反応タイムを目指そう。</p>
+                        <div class="reaction-area">
+                            <button type="button" class="btn btn-primary" id="reactionStartBtn">スタート</button>
+                            <button type="button" class="btn btn-warning" id="reactionStopBtn" disabled>ストップ</button>
+                            <div class="reaction-status" id="reactionStatus">待機中</div>
+                            <div class="reaction-best" id="reactionBest"></div>
+                        </div>
+                    </div>
+                    <div class="game-card" data-game="twenty">
+                        <h3>20秒測定ゲーム</h3>
+                        <p>心の中で 20 秒を数えてストップ。20 秒との差を競う。</p>
+                        <div class="twenty-area">
+                            <button type="button" class="btn btn-primary" id="twentyStartBtn">スタート</button>
+                            <button type="button" class="btn btn-warning" id="twentyStopBtn" disabled>ストップ</button>
+                            <div class="twenty-status" id="twentyStatus">待機中</div>
+                            <div class="twenty-best" id="twentyBest"></div>
+                        </div>
+                    </div>
+                    <div class="game-card" data-game="rpg">
+                        <h3>ミニRPG</h3>
+                        <p>歩いて戦ってレベルアップ。ラスボス討伐を目指せ！</p>
+                        <div class="rpg-area">
+                            <div class="rpg-state" id="rpgState">未ロード</div>
+                            <div class="rpg-actions">
+                                <button class="btn btn-primary" id="rpgBattleBtn" type="button">たたかう</button>
+                                <button class="btn btn-secondary" id="rpgHealBtn" type="button">宿屋(10G)</button>
+                                <button class="btn btn-success" id="rpgEquipSwordBtn" type="button">剣(50G)</button>
+                                <button class="btn btn-success" id="rpgEquipArmorBtn" type="button">防具(50G)</button>
+                                <button class="btn btn-danger" id="rpgBossBtn" type="button">ラスボス</button>
+                            </div>
+                            <div class="rpg-log" id="rpgLog"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="game-rankings">
+                    <h3>ランキング</h3>
+                    <div class="ranking-section">
+                        <h4>反射神経 (ms 小さいほど良)</h4>
+                        <ol id="rankingReaction" class="ranking-list"></ol>
+                    </div>
+                    <div class="ranking-section">
+                        <h4>20秒測定 (ズレ ms 小さいほど良)</h4>
+                        <ol id="rankingTwenty" class="ranking-list"></ol>
+                    </div>
+                    <div class="ranking-section">
+                        <h4>RPG レベル</h4>
+                        <ol id="rankingRpg" class="ranking-list"></ol>
+                    </div>
+                </div>
+            </section>
             <div class="main-content">
                 <!-- タブナビゲーション -->
                 <nav class="tab-navigation">
