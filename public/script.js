@@ -1058,11 +1058,8 @@ function saveSharedNote() {
   paManager.saveSharedNote(true);
 }
 
-// グローバル変数とインスタンス
-let paManager;
-
-// 初期化
-paManager = new PAManager();
+// グローバル変数とインスタンス (GameHub IIFE より前に生成する必要あり)
+let paManager = new PAManager();
 
 // 共有メモ フォントサイズ切替
 document.addEventListener("DOMContentLoaded", () => {
