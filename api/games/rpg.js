@@ -70,13 +70,41 @@ export default async function handler(req,res){
 
     let result = null;
     if (action === 'init'){ /* no change */ }
-    else if (action === 'heal') { const cost=10; if (state.gold>=cost){ state.gold-=cost; state.hp=state.maxHp; result={ msg:'宿屋で回復した'} } else result={ msg:'ゴールド不足' }; }
+    else if (action === 'heal') {
+      // 宿屋: 所持金の10% (端数切り捨て) を支払い HP全回復。最低1G必要。
+      const cost = Math.floor(state.gold * 0.10);
+      if (state.gold > 0 && cost >= 1 && state.gold >= cost) {
+        state.gold -= cost;
+        state.hp = state.maxHp;
+        result = { msg: `宿屋で休んだ (-${cost}G)` };
+      } else if (state.gold > 0 && cost === 0) {
+        // 1G以上だが 10% が 0G になる極少資産 (1~9G)。その場合は全額1G扱い
+        if (state.gold >= 1) {
+          state.gold -= 1; state.hp = state.maxHp; result = { msg: '宿屋で休んだ (-1G)' };
+        } else {
+          result = { msg: 'ゴールド不足' };
+        }
+      } else {
+        result = { msg: 'ゴールド不足' };
+      }
+    }
     else if (action === 'battle') { // ランダム敵
       const enemy = { hp: randInt(12, 25), atk: randInt(3,7), exp: randInt(8,14), gold: randInt(6,11) };
       result = applyBattle(state, enemy);
     }
     else if (action === 'boss') { if (state.bossDefeated) { result={ msg:'既に討伐済み'} } else { const boss={ hp:120, atk:14, exp:60, gold:120 }; const r=applyBattle(state,boss); if (r.victory){ state.bossDefeated=true; } result=r; } }
-    else if (action === 'equip') { const { type } = payload||{}; if (type==='sword' && state.gold>=50){ state.gold-=50; state.atk+=5; state.equips.push('sword'); result={ msg:'剣を購入した' }; } else if(type==='armor' && state.gold>=50){ state.gold-=50; state.maxHp+=15; state.hp=state.maxHp; state.equips.push('armor'); result={ msg:'防具を購入した' }; } else { result={ msg:'購入失敗(ゴールド不足 or 不明)' }; } }
+    else if (action === 'equip') {
+      const { type } = payload||{};
+      if (type==='sword') {
+        if (state.equips.includes('sword')) result={ msg:'既に剣所持' };
+        else if (state.gold>=50){ state.gold-=50; state.atk+=5; state.equips.push('sword'); result={ msg:'剣を購入 (+ATK5)' }; } else result={ msg:'G不足(50G必要)' };
+      } else if (type==='armor') {
+        if (state.equips.includes('armor')) result={ msg:'既に防具所持' };
+        else if (state.gold>=50){ state.gold-=50; state.maxHp+=15; state.hp=state.maxHp; state.equips.push('armor'); result={ msg:'防具を購入 (+HP15)' }; } else result={ msg:'G不足(50G必要)' };
+      } else {
+        result={ msg:'不明な装備' };
+      }
+    }
     else if (action === 'save') { /* explicit save only */ }
     else { return res.status(400).json({ error:'unknown action' }); }
 
