@@ -224,52 +224,55 @@ class PAManager {
     if (staffForm) {
       staffForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const name = document.getElementById("staffName")?.value?.trim();
-        const kana =
-          document.getElementById("staffKana")?.value?.trim() || null;
-        const position =
-          document.getElementById("staffPositionType")?.value || null;
-        const birth_date =
-          document.getElementById("staffBirthDate")?.value || null;
+        console.log("[staffForm] submit start (editingStaffId=", this.editingStaffId, ")");
+        const nameEl = document.getElementById("staffName");
+        const name = nameEl?.value?.trim();
+        const kana = document.getElementById("staffKana")?.value?.trim() || null;
+        const position = document.getElementById("staffPositionType")?.value || null;
+        const birth_date = document.getElementById("staffBirthDate")?.value || null;
         let mgmtCode = document.getElementById("staffMgmtCode")?.value?.trim();
         if (mgmtCode === "") mgmtCode = null;
-        // mgmtCode: null か 4桁数字のみ許可（空なら送らない）
         if (mgmtCode && !/^\d{4}$/.test(mgmtCode)) {
-          this.showNotification(
-            "管理番号は4桁の数字で入力してください (例 0123)",
-            "error"
-          );
+          this.showNotification("管理番号は4桁の数字で入力してください (例 0123)", "error");
+          console.warn("[staffForm] invalid mgmtCode", mgmtCode);
           return;
         }
         if (!name) {
           this.showNotification("名前は必須です", "error");
+          nameEl && nameEl.focus();
           return;
         }
-        if (this._isSavingStaff) return;
+        if (this._isSavingStaff) {
+          console.log("[staffForm] already saving; ignored duplicate");
+          return;
+        }
         this._isSavingStaff = true;
         const submitBtn = staffForm.querySelector('button[type="submit"]');
         if (submitBtn) submitBtn.disabled = true;
+        submitBtn && (submitBtn.dataset.originalText = submitBtn.innerHTML);
+        if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
         try {
           const isEdit = !!this.editingStaffId;
-          const url = isEdit
-            ? `/api/staff?id=${this.editingStaffId}`
-            : "/api/staff";
+          const url = isEdit ? `/api/staff?id=${this.editingStaffId}` : "/api/staff";
           const method = isEdit ? "PUT" : "POST";
+          console.log("[staffForm] fetch", method, url);
           const res = await fetch(url, {
             method,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name,
-              kana,
-              position,
-              birth_date,
-              mgmtCode,
-            }),
+            body: JSON.stringify({ name, kana, position, birth_date, mgmtCode }),
           });
-          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-          this.showNotification(
-            isEdit ? "スタッフを更新しました" : "スタッフを追加しました"
-          );
+          let payload = null;
+          try { payload = await res.json(); } catch {}
+          if (!res.ok) {
+            console.error("[staffForm] server error", res.status, payload);
+            this.showNotification(
+              (payload && payload.error) || `保存に失敗しました (${res.status})`,
+              "error"
+            );
+            return;
+          }
+          console.log("[staffForm] success", payload);
+            this.showNotification(isEdit ? "スタッフを更新しました" : "スタッフを追加しました");
           this.closeModal("staffModal");
           staffForm.reset();
           this.editingStaffId = null;
@@ -282,7 +285,10 @@ class PAManager {
           this.showNotification("スタッフの保存に失敗しました", "error");
         } finally {
           this._isSavingStaff = false;
-          if (submitBtn) submitBtn.disabled = false;
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = submitBtn.dataset.originalText || '<i class="fas fa-save"></i> 保存';
+          }
         }
       });
     }
