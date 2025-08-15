@@ -1,18 +1,20 @@
 // Health check for API/DB connectivity and deployment freshness
-const prisma = require('./_prisma');
+const prisma = require("./_prisma");
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") return res.status(200).end();
 
   // POST (debug insert) を先にハンドル
-  if (req.method === 'POST') {
+  if (req.method === "POST") {
     try {
-      const action = (req.query.action || req.body?.action || '').toString();
-      if (action !== 'debug-insert') {
-        return res.status(400).json({ error: 'invalid action', hint: 'use ?action=debug-insert' });
+      const action = (req.query.action || req.body?.action || "").toString();
+      if (action !== "debug-insert") {
+        return res
+          .status(400)
+          .json({ error: "invalid action", hint: "use ?action=debug-insert" });
       }
       const name = `debug-${Date.now()}`;
       const row = await prisma.staff.create({ data: { name } });
@@ -23,33 +25,34 @@ module.exports = async function handler(req, res) {
   }
 
   const info = {
-      ok: true,
-      time: new Date().toISOString(),
-      node: process.version,
-      env: process.env.VERCEL_ENV || process.env.NODE_ENV || 'unknown'
+    ok: true,
+    time: new Date().toISOString(),
+    node: process.version,
+    env: process.env.VERCEL_ENV || process.env.NODE_ENV || "unknown",
   };
   try {
     // Lightweight probe
-    const ping = await prisma.$queryRaw`SELECT current_database() AS db, current_schema() AS schema`;
-    info.db = 'ok';
+    const ping =
+      await prisma.$queryRaw`SELECT current_database() AS db, current_schema() AS schema`;
+    info.db = "ok";
     info.database = ping?.[0]?.db;
     info.schema = ping?.[0]?.schema;
     // Counts for quick sanity check
     info.counts = {
-      staff: await prisma.staff.count().catch(()=>null),
-      criteria: await prisma.criteria.count().catch(()=>null),
+      staff: await prisma.staff.count().catch(() => null),
+      criteria: await prisma.criteria.count().catch(() => null),
     };
     // URL (sanitized)
     try {
-      const u = new URL(process.env.DATABASE_URL || '');
+      const u = new URL(process.env.DATABASE_URL || "");
       info.dbHost = u.hostname;
       info.dbPath = u.pathname;
-      info.dbPooler = u.hostname.includes('pooler');
-      info.dbSSL = (u.search || '').includes('sslmode=require');
+      info.dbPooler = u.hostname.includes("pooler");
+      info.dbSSL = (u.search || "").includes("sslmode=require");
     } catch {}
   } catch (e) {
-    info.db = 'error';
+    info.db = "error";
     info.error = e.message;
   }
   res.status(200).json(info);
-}
+};

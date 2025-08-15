@@ -63,17 +63,15 @@ module.exports = async function handler(req, res) {
           ops = body;
         }
       }
-      res
-        .status(200)
-        .json({
-          ops,
-          comm,
-          stoveDate,
-          stoveNumber,
-          opsFont,
-          commFont,
-          updatedAt: latest?.createdAt,
-        });
+      res.status(200).json({
+        ops,
+        comm,
+        stoveDate,
+        stoveNumber,
+        opsFont,
+        commFont,
+        updatedAt: latest?.createdAt,
+      });
     } else if (req.method === "POST") {
       const { content, ops, comm, stoveDate, stoveNumber, opsFont, commFont } =
         req.body || {};

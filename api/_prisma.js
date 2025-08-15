@@ -1,9 +1,9 @@
 // Prisma client singleton for Vercel/Serverless
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require("@prisma/client");
 
 let prisma;
 
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === "production") {
   prisma = new PrismaClient();
 } else {
   // Avoid creating new instances on hot-reload in dev
