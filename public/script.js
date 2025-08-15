@@ -393,7 +393,22 @@ class PAManager {
     const staffSaveBtn = document.querySelector(
       '#staffForm button[type="submit"]'
     );
-    if (staffSaveBtn) staffSaveBtn.disabled = true;
+    if (staffSaveBtn) {
+      // 初期は追加モード想定で無効。編集モードで開いたら editStaff 内で再度有効化。
+      staffSaveBtn.disabled = true;
+      const recompute = () => {
+        const nameVal = document.getElementById('staffName')?.value?.trim();
+        const mgVal = document.getElementById('staffMgmtCode')?.value?.trim();
+        const ok = !!nameVal && (mgVal === '' || /^\d{4}$/.test(mgVal));
+        // 追加モード (editingStaffId null) でも条件満たせば活性化
+        if (!this.editingStaffId && !ok) staffSaveBtn.disabled = true;
+        else staffSaveBtn.disabled = !ok;
+      };
+      ['input','change'].forEach(ev=>{
+        document.getElementById('staffName')?.addEventListener(ev,recompute);
+        document.getElementById('staffMgmtCode')?.addEventListener(ev,recompute);
+      });
+    }
   }
 
   showNotification(message, type = "success") {
@@ -1353,6 +1368,11 @@ function editStaff(id) {
     document.getElementById("staffBirthDate").value = `${yyyy}-${mm}-${dd}`;
   } else {
     document.getElementById("staffBirthDate").value = "";
+  }
+  // 編集モードでは即ボタン活性化（名前が既にあるため）
+  const saveBtn = document.querySelector('#staffForm button[type="submit"]');
+  if (saveBtn) {
+    saveBtn.disabled = false; // 編集開始時は既存データが正しい前提で有効化
   }
   paManager.showModal("staffModal");
 }
