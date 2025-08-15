@@ -19,6 +19,7 @@ module.exports = async function handler(req, res) {
         where: { game },
         orderBy,
         take: 50,
+        include: { staff: { select: { id: true, name: true } } },
       });
       return res.json(rows);
     }

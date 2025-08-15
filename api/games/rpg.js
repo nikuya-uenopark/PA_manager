@@ -1,5 +1,6 @@
-import { prisma } from "../_prisma";
-import { logEvent } from "../_log";
+// CommonJS へ統一 & RPG 進行管理
+const prisma = require("../_prisma");
+const { addLog } = require("../_log");
 
 // 簡易RPG進行 API
 // POST { staffId, action, payload }
@@ -20,6 +21,7 @@ function newState(name) {
     atk: BASE_ATK,
     equips: [],
     bossDefeated: false,
+    nextExp: levelNeeded(1),
   };
 }
 
@@ -28,6 +30,21 @@ function levelNeeded(lv) {
 }
 function randInt(a, b) {
   return Math.floor(Math.random() * (b - a + 1)) + a;
+}
+
+function recomputeDerived(state) {
+  if (!state) return state;
+  const equips = state.equips || [];
+  // レベル由来の成長計算 + 装備ボーナス
+  const levelBonusHp = (state.level - 1) * 6;
+  const levelBonusAtk = (state.level - 1) * 2;
+  const armorBonus = equips.includes("armor") ? 15 : 0;
+  const swordBonus = equips.includes("sword") ? 5 : 0;
+  state.maxHp = BASE_HP + levelBonusHp + armorBonus;
+  state.atk = BASE_ATK + levelBonusAtk + swordBonus;
+  if (state.hp > state.maxHp) state.hp = state.maxHp;
+  state.nextExp = levelNeeded(state.level);
+  return state;
 }
 
 function applyBattle(state, enemy) {
@@ -55,22 +72,22 @@ function applyBattle(state, enemy) {
   while (state.exp >= levelNeeded(state.level)) {
     state.exp -= levelNeeded(state.level);
     state.level += 1;
-    state.maxHp += 6;
-    state.atk += 2;
-    state.hp = state.maxHp;
+    recomputeDerived(state); // レベルアップ毎に再計算
+    state.hp = state.maxHp; // 全回復
     log.push(`レベルアップ! Lv${state.level}`);
   }
+  recomputeDerived(state);
   return { state, victory: true, log };
 }
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     if (req.method === "GET") {
       const { staffId } = req.query || {};
       if (!staffId) return res.status(400).json({ error: "staffId required" });
       const key = { game_staffId: { game: "rpg", staffId: Number(staffId) } };
       const record = await prisma.gameScore.findUnique({ where: key });
-      return res.json({ state: record?.meta || null, record });
+      const st = record?.meta ? recomputeDerived(record.meta) : null;
+      return res.json({ state: st, record });
     }
     if (req.method !== "POST")
       return res.status(405).json({ error: "Method not allowed" });
@@ -85,6 +102,7 @@ export default async function handler(req, res) {
     let record = await prisma.gameScore.findUnique({ where: key });
     let state = record?.meta || null;
     if (!state) state = newState(staff.name);
+    recomputeDerived(state); // 破損/旧データ対策
 
     let result = null;
     if (action === "init") {
@@ -128,24 +146,24 @@ export default async function handler(req, res) {
         }
         result = r;
       }
-    } else if (action === "equip") {
+  } else if (action === "equip") {
       const { type } = payload || {};
       if (type === "sword") {
         if (state.equips.includes("sword")) result = { msg: "既に剣所持" };
         else if (state.gold >= 50) {
           state.gold -= 50;
-          state.atk += 5;
           state.equips.push("sword");
-          result = { msg: "剣を購入 (+ATK5)" };
+    recomputeDerived(state);
+    result = { msg: "剣を購入 (+ATK5)" };
         } else result = { msg: "G不足(50G必要)" };
       } else if (type === "armor") {
         if (state.equips.includes("armor")) result = { msg: "既に防具所持" };
         else if (state.gold >= 50) {
           state.gold -= 50;
-          state.maxHp += 15;
-          state.hp = state.maxHp;
           state.equips.push("armor");
-          result = { msg: "防具を購入 (+HP15)" };
+    recomputeDerived(state);
+    state.hp = state.maxHp;
+    result = { msg: "防具を購入 (+HP15)" };
         } else result = { msg: "G不足(50G必要)" };
       } else {
         result = { msg: "不明な装備" };
@@ -157,6 +175,7 @@ export default async function handler(req, res) {
     }
 
     // 保存 (value=level, extra=gold)
+    recomputeDerived(state);
     record = await prisma.gameScore.upsert({
       where: key,
       update: { value: state.level, extra: state.gold, meta: state },
@@ -168,10 +187,10 @@ export default async function handler(req, res) {
         meta: state,
       },
     });
-    await logEvent("rpg", `rpg action ${action} by staff#${staffId}`);
+    try { await addLog("rpg", `rpg action ${action} by staff#${staffId}`); } catch {}
     return res.json({ state, result, record });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "server error" });
   }
-}
+};

@@ -250,6 +250,7 @@
         <div class="rpg-panel" id="panelStats">
           <h3>ステータス</h3>
           <div id="statsBox">-</div>
+          <button id="manualSaveBtn" style="margin-top:6px;background:#118ab2;color:#fff;border:1px solid #118ab2;border-radius:6px;padding:4px 8px;font-size:11px;">手動セーブ</button>
         </div>
         <div class="rpg-panel">
           <h3>操作</h3>
@@ -446,6 +447,12 @@
           bossDefeated ? " <span class=badge>BOSS</span>" : ""
         }`;
       }
+      // 手動セーブ
+      document.getElementById('manualSaveBtn').onclick = async () => {
+        if(!currentPlayerId) { alert('プレイヤー未選択'); return; }
+        const r = await api('save');
+        if(r && r.state){ state = r.state; updateStats(); log('手動セーブ完了'); }
+      };
       async function initPlayer() {
         if (!currentPlayerId) return;
         const r = await api("init");
