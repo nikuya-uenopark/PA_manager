@@ -40,7 +40,8 @@ body.rpg-body{background:#0b132b;color:#fff;font-family:'Inter',sans-serif;overf
 </div>
 <script>
 const API='/api/games/rpg';
-let staffCache=[];let currentPlayerId=null;let state=null;let autoEncounter=true;let walking=false;let encounterStep=0;
+const params=new URLSearchParams(location.search);const presetStaffId=params.get('staffId');
+let staffCache=[];let currentPlayerId=presetStaffId?Number(presetStaffId):null;let state=null;let autoEncounter=true;let walking=false;let encounterStep=0;
 const canvas=document.getElementById('rpgCanvas');const ctx=canvas.getContext('2d');const tile=32;const mapW=15,mapH=10; 
 // 0:草 1:壁 2:宿屋 3:武器屋
 const world=[...Array(mapH)].map((_,y)=>[...Array(mapW)].map((_,x)=>{if(x===0||y===0||x===mapW-1||y===mapH-1)return 1;return 0;}));
@@ -60,7 +61,7 @@ async function api(action, payload){if(!currentPlayerId)return;const body={staff
 function updateStats(){if(!state){document.getElementById('statsBox').textContent='-';return;}const {level,hp,maxHp,gold,exp,nextExp,atk,def,equips,bossDefeated}=state;document.getElementById('statsBox').innerHTML=`Lv${level} HP ${hp}/${maxHp}<div class='hp-bar'><span style='width:${(hp/maxHp*100).toFixed(1)}%'></span></div>EXP ${exp}/${nextExp} G:${gold}<br>ATK:${atk} DEF:${def||0} 装備:${(equips||[]).join(',')||'-'} ${bossDefeated?' <span class=badge>BOSS</span>':''}`;}
 async function initPlayer(){if(!currentPlayerId)return;const r=await api('init');if(r&&r.state){state=r.state;updateStats();log('ロード完了');draw();}}
 function ensurePlayerSelect(){const sel=document.getElementById('playerSelectRpg');sel.innerHTML=staffCache.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');if(!currentPlayerId&&staffCache.length){currentPlayerId=staffCache[0].id;}sel.value=currentPlayerId||'';sel.onchange=()=>{currentPlayerId=Number(sel.value)||null;initPlayer();};}
-async function loadStaff(){const res=await fetch('/api/staff');if(res.ok){staffCache=await res.json();ensurePlayerSelect();initPlayer();}}
+async function loadStaff(){const res=await fetch('/api/staff');if(res.ok){staffCache=await res.json();ensurePlayerSelect();if(presetStaffId&&!staffCache.some(s=>s.id===Number(presetStaffId))){alert('指定されたプレイヤーが存在しません');currentPlayerId=null;} if(!currentPlayerId){alert('プレイヤーを選択してください');} initPlayer();}}
 async function doAction(k){if(!state)return; if(k==='battle'){const r=await api('battle'); if(r&&r.state){state=r.state;updateStats();log('戦闘: '+(r.result?.victory?'勝利':'敗北'));} } else if(k==='heal'){const r=await api('heal'); if(r&&r.state){state=r.state;updateStats();log(r.result?.msg||'回復');} } else if(k==='equip-sword'){const r=await api('equip',{type:'sword'}); if(r&&r.state){state=r.state;updateStats();log(r.result?.msg);} } else if(k==='equip-armor'){const r=await api('equip',{type:'armor'}); if(r&&r.state){state=r.state;updateStats();log(r.result?.msg);} } else if(k==='boss'){const r=await api('boss'); if(r&&r.state){state=r.state;updateStats();log('ボス戦: '+(r.result?.victory?'勝利!':'結果:'+ (r.result?.log?.slice(-1)[0]||'')));}} }
 function attemptEncounter(){ if(!autoEncounter) return; if(Math.random()<0.18){ walking=false; flashEncounter(); fadeMessage('エンカウント!'); doAction('battle'); } }
 window.addEventListener('keydown',e=>{ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){ e.preventDefault(); movePlayer(e.key); }});

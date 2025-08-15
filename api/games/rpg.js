@@ -115,7 +115,7 @@ export default async function handler(req,res){
       create:{ game:'rpg', staffId:Number(staffId), value: state.level, extra: state.gold, meta: state }
     });
     await logEvent('rpg', `rpg action ${action} by staff#${staffId}`);
-    return res.json({ state, result, record });
+  return res.json({ state, result, record });
   } catch(e){
     console.error(e);
     return res.status(500).json({ error:'server error' });

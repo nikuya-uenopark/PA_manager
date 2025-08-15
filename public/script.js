@@ -1310,6 +1310,7 @@ document.addEventListener('DOMContentLoaded', () => {
         twenty: document.getElementById('rankingTwenty'),
         rpg: document.getElementById('rankingRpg')
     };
+    const openRpgLink = document.getElementById('openRpgLink');
     let reactionState = { timerId:null, startWait:0, started:false, reacted:false, startTime:0 };
     let twentyState = { startTime:0, running:false };
     const reactionStartBtn = document.getElementById('reactionStartBtn');
@@ -1328,6 +1329,13 @@ document.addEventListener('DOMContentLoaded', () => {
         header.addEventListener('keydown', e=>{ if (e.key==='Enter' || e.key===' ') { e.preventDefault(); showGameHub(); } });
     }
     if (backBtn) backBtn.addEventListener('click', ()=> hideGameHub());
+    if (openRpgLink) {
+        openRpgLink.addEventListener('click', (e)=>{
+            if(!playerSelect.value){ e.preventDefault(); alert('プレイヤーを選択してください'); return; }
+            // クエリ引き継ぎ
+            openRpgLink.href = `/rpg.html?staffId=${encodeURIComponent(playerSelect.value)}`;
+        });
+    }
 
     function refreshPlayerSelect(){ if(!playerSelect) return; const staff = (window.paManager?.currentStaff)||[]; playerSelect.innerHTML = staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join(''); }
     // Rankings
