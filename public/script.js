@@ -1301,7 +1301,14 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
 }
 
 // ====== ゲームセンター機能 ======
-document.addEventListener('DOMContentLoaded', () => {
+// DOMContentLoaded が既に発火済みでも初期化されるよう即時IIFE化
+(function initGameHub(){
+    if (initGameHub._inited) return; // 再入防止
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initGameHub, { once: true });
+        return;
+    }
+    initGameHub._inited = true;
     const header = document.getElementById('mainHeader');
     const gameHub = document.getElementById('gameHub');
     const backBtn = document.getElementById('backToMain');
@@ -1354,8 +1361,14 @@ document.addEventListener('DOMContentLoaded', () => {
             playerSelect.value = prev;
         }
     }
-    // スタッフ読み込み後に自動反映できるようグローバルフック
-    window._refreshGamePlayerSelect = refreshPlayerSelect;
+    // スタッフ読み込み後に自動反映できるようグローバルフック（常に最新参照）
+    window._refreshGamePlayerSelect = () => {
+        try { refreshPlayerSelect(); } catch(e){ console.warn('refreshPlayerSelect failed', e); }
+    };
+    // 既に staff がロード済みの場合は即反映
+    if (window.paManager && Array.isArray(window.paManager.currentStaff) && window.paManager.currentStaff.length) {
+        window._refreshGamePlayerSelect();
+    }
     // Rankings
     async function loadRanking(game){ const el = rankingEls[game]; if(!el) return; try { el.innerHTML='<li>読み込み中...</li>'; const res = await fetch(`/api/games/scores?game=${game}`); if(!res.ok) throw 0; const data = await res.json(); if(!Array.isArray(data)||!data.length){ el.innerHTML='<li>なし</li>'; return; } el.innerHTML = data.map((r,i)=>{ let v = r.value; if(game==='twenty'){ v = `${v}ms (実 ${r.extra||''}ms)`; } if(game==='reaction'){ v = v+'ms'; } if(game==='rpg'){ v = 'Lv'+v+(r.meta?.bossDefeated?' ⭐':'' ); } return `<li><span>${i+1}. ${r.staff?.name||'?'}</span><span>${v}</span></li>`; }).join(''); } catch{ el.innerHTML='<li>取得失敗</li>'; } }
     function loadRankingsAll(){ ['reaction','twenty','rpg'].forEach(g=> loadRanking(g)); }
@@ -1384,4 +1397,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         loadRankingsAll(); 
     });
-});
+})();

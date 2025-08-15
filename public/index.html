@@ -1,9 +1,15 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
+  <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="description" content="バイト・パートスタッフのスキル評価と進捗管理を行うWebアプリケーション" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="バイト・パートスタッフのスキル評価と進捗管理を行うWebアプリケーション"
+    />
     <meta name="keywords" content="バイト,パート,評価,管理,スキル,進捗" />
     <meta name="author" content="PA Manager" />
     <!-- Favicon -->
@@ -11,417 +17,782 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon.svg" />
     <title>PA評価管理システム</title>
     <link rel="stylesheet" href="style.css" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <!-- PWAマニフェスト（将来の拡張用） -->
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#74b9ff" />
-</head>
-<body>
+  </head>
+  <body>
     <!-- ログイン（スワイプ）オーバーレイ：未ログイン時のみ表示 -->
     <div id="loginOverlay" class="login-overlay" aria-hidden="true">
-        <div class="login-root" data-phase="intro">
-            <div class="login-animated-bg">
-                <span class="bg-shape s1"></span>
-                <span class="bg-shape s2"></span>
-                <span class="bg-shape s3"></span>
-                <span class="bg-shape s4"></span>
-                <span class="bg-shape s5"></span>
-                <span class="bg-shape s6"></span>
-                <span class="bg-shape s7"></span>
-                <span class="bg-shape s8"></span>
-            </div>
-            <div class="login-center">
-                <div class="login-intro" aria-live="polite">ようこそ</div>
-                <!-- PIN フェーズ -->
-                <div class="login-pin-area" id="loginSwipeArea" aria-label="ログインコード入力領域">
-                    <div class="login-pin-display" id="loginPinDisplay" aria-live="polite" aria-label="入力コード">____</div>
-                    <div class="login-digits-row one-line" id="loginDigitsRow" role="list" aria-label="数字キー">
-                        <button type="button" class="login-digit" data-val="0" role="listitem">0</button>
-                        <button type="button" class="login-digit" data-val="1" role="listitem">1</button>
-                        <button type="button" class="login-digit" data-val="2" role="listitem">2</button>
-                        <button type="button" class="login-digit" data-val="3" role="listitem">3</button>
-                        <button type="button" class="login-digit" data-val="4" role="listitem">4</button>
-                        <button type="button" class="login-digit" data-val="5" role="listitem">5</button>
-                        <button type="button" class="login-digit" data-val="6" role="listitem">6</button>
-                        <button type="button" class="login-digit" data-val="7" role="listitem">7</button>
-                        <button type="button" class="login-digit" data-val="8" role="listitem">8</button>
-                        <button type="button" class="login-digit" data-val="9" role="listitem">9</button>
-                    </div>
-                    <div class="login-hint" id="loginSwipeHint">スワイプ</div>
-                    <div class="login-error" id="loginPinError" aria-live="assertive"></div>
-                </div>
-            </div>
+      <div class="login-root" data-phase="intro">
+        <div class="login-animated-bg">
+          <span class="bg-shape s1"></span>
+          <span class="bg-shape s2"></span>
+          <span class="bg-shape s3"></span>
+          <span class="bg-shape s4"></span>
+          <span class="bg-shape s5"></span>
+          <span class="bg-shape s6"></span>
+          <span class="bg-shape s7"></span>
+          <span class="bg-shape s8"></span>
         </div>
+        <div class="login-center">
+          <div class="login-intro" aria-live="polite">ようこそ</div>
+          <!-- PIN フェーズ -->
+          <div
+            class="login-pin-area"
+            id="loginSwipeArea"
+            aria-label="ログインコード入力領域"
+          >
+            <div
+              class="login-pin-display"
+              id="loginPinDisplay"
+              aria-live="polite"
+              aria-label="入力コード"
+            >
+              ____
+            </div>
+            <div
+              class="login-digits-row one-line"
+              id="loginDigitsRow"
+              role="list"
+              aria-label="数字キー"
+            >
+              <button
+                type="button"
+                class="login-digit"
+                data-val="0"
+                role="listitem"
+              >
+                0
+              </button>
+              <button
+                type="button"
+                class="login-digit"
+                data-val="1"
+                role="listitem"
+              >
+                1
+              </button>
+              <button
+                type="button"
+                class="login-digit"
+                data-val="2"
+                role="listitem"
+              >
+                2
+              </button>
+              <button
+                type="button"
+                class="login-digit"
+                data-val="3"
+                role="listitem"
+              >
+                3
+              </button>
+              <button
+                type="button"
+                class="login-digit"
+                data-val="4"
+                role="listitem"
+              >
+                4
+              </button>
+              <button
+                type="button"
+                class="login-digit"
+                data-val="5"
+                role="listitem"
+              >
+                5
+              </button>
+              <button
+                type="button"
+                class="login-digit"
+                data-val="6"
+                role="listitem"
+              >
+                6
+              </button>
+              <button
+                type="button"
+                class="login-digit"
+                data-val="7"
+                role="listitem"
+              >
+                7
+              </button>
+              <button
+                type="button"
+                class="login-digit"
+                data-val="8"
+                role="listitem"
+              >
+                8
+              </button>
+              <button
+                type="button"
+                class="login-digit"
+                data-val="9"
+                role="listitem"
+              >
+                9
+              </button>
+            </div>
+            <div class="login-hint" id="loginSwipeHint">スワイプ</div>
+            <div
+              class="login-error"
+              id="loginPinError"
+              aria-live="assertive"
+            ></div>
+          </div>
+        </div>
+      </div>
     </div>
     <!-- ローディング画面 -->
     <div id="loadingScreen">
-        <div class="loading-center">
-            <div class="modern-loader"></div>
-            <div class="loading-text">システムを起動しています...</div>
-        </div>
+      <div class="loading-center">
+        <div class="modern-loader"></div>
+        <div class="loading-text">システムを起動しています...</div>
+      </div>
     </div>
 
     <div id="app">
-        <div class="container">
-            <header class="main-header" id="mainHeader" role="button" tabindex="0" aria-label="ゲーム一覧へ">
-                <div class="header-content">
-                    <h1>肉屋の台所 宮益坂店<br />新人教育用システム</h1>
-                </div>
-            </header>
-            <section id="gameHub" style="display:none;" class="game-hub">
-                <div class="game-hub-head">
-                    <h2>ゲームセンター</h2>
-                    <button class="btn btn-secondary" id="backToMain" type="button">コン店長に見つからないよう隠す</button>
-                </div>
-                <div class="game-player-select">
-                    <label>プレイヤー: <select id="gamePlayerSelect"></select></label>
-                </div>
-                <div class="game-list" id="gameList">
-                    <div class="game-card" data-game="reaction">
-                        <h3>反射神経ゲーム</h3>
-                        <p>赤に変わったら即ストップ！最速反応タイムを目指そう。</p>
-                        <div class="reaction-area">
-                            <button type="button" class="btn btn-primary" id="reactionStartBtn">スタート</button>
-                            <button type="button" class="btn btn-warning" id="reactionStopBtn" disabled>ストップ</button>
-                            <div class="reaction-status" id="reactionStatus">待機中</div>
-                            <div class="reaction-best" id="reactionBest"></div>
-                        </div>
-                    </div>
-                    <div class="game-card" data-game="twenty">
-                        <h3>20秒測定ゲーム</h3>
-                        <p>心の中で 20 秒を数えてストップ。20 秒との差を競う。</p>
-                        <div class="twenty-area">
-                            <button type="button" class="btn btn-primary" id="twentyStartBtn">スタート</button>
-                            <button type="button" class="btn btn-warning" id="twentyStopBtn" disabled>ストップ</button>
-                            <div class="twenty-status" id="twentyStatus">待機中</div>
-                            <div class="twenty-best" id="twentyBest"></div>
-                        </div>
-                    </div>
-                    <div class="game-card" data-game="rpg">
-                        <h3>ミニRPG</h3>
-                        <p>フィールドを歩いてランダムエンカウント！<br>別ページでドットRPGをプレイ。</p>
-                        <div>
-                            <a id="openRpgLink" href="/rpg.html" class="btn btn-primary" style="width:100%; justify-content:center;">RPGを開く</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="game-rankings">
-                    <h3>ランキング</h3>
-                    <div class="ranking-section">
-                        <h4>反射神経ゲーム</h4>
-                        <ol id="rankingReaction" class="ranking-list"></ol>
-                    </div>
-                    <div class="ranking-section">
-                        <h4>20秒測定ゲーム</h4>
-                        <ol id="rankingTwenty" class="ranking-list"></ol>
-                    </div>
-                    <div class="ranking-section">
-                        <h4>RPG レベル</h4>
-                        <ol id="rankingRpg" class="ranking-list"></ol>
-                    </div>
-                </div>
-            </section>
-            <div class="main-content">
-                <!-- タブナビゲーション -->
-                <nav class="tab-navigation">
-                    <button class="tab-button active" onclick="switchTab('sharedNote')" id="sharedNoteTab">
-                        <i class="fas fa-note-sticky"></i><span>共有メモ</span>
-                    </button>
-                    <button class="tab-button" onclick="switchTab('staff')" id="staffTab">
-                        <i class="fas fa-users"></i><span>スタッフ</span>
-                    </button>
-                    <button class="tab-button" onclick="switchTab('criteria')" id="criteriaTab">
-                        <i class="fas fa-list-check"></i><span>評価項目</span>
-                    </button>
-                    <button class="tab-button" onclick="switchTab('analytics')" id="analyticsTab">
-                        <i class="fas fa-chart-line"></i><span>ログ</span>
-                    </button>
-                </nav>
-                <!-- 共有メモタブ -->
-                <div id="sharedNotePanel" class="tab-panel active">
-                    <div class="panel-header align-start">
-                        <div class="shared-note-head">
-                            <h2 class="no-margin">共有メモ</h2>
-                            <span class="shared-note-desc">LINEで報連相が全くこれっぽちもないので、しかたなく、このメモを作りました♡</span>
-                        </div>
-                        <div class="panel-actions compact">
-                            <span id="sharedNoteStatus">読み込み中...</span>
-                            <button class="btn btn-primary" type="button" onclick="saveSharedNote()"><i class="fas fa-save"></i> 保存</button>
-                        </div>
-                    </div>
-                    <div class="shared-note-body">
-                        <div class="stove-inline-block">
-                            <label class="stove-label">コンロつけ</label>
-                            <input type="date" id="stoveDate" class="stove-date" />
-                            <select id="stoveNumber" class="stove-number">
-                                <option value="">卓番号</option>
-                                <option>21卓</option><option>22卓</option><option>23卓</option><option>24卓</option><option>25卓</option>
-                                <option>31卓</option><option>32卓</option><option>33卓</option><option>34卓</option><option>35卓</option><option>36卓</option><option>37卓</option><option>38卓</option>
-                                <option>41卓</option><option>42卓</option><option>43卓</option><option>44卓</option><option>45卓</option><option>46卓</option><option>47卓</option><option>48卓</option>
-                                <option>51卓</option><option>52卓</option><option>53卓</option>
-                            </select>
-                        </div>
-                        <div class="shared-note-section">
-                            <div class="shared-note-section-head-row">
-                                <div class="shared-note-section-head">業務メモ</div>
-                                <div class="shared-note-tools" data-target-group="sharedNoteOps">文字サイズ
-                                    <span class="font-size-trigger font-wheel-value" data-target-display="sharedNoteOps" data-target="sharedNoteOps" role="button" tabindex="0">16px</span>
-                                </div>
-                            </div>
-                            <textarea id="sharedNoteOps" placeholder="業務に関する共有事項を記入してください"></textarea>
-                        </div>
-                        <div class="shared-note-section">
-                            <div class="shared-note-section-head-row">
-                                <div class="shared-note-section-head">連絡メモ</div>
-                                <div class="shared-note-tools" data-target-group="sharedNoteComm">文字サイズ
-                                    <span class="font-size-trigger font-wheel-value" data-target-display="sharedNoteComm" data-target="sharedNoteComm" role="button" tabindex="0">16px</span>
-                                </div>
-                            </div>
-                            <textarea id="sharedNoteComm" placeholder="連絡事項・周知事項を記入してください"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <!-- スタッフ管理タブ -->
-                <div id="staffPanel" class="tab-panel">
-                    <div class="panel-header">
-                        <h2>スタッフ管理</h2>
-                        <div class="panel-actions">
-                            <button class="btn btn-primary" onclick="showAddStaffModal()">
-                                <i class="fas fa-plus"></i> 新規スタッフ追加
-                            </button>
-                        </div>
-                    </div>
-                    <div id="staffGrid" class="staff-grid"></div>
-                </div>
-                <!-- 評価項目管理タブ -->
-                <div id="criteriaPanel" class="tab-panel">
-                    <div class="panel-header">
-                        <h2>評価項目管理</h2>
-                        <div class="panel-actions criteria-actions">
-                            <label class="criteria-filter-label">
-                                <select id="criteriaCategoryFilter">
-                                    <option value="">すべてのカテゴリ</option>
-                                    <option value="共通">共通</option>
-                                    <option value="ホール">ホール</option>
-                                    <option value="キッチン">キッチン</option>
-                                    <option value="その他">その他</option>
-                                </select>
-                            </label>
-                            <button class="btn btn-primary" onclick="showAddCriteriaModal()">
-                                <i class="fas fa-plus"></i> 項目追加
-                            </button>
-                        </div>
-                    </div>
-                    <div id="criteriaGrid" class="criteria-grid"></div>
-                </div>
-                <!-- 分析・統計タブ（円グラフ廃止、ログのみ表示） -->
-                <div id="analyticsPanel" class="tab-panel">
-                    <div class="panel-header">
-                        <h2>アクティビティログ</h2>
-                    </div>
-                    <div class="analytics-content">
-                        <div class="stat-card full-width">
-                            <h3>最新ログ</h3>
-                            <div id="activityLogs" class="logs-list"></div>
-                        </div>
-                    </div>
-                </div>
+      <div class="container">
+        <header
+          class="main-header"
+          id="mainHeader"
+          role="button"
+          tabindex="0"
+          aria-label="ゲーム一覧へ"
+        >
+          <div class="header-content">
+            <h1>肉屋の台所 宮益坂店<br />新人教育用システム</h1>
+          </div>
+        </header>
+        <section id="gameHub" style="display: none" class="game-hub">
+          <div class="game-hub-head">
+            <h2>ゲームセンター</h2>
+            <button class="btn btn-secondary" id="backToMain" type="button">
+              コン店長に見つからないよう隠す
+            </button>
+          </div>
+          <div class="game-player-select">
+            <label
+              >プレイヤー:
+              <select id="gamePlayerSelect"></select
+            ></label>
+          </div>
+          <div class="game-list" id="gameList">
+            <div class="game-card" data-game="reaction">
+              <h3>反射神経ゲーム</h3>
+              <p>赤に変わったら即ストップ！最速反応タイムを目指そう。</p>
+              <div class="reaction-area">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  id="reactionStartBtn"
+                >
+                  スタート
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-warning"
+                  id="reactionStopBtn"
+                  disabled
+                >
+                  ストップ
+                </button>
+                <div class="reaction-status" id="reactionStatus">待機中</div>
+                <div class="reaction-best" id="reactionBest"></div>
+              </div>
             </div>
+            <div class="game-card" data-game="twenty">
+              <h3>20秒測定ゲーム</h3>
+              <p>心の中で 20 秒を数えてストップ。20 秒との差を競う。</p>
+              <div class="twenty-area">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  id="twentyStartBtn"
+                >
+                  スタート
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-warning"
+                  id="twentyStopBtn"
+                  disabled
+                >
+                  ストップ
+                </button>
+                <div class="twenty-status" id="twentyStatus">待機中</div>
+                <div class="twenty-best" id="twentyBest"></div>
+              </div>
+            </div>
+            <div class="game-card" data-game="rpg">
+              <h3>ミニRPG</h3>
+              <p>
+                フィールドを歩いてランダムエンカウント！<br />別ページでドットRPGをプレイ。
+              </p>
+              <div>
+                <a
+                  id="openRpgLink"
+                  href="/rpg.html"
+                  class="btn btn-primary"
+                  style="width: 100%; justify-content: center"
+                  >RPGを開く</a
+                >
+              </div>
+            </div>
+          </div>
+          <div class="game-rankings">
+            <h3>ランキング</h3>
+            <div class="ranking-section">
+              <h4>反射神経ゲーム</h4>
+              <ol id="rankingReaction" class="ranking-list"></ol>
+            </div>
+            <div class="ranking-section">
+              <h4>20秒測定ゲーム</h4>
+              <ol id="rankingTwenty" class="ranking-list"></ol>
+            </div>
+            <div class="ranking-section">
+              <h4>RPG レベル</h4>
+              <ol id="rankingRpg" class="ranking-list"></ol>
+            </div>
+          </div>
+        </section>
+        <div class="main-content">
+          <!-- タブナビゲーション -->
+          <nav class="tab-navigation">
+            <button
+              class="tab-button active"
+              onclick="switchTab('sharedNote')"
+              id="sharedNoteTab"
+            >
+              <i class="fas fa-note-sticky"></i><span>共有メモ</span>
+            </button>
+            <button
+              class="tab-button"
+              onclick="switchTab('staff')"
+              id="staffTab"
+            >
+              <i class="fas fa-users"></i><span>スタッフ</span>
+            </button>
+            <button
+              class="tab-button"
+              onclick="switchTab('criteria')"
+              id="criteriaTab"
+            >
+              <i class="fas fa-list-check"></i><span>評価項目</span>
+            </button>
+            <button
+              class="tab-button"
+              onclick="switchTab('analytics')"
+              id="analyticsTab"
+            >
+              <i class="fas fa-chart-line"></i><span>ログ</span>
+            </button>
+          </nav>
+          <!-- 共有メモタブ -->
+          <div id="sharedNotePanel" class="tab-panel active">
+            <div class="panel-header align-start">
+              <div class="shared-note-head">
+                <h2 class="no-margin">共有メモ</h2>
+                <span class="shared-note-desc"
+                  >LINEで報連相が全くこれっぽちもないので、しかたなく、このメモを作りました♡</span
+                >
+              </div>
+              <div class="panel-actions compact">
+                <span id="sharedNoteStatus">読み込み中...</span>
+                <button
+                  class="btn btn-primary"
+                  type="button"
+                  onclick="saveSharedNote()"
+                >
+                  <i class="fas fa-save"></i> 保存
+                </button>
+              </div>
+            </div>
+            <div class="shared-note-body">
+              <div class="stove-inline-block">
+                <label class="stove-label">コンロつけ</label>
+                <input type="date" id="stoveDate" class="stove-date" />
+                <select id="stoveNumber" class="stove-number">
+                  <option value="">卓番号</option>
+                  <option>21卓</option>
+                  <option>22卓</option>
+                  <option>23卓</option>
+                  <option>24卓</option>
+                  <option>25卓</option>
+                  <option>31卓</option>
+                  <option>32卓</option>
+                  <option>33卓</option>
+                  <option>34卓</option>
+                  <option>35卓</option>
+                  <option>36卓</option>
+                  <option>37卓</option>
+                  <option>38卓</option>
+                  <option>41卓</option>
+                  <option>42卓</option>
+                  <option>43卓</option>
+                  <option>44卓</option>
+                  <option>45卓</option>
+                  <option>46卓</option>
+                  <option>47卓</option>
+                  <option>48卓</option>
+                  <option>51卓</option>
+                  <option>52卓</option>
+                  <option>53卓</option>
+                </select>
+              </div>
+              <div class="shared-note-section">
+                <div class="shared-note-section-head-row">
+                  <div class="shared-note-section-head">業務メモ</div>
+                  <div
+                    class="shared-note-tools"
+                    data-target-group="sharedNoteOps"
+                  >
+                    文字サイズ
+                    <span
+                      class="font-size-trigger font-wheel-value"
+                      data-target-display="sharedNoteOps"
+                      data-target="sharedNoteOps"
+                      role="button"
+                      tabindex="0"
+                      >16px</span
+                    >
+                  </div>
+                </div>
+                <textarea
+                  id="sharedNoteOps"
+                  placeholder="業務に関する共有事項を記入してください"
+                ></textarea>
+              </div>
+              <div class="shared-note-section">
+                <div class="shared-note-section-head-row">
+                  <div class="shared-note-section-head">連絡メモ</div>
+                  <div
+                    class="shared-note-tools"
+                    data-target-group="sharedNoteComm"
+                  >
+                    文字サイズ
+                    <span
+                      class="font-size-trigger font-wheel-value"
+                      data-target-display="sharedNoteComm"
+                      data-target="sharedNoteComm"
+                      role="button"
+                      tabindex="0"
+                      >16px</span
+                    >
+                  </div>
+                </div>
+                <textarea
+                  id="sharedNoteComm"
+                  placeholder="連絡事項・周知事項を記入してください"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+          <!-- スタッフ管理タブ -->
+          <div id="staffPanel" class="tab-panel">
+            <div class="panel-header">
+              <h2>スタッフ管理</h2>
+              <div class="panel-actions">
+                <button class="btn btn-primary" onclick="showAddStaffModal()">
+                  <i class="fas fa-plus"></i> 新規スタッフ追加
+                </button>
+              </div>
+            </div>
+            <div id="staffGrid" class="staff-grid"></div>
+          </div>
+          <!-- 評価項目管理タブ -->
+          <div id="criteriaPanel" class="tab-panel">
+            <div class="panel-header">
+              <h2>評価項目管理</h2>
+              <div class="panel-actions criteria-actions">
+                <label class="criteria-filter-label">
+                  <select id="criteriaCategoryFilter">
+                    <option value="">すべてのカテゴリ</option>
+                    <option value="共通">共通</option>
+                    <option value="ホール">ホール</option>
+                    <option value="キッチン">キッチン</option>
+                    <option value="その他">その他</option>
+                  </select>
+                </label>
+                <button
+                  class="btn btn-primary"
+                  onclick="showAddCriteriaModal()"
+                >
+                  <i class="fas fa-plus"></i> 項目追加
+                </button>
+              </div>
+            </div>
+            <div id="criteriaGrid" class="criteria-grid"></div>
+          </div>
+          <!-- 分析・統計タブ（円グラフ廃止、ログのみ表示） -->
+          <div id="analyticsPanel" class="tab-panel">
+            <div class="panel-header">
+              <h2>アクティビティログ</h2>
+            </div>
+            <div class="analytics-content">
+              <div class="stat-card full-width">
+                <h3>最新ログ</h3>
+                <div id="activityLogs" class="logs-list"></div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- スタッフ追加/編集モーダル -->
     <div id="staffModal" class="modal">
-        <div class="modal-content large">
-            <div class="modal-header">
-                <h3 id="staffModalTitle">新しいスタッフを追加</h3>
-                <span class="close" onclick="closeModal('staffModal')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="staffForm">
-                    <div class="form-grid">
-                        <div class="form-section">
-                            <h4>プロフィール</h4>
-                            <div class="form-group">
-                                <label for="staffName">名前</label>
-                                <input type="text" id="staffName" required />
-                            </div>
-                            <div class="form-group">
-                                <label for="staffKana">フリガナ</label>
-                                <input type="text" id="staffKana" placeholder="ヤマダ タロウ" />
-                            </div>
-                            <div class="form-group">
-                                <label for="staffPositionType">区分</label>
-                                <select id="staffPositionType">
-                                    <option value="バイト">バイト</option>
-                                    <option value="社員">社員</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="staffBirthDate">生年月日</label>
-                                <input type="date" id="staffBirthDate" />
-                            </div>
-                            <div class="form-group">
-                                <label for="staffMgmtCode">管理番号</label>
-                                <input type="text" id="staffMgmtCode" inputmode="numeric" maxlength="4" placeholder="4桁 (例 0123)" style="letter-spacing:.2em;" data-digit-only="true" />
-                                <small style="display:block; margin-top:4px; color:#666; font-size:11px;">※ 空欄または4桁数字のみ。重複可 / 変更しても安全ですが用途を統一してください。</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> 保存</button>
-                        <button type="button" class="btn btn-secondary" onclick="closeModal('staffModal')"><i class="fas fa-times"></i> キャンセル</button>
-                    </div>
-                </form>
-            </div>
+      <div class="modal-content large">
+        <div class="modal-header">
+          <h3 id="staffModalTitle">新しいスタッフを追加</h3>
+          <span class="close" onclick="closeModal('staffModal')">&times;</span>
         </div>
+        <div class="modal-body">
+          <form id="staffForm">
+            <div class="form-grid">
+              <div class="form-section">
+                <h4>プロフィール</h4>
+                <div class="form-group">
+                  <label for="staffName">名前</label>
+                  <input type="text" id="staffName" required />
+                </div>
+                <div class="form-group">
+                  <label for="staffKana">フリガナ</label>
+                  <input
+                    type="text"
+                    id="staffKana"
+                    placeholder="ヤマダ タロウ"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="staffPositionType">区分</label>
+                  <select id="staffPositionType">
+                    <option value="バイト">バイト</option>
+                    <option value="社員">社員</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="staffBirthDate">生年月日</label>
+                  <input type="date" id="staffBirthDate" />
+                </div>
+                <div class="form-group">
+                  <label for="staffMgmtCode">管理番号</label>
+                  <input
+                    type="text"
+                    id="staffMgmtCode"
+                    inputmode="numeric"
+                    maxlength="4"
+                    placeholder="4桁 (例 0123)"
+                    style="letter-spacing: 0.2em"
+                    data-digit-only="true"
+                  />
+                  <small
+                    style="
+                      display: block;
+                      margin-top: 4px;
+                      color: #666;
+                      font-size: 11px;
+                    "
+                    >※ 空欄または4桁数字のみ。重複可 /
+                    変更しても安全ですが用途を統一してください。</small
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> 保存
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="closeModal('staffModal')"
+              >
+                <i class="fas fa-times"></i> キャンセル
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <!-- 評価項目追加/編集モーダル -->
     <div id="criteriaModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="criteriaModalTitle">新しい評価項目を追加</h3>
-                <span class="close" onclick="closeModal('criteriaModal')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="criteriaForm">
-                    <div class="form-group">
-                        <label for="criteriaName">項目名</label>
-                        <input type="text" id="criteriaName" required placeholder="例: 接客スキル、レジ操作" />
-                    </div>
-                    <div class="form-group">
-                        <label for="criteriaCategory">カテゴリー</label>
-                        <select id="criteriaCategory">
-                            <option value="共通">共通</option>
-                            <option value="ホール">ホール</option>
-                            <option value="キッチン">キッチン</option>
-                            <option value="その他">その他</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="criteriaDescription">説明</label>
-                        <textarea id="criteriaDescription" rows="4" placeholder="業務内容を記入（複数の場合は改行してください）"></textarea>
-                        <div class="criteria-desc-tools" aria-live="polite">
-                            <div class="desc-example">
-                                <div class="example-title">自動フォーマット機能</div>
-                                <div class="example-body">
-                                    <div class="example-before">
-                                        <span class="badge">入力</span>
-                                        <pre>ログイン方法
-色の変え方
-予約の動かし方</pre>
-                                    </div>
-                                    <div class="example-arrow">→</div>
-                                    <div class="example-after">
-                                        <span class="badge">保存後</span>
-                                        <pre>- ログイン方法<br>- 色の変え方<br>- 予約の動かし方</pre>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> 保存</button>
-                        <button type="button" class="btn btn-secondary" onclick="closeModal('criteriaModal')"><i class="fas fa-times"></i> キャンセル</button>
-                    </div>
-                </form>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="criteriaModalTitle">新しい評価項目を追加</h3>
+          <span class="close" onclick="closeModal('criteriaModal')"
+            >&times;</span
+          >
         </div>
+        <div class="modal-body">
+          <form id="criteriaForm">
+            <div class="form-group">
+              <label for="criteriaName">項目名</label>
+              <input
+                type="text"
+                id="criteriaName"
+                required
+                placeholder="例: 接客スキル、レジ操作"
+              />
+            </div>
+            <div class="form-group">
+              <label for="criteriaCategory">カテゴリー</label>
+              <select id="criteriaCategory">
+                <option value="共通">共通</option>
+                <option value="ホール">ホール</option>
+                <option value="キッチン">キッチン</option>
+                <option value="その他">その他</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="criteriaDescription">説明</label>
+              <textarea
+                id="criteriaDescription"
+                rows="4"
+                placeholder="業務内容を記入（複数の場合は改行してください）"
+              ></textarea>
+              <div class="criteria-desc-tools" aria-live="polite">
+                <div class="desc-example">
+                  <div class="example-title">自動フォーマット機能</div>
+                  <div class="example-body">
+                    <div class="example-before">
+                      <span class="badge">入力</span>
+                      <pre>
+ログイン方法
+色の変え方
+予約の動かし方</pre
+                      >
+                    </div>
+                    <div class="example-arrow">→</div>
+                    <div class="example-after">
+                      <span class="badge">保存後</span>
+                      <pre>- ログイン方法<br>- 色の変え方<br>- 予約の動かし方</pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> 保存
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="closeModal('criteriaModal')"
+              >
+                <i class="fas fa-times"></i> キャンセル
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <!-- スタッフ詳細/評価モーダル -->
     <div id="staffDetailModal" class="modal">
-        <div class="modal-content extra-large">
-            <div class="modal-header">
-                <div class="staff-detail-summary">
-                    <div id="staffDetailKana" class="staff-detail-kana"></div>
-                    <h3 id="staffDetailName" class="staff-detail-name"></h3>
-                    <div class="staff-detail-meta">
-                        <span id="staffDetailPosition" class="position-badge"></span>
-                        <span class="staff-detail-birth">生年月日: <span id="staffDetailBirth"></span></span>
-                        <span class="staff-detail-birth">管理番号: <span id="staffDetailMgmtCode">-</span></span>
-                    </div>
-                </div>
-                <span class="close" onclick="closeModal('staffDetailModal')">&times;</span>
+      <div class="modal-content extra-large">
+        <div class="modal-header">
+          <div class="staff-detail-summary">
+            <div id="staffDetailKana" class="staff-detail-kana"></div>
+            <h3 id="staffDetailName" class="staff-detail-name"></h3>
+            <div class="staff-detail-meta">
+              <span id="staffDetailPosition" class="position-badge"></span>
+              <span class="staff-detail-birth"
+                >生年月日: <span id="staffDetailBirth"></span
+              ></span>
+              <span class="staff-detail-birth"
+                >管理番号: <span id="staffDetailMgmtCode">-</span></span
+              >
             </div>
-            <div class="modal-body">
-                <div class="eval-changer-row">
-                    <label for="evaluationChangedBy" class="label-fixed">進捗変更者</label>
-                    <select id="evaluationChangedBy"></select>
-                </div>
-                <div id="evaluationFilters">
-                    <div class="filter-section">
-                        <div class="filter-section-title">進捗</div>
-                        <div class="eval-filter-group">
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="not-started" checked /> 未着手</label>
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="learning" checked /> 学習中</label>
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="done" checked /> 習得済み</label>
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalStatusFilter[]" value="tested" checked /> テスト完了</label>
-                        </div>
-                    </div>
-                    <div class="filter-section">
-                        <div class="filter-section-title">カテゴリ</div>
-                        <div class="eval-filter-group">
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="共通" checked /> 共通</label>
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="ホール" checked /> ホール</label>
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="キッチン" checked /> キッチン</label>
-                            <label class="eval-filter-chip"><input type="checkbox" name="evalCategoryFilter[]" value="その他" checked /> その他</label>
-                        </div>
-                    </div>
-                </div>
-                <h4 class="eval-list-title">評価一覧</h4>
-                <div id="staffEvaluations" class="evaluations-grid"></div>
-            </div>
+          </div>
+          <span class="close" onclick="closeModal('staffDetailModal')"
+            >&times;</span
+          >
         </div>
+        <div class="modal-body">
+          <div class="eval-changer-row">
+            <label for="evaluationChangedBy" class="label-fixed"
+              >進捗変更者</label
+            >
+            <select id="evaluationChangedBy"></select>
+          </div>
+          <div id="evaluationFilters">
+            <div class="filter-section">
+              <div class="filter-section-title">進捗</div>
+              <div class="eval-filter-group">
+                <label class="eval-filter-chip"
+                  ><input
+                    type="checkbox"
+                    name="evalStatusFilter[]"
+                    value="not-started"
+                    checked
+                  />
+                  未着手</label
+                >
+                <label class="eval-filter-chip"
+                  ><input
+                    type="checkbox"
+                    name="evalStatusFilter[]"
+                    value="learning"
+                    checked
+                  />
+                  学習中</label
+                >
+                <label class="eval-filter-chip"
+                  ><input
+                    type="checkbox"
+                    name="evalStatusFilter[]"
+                    value="done"
+                    checked
+                  />
+                  習得済み</label
+                >
+                <label class="eval-filter-chip"
+                  ><input
+                    type="checkbox"
+                    name="evalStatusFilter[]"
+                    value="tested"
+                    checked
+                  />
+                  テスト完了</label
+                >
+              </div>
+            </div>
+            <div class="filter-section">
+              <div class="filter-section-title">カテゴリ</div>
+              <div class="eval-filter-group">
+                <label class="eval-filter-chip"
+                  ><input
+                    type="checkbox"
+                    name="evalCategoryFilter[]"
+                    value="共通"
+                    checked
+                  />
+                  共通</label
+                >
+                <label class="eval-filter-chip"
+                  ><input
+                    type="checkbox"
+                    name="evalCategoryFilter[]"
+                    value="ホール"
+                    checked
+                  />
+                  ホール</label
+                >
+                <label class="eval-filter-chip"
+                  ><input
+                    type="checkbox"
+                    name="evalCategoryFilter[]"
+                    value="キッチン"
+                    checked
+                  />
+                  キッチン</label
+                >
+                <label class="eval-filter-chip"
+                  ><input
+                    type="checkbox"
+                    name="evalCategoryFilter[]"
+                    value="その他"
+                    checked
+                  />
+                  その他</label
+                >
+              </div>
+            </div>
+          </div>
+          <h4 class="eval-list-title">評価一覧</h4>
+          <div id="staffEvaluations" class="evaluations-grid"></div>
+        </div>
+      </div>
     </div>
 
     <!-- 通知表示用 -->
     <div id="notification" class="notification"></div>
     <!-- テスター選択モーダル -->
     <div id="testerSelectModal" class="modal">
-        <div class="modal-content max-420">
-            <div class="modal-header">
-                <h3>テスト確認者を選択</h3>
-                <span class="close" onclick="closeModal('testerSelectModal')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="testerSelect">確認者</label>
-                    <select id="testerSelect"></select>
-                </div>
-                <div class="form-actions tester-actions">
-                    <button id="confirmTesterBtn" class="btn btn-primary" type="button">決定</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('testerSelectModal')">キャンセル</button>
-                </div>
-            </div>
+      <div class="modal-content max-420">
+        <div class="modal-header">
+          <h3>テスト確認者を選択</h3>
+          <span class="close" onclick="closeModal('testerSelectModal')"
+            >&times;</span
+          >
         </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="testerSelect">確認者</label>
+            <select id="testerSelect"></select>
+          </div>
+          <div class="form-actions tester-actions">
+            <button id="confirmTesterBtn" class="btn btn-primary" type="button">
+              決定
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeModal('testerSelectModal')"
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
     <!-- 保存オーバーレイ -->
     <div id="savingOverlay" class="saving-overlay">
-        <div class="saving-spinner"></div>
-        <div class="saving-text">保存中...</div>
+      <div class="saving-spinner"></div>
+      <div class="saving-text">保存中...</div>
     </div>
     <!-- フォントサイズピッカーモーダル -->
     <div id="fontSizePickerModal" class="modal font-size-picker-modal">
-        <div class="modal-content picker">
-            <div class="modal-header">
-                <h3>文字サイズを選択</h3>
-                <span class="close" onclick="closeFontSizePicker()">&times;</span>
-            </div>
-            <div class="modal-body picker-body">
-                <div class="picker-list-wrapper">
-                    <div id="fontSizePickerList" class="picker-list" role="listbox" aria-label="文字サイズ"></div>
-                </div>
-            </div>
-            <div class="modal-footer picker-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeFontSizePicker()">キャンセル</button>
-                <button type="button" class="btn btn-primary" id="fontSizePickerApplyBtn">適用</button>
-            </div>
+      <div class="modal-content picker">
+        <div class="modal-header">
+          <h3>文字サイズを選択</h3>
+          <span class="close" onclick="closeFontSizePicker()">&times;</span>
         </div>
+        <div class="modal-body picker-body">
+          <div class="picker-list-wrapper">
+            <div
+              id="fontSizePickerList"
+              class="picker-list"
+              role="listbox"
+              aria-label="文字サイズ"
+            ></div>
+          </div>
+        </div>
+        <div class="modal-footer picker-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="closeFontSizePicker()"
+          >
+            キャンセル
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="fontSizePickerApplyBtn"
+          >
+            適用
+          </button>
+        </div>
+      </div>
     </div>
     <!-- 外部ライブラリ（Chart.js 依存削除） -->
     <script src="script.js"></script>
-</body>
+  </body>
 </html>
