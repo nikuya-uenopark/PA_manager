@@ -1,5 +1,5 @@
-import { prisma } from '../_prisma';
-import { logEvent } from '../_log';
+import { prisma } from "../_prisma";
+import { logEvent } from "../_log";
 
 // GET /api/games/scores?game=reaction|twenty|rpg
 //  - reaction: 反応が速い(数値小)順
@@ -8,42 +8,52 @@ import { logEvent } from '../_log';
 export default async function handler(req, res) {
   try {
     const { method } = req;
-    if (method === 'GET') {
+    if (method === "GET") {
       const { game } = req.query;
-      if (!game) return res.status(400).json({ error: 'game required' });
+      if (!game) return res.status(400).json({ error: "game required" });
       let orderBy;
-      if (game === 'rpg') orderBy = { value: 'desc' };
-      else orderBy = { value: 'asc' }; // 小さいほど良い
-      const rows = await prisma.gameScore.findMany({ where: { game }, orderBy, take: 50 });
+      if (game === "rpg") orderBy = { value: "desc" };
+      else orderBy = { value: "asc" }; // 小さいほど良い
+      const rows = await prisma.gameScore.findMany({
+        where: { game },
+        orderBy,
+        take: 50,
+      });
       return res.json(rows);
     }
-    if (method === 'POST') {
+    if (method === "POST") {
       const { game, staffId, value, extra, meta } = req.body || {};
-      if (!game || !staffId) return res.status(400).json({ error: 'game & staffId required' });
+      if (!game || !staffId)
+        return res.status(400).json({ error: "game & staffId required" });
       // upsert: reaction/twenty はベスト更新時のみ。rpg は常に現在値(レベル/状態)。
-      const existing = await prisma.gameScore.findUnique({ where: { game_staffId: { game, staffId:Number(staffId) } } });
+      const existing = await prisma.gameScore.findUnique({
+        where: { game_staffId: { game, staffId: Number(staffId) } },
+      });
       let shouldUpdate = false;
       if (!existing) shouldUpdate = true;
-      else if (game === 'rpg') shouldUpdate = true; // 常に進行保存
-      else if (typeof value === 'number') {
+      else if (game === "rpg") shouldUpdate = true; // 常に進行保存
+      else if (typeof value === "number") {
         if (existing.value == null) shouldUpdate = true;
-        else if (game === 'reaction' || game === 'twenty') {
+        else if (game === "reaction" || game === "twenty") {
           // どちらも小さい数値が良い
           if (value < existing.value) shouldUpdate = true;
         }
       }
-      if (!shouldUpdate) return res.json({ ok:true, unchanged:true });
+      if (!shouldUpdate) return res.json({ ok: true, unchanged: true });
       const saved = await prisma.gameScore.upsert({
-        where: { game_staffId: { game, staffId:Number(staffId) } },
+        where: { game_staffId: { game, staffId: Number(staffId) } },
         update: { value, extra, meta },
-        create: { game, staffId:Number(staffId), value, extra, meta }
+        create: { game, staffId: Number(staffId), value, extra, meta },
       });
-      await logEvent('game_score', `${game} score updated by staff#${staffId} -> ${value}`);
+      await logEvent(
+        "game_score",
+        `${game} score updated by staff#${staffId} -> ${value}`
+      );
       return res.json(saved);
     }
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: "Method not allowed" });
   } catch (e) {
     console.error(e);
-    return res.status(500).json({ error: 'server error' });
+    return res.status(500).json({ error: "server error" });
   }
 }

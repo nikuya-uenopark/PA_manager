@@ -1,85 +1,630 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/><title>ミニRPG</title><link rel="stylesheet" href="style.css" />
-<style>
-body.rpg-body{background:#0b132b;color:#fff;font-family:'Inter',sans-serif;overflow:hidden;}
-.rpg-topbar{position:fixed;top:0;left:0;right:0;height:46px;background:#1c2541;display:flex;align-items:center;gap:8px;padding:0 10px;font-size:13px;z-index:10;}
-.rpg-topbar select{background:#3a506b;color:#fff;border:1px solid #4f6480;border-radius:6px;padding:4px 6px;}
-.rpg-wrapper{position:fixed;inset:46px 0 0 0;display:flex;}
-.rpg-left{flex:0 0 70vw;max-width:820px;display:flex;align-items:center;justify-content:center;}
-.rpg-canvas-wrap{position:relative;image-rendering:pixelated;}
-#rpgCanvas{background:#14213d;box-shadow:0 0 0 4px #222,0 0 18px #000;border-radius:4px;image-rendering:pixelated;}
-.rpg-right{flex:1;display:flex;flex-direction:column;gap:8px;padding:8px 10px;overflow:auto;background:linear-gradient(180deg,#1c2541,#0b132b);}
-.rpg-panel{background:#243b55;border:1px solid #2f4e6d;border-radius:10px;padding:8px 10px;font-size:12px;line-height:1.4;}
-.rpg-panel h3{margin:0 0 4px;font-size:13px;letter-spacing:.5px;}
-#rpgLog{max-height:220px;overflow:auto;font-family:ui-monospace,monospace;background:#0d1b2a;border:1px solid #223246;padding:6px 8px;border-radius:6px;font-size:11px;}
-.rpg-actions{display:flex;flex-wrap:wrap;gap:4px;}
-.rpg-actions button{flex:1 1 calc(50% - 4px);background:#3a506b;color:#fff;border:1px solid #4f6480;border-radius:6px;padding:6px 4px;font-size:11px;cursor:pointer;letter-spacing:.5px;}
-.rpg-actions button:active{transform:translateY(2px);}
-.badge{display:inline-block;background:#ffb703;color:#222;font-weight:600;padding:2px 6px;border-radius:9999px;font-size:10px;margin-left:4px;}
-.encounter-flash{position:absolute;inset:0;background:radial-gradient(circle at center,rgba(255,255,255,0.9),rgba(255,255,255,0));pointer-events:none;animation:flash .6s ease forwards;}
-@keyframes flash{0%{opacity:0;}30%{opacity:1;}100%{opacity:0;}}
-.hp-bar{height:6px;background:#112031;border-radius:4px;overflow:hidden;margin-top:4px;}
-.hp-bar span{display:block;height:100%;background:linear-gradient(90deg,#06d6a0,#118ab2);} 
-.enemy-window{position:absolute;top:-56px;left:0;right:0;display:flex;justify-content:space-between;font-size:11px;color:#fff;font-family:ui-monospace,monospace;}
-.fade-msg{position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:11px;color:#fff;animation:fadeMsg 2.2s ease forwards;pointer-events:none;text-shadow:0 0 4px #000;}
-@keyframes fadeMsg{0%{opacity:0;transform:translateY(8px);}15%{opacity:1;transform:translateY(0);}85%{opacity:1;}100%{opacity:0;}}
-</style></head><body class="rpg-body">
-<div class="rpg-topbar"><button onclick="location.href='/'" style="background:#3a506b;color:#fff;border:1px solid #4f6480;border-radius:6px;padding:4px 10px;font-size:12px;">戻る</button><label style="display:flex;align-items:center;gap:4px;">プレイヤー<select id="playerSelectRpg"></select></label><span id="rpgStatusText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span><button id="toggleAutoEncounter" style="background:#ffb703;color:#222;border:1px solid #ffb703;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;">自動エンカON</button></div>
-<div class="rpg-wrapper">
-    <div class="rpg-left">
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+    />
+    <title>ミニRPG</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body.rpg-body {
+        background: #0b132b;
+        color: #fff;
+        font-family: "Inter", sans-serif;
+        overflow: hidden;
+      }
+      .rpg-topbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 46px;
+        background: #1c2541;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 10px;
+        font-size: 13px;
+        z-index: 10;
+      }
+      .rpg-topbar select {
+        background: #3a506b;
+        color: #fff;
+        border: 1px solid #4f6480;
+        border-radius: 6px;
+        padding: 4px 6px;
+      }
+      .rpg-wrapper {
+        position: fixed;
+        inset: 46px 0 0 0;
+        display: flex;
+      }
+      .rpg-left {
+        flex: 0 0 70vw;
+        max-width: 820px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .rpg-canvas-wrap {
+        position: relative;
+        image-rendering: pixelated;
+      }
+      #rpgCanvas {
+        background: #14213d;
+        box-shadow: 0 0 0 4px #222, 0 0 18px #000;
+        border-radius: 4px;
+        image-rendering: pixelated;
+      }
+      .rpg-right {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 10px;
+        overflow: auto;
+        background: linear-gradient(180deg, #1c2541, #0b132b);
+      }
+      .rpg-panel {
+        background: #243b55;
+        border: 1px solid #2f4e6d;
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .rpg-panel h3 {
+        margin: 0 0 4px;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+      }
+      #rpgLog {
+        max-height: 220px;
+        overflow: auto;
+        font-family: ui-monospace, monospace;
+        background: #0d1b2a;
+        border: 1px solid #223246;
+        padding: 6px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+      }
+      .rpg-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      .rpg-actions button {
+        flex: 1 1 calc(50% - 4px);
+        background: #3a506b;
+        color: #fff;
+        border: 1px solid #4f6480;
+        border-radius: 6px;
+        padding: 6px 4px;
+        font-size: 11px;
+        cursor: pointer;
+        letter-spacing: 0.5px;
+      }
+      .rpg-actions button:active {
+        transform: translateY(2px);
+      }
+      .badge {
+        display: inline-block;
+        background: #ffb703;
+        color: #222;
+        font-weight: 600;
+        padding: 2px 6px;
+        border-radius: 9999px;
+        font-size: 10px;
+        margin-left: 4px;
+      }
+      .encounter-flash {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at center,
+          rgba(255, 255, 255, 0.9),
+          rgba(255, 255, 255, 0)
+        );
+        pointer-events: none;
+        animation: flash 0.6s ease forwards;
+      }
+      @keyframes flash {
+        0% {
+          opacity: 0;
+        }
+        30% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+      .hp-bar {
+        height: 6px;
+        background: #112031;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 4px;
+      }
+      .hp-bar span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #06d6a0, #118ab2);
+      }
+      .enemy-window {
+        position: absolute;
+        top: -56px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #fff;
+        font-family: ui-monospace, monospace;
+      }
+      .fade-msg {
+        position: absolute;
+        bottom: 6px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 11px;
+        color: #fff;
+        animation: fadeMsg 2.2s ease forwards;
+        pointer-events: none;
+        text-shadow: 0 0 4px #000;
+      }
+      @keyframes fadeMsg {
+        0% {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        15% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        85% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body class="rpg-body">
+    <div class="rpg-topbar">
+      <button
+        onclick="location.href='/'"
+        style="
+          background: #3a506b;
+          color: #fff;
+          border: 1px solid #4f6480;
+          border-radius: 6px;
+          padding: 4px 10px;
+          font-size: 12px;
+        "
+      >
+        戻る</button
+      ><label style="display: flex; align-items: center; gap: 4px"
+        >プレイヤー<select id="playerSelectRpg"></select></label
+      ><span
+        id="rpgStatusText"
+        style="
+          flex: 1;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        "
+      ></span
+      ><button
+        id="toggleAutoEncounter"
+        style="
+          background: #ffb703;
+          color: #222;
+          border: 1px solid #ffb703;
+          border-radius: 6px;
+          padding: 4px 8px;
+          font-size: 11px;
+          font-weight: 600;
+        "
+      >
+        自動エンカON
+      </button>
+    </div>
+    <div class="rpg-wrapper">
+      <div class="rpg-left">
         <div class="rpg-canvas-wrap">
-            <canvas id="rpgCanvas" width="480" height="320"></canvas>
-            <div class="enemy-window" id="enemyWindow" style="display:none;"></div>
-            <div class="fade-msg" id="fadeMsg" style="display:none;"></div>
+          <canvas id="rpgCanvas" width="480" height="320"></canvas>
+          <div
+            class="enemy-window"
+            id="enemyWindow"
+            style="display: none"
+          ></div>
+          <div class="fade-msg" id="fadeMsg" style="display: none"></div>
         </div>
+      </div>
+      <div class="rpg-right">
+        <div class="rpg-panel" id="panelStats">
+          <h3>ステータス</h3>
+          <div id="statsBox">-</div>
+        </div>
+        <div class="rpg-panel">
+          <h3>操作</h3>
+          <div class="rpg-actions">
+            <button data-act="battle">たたかう</button
+            ><button data-act="heal">宿屋(10G)</button
+            ><button data-act="equip-sword">剣(50G)</button
+            ><button data-act="equip-armor">防具(50G)</button
+            ><button data-act="boss">ラスボス</button>
+          </div>
+        </div>
+        <div class="rpg-panel">
+          <h3>ログ</h3>
+          <div id="rpgLog"></div>
+        </div>
+      </div>
     </div>
-    <div class="rpg-right">
-        <div class="rpg-panel" id="panelStats"><h3>ステータス</h3><div id="statsBox">-</div></div>
-        <div class="rpg-panel"><h3>操作</h3><div class="rpg-actions"><button data-act="battle">たたかう</button><button data-act="heal">宿屋(10G)</button><button data-act="equip-sword">剣(50G)</button><button data-act="equip-armor">防具(50G)</button><button data-act="boss">ラスボス</button></div></div>
-        <div class="rpg-panel"><h3>ログ</h3><div id="rpgLog"></div></div>
-    </div>
-</div>
-<script>
-const API='/api/games/rpg';
-const params=new URLSearchParams(location.search);const presetStaffId=params.get('staffId');
-let staffCache=[];let currentPlayerId=presetStaffId?Number(presetStaffId):(Number(localStorage.getItem('gameSelectedStaffId'))||null);let state=null;let autoEncounter=true;let walking=false;let encounterStep=0;
-const canvas=document.getElementById('rpgCanvas');const ctx=canvas.getContext('2d');const tile=32;const mapW=15,mapH=10; 
-// 0:草 1:壁 2:宿屋 3:武器屋
-const world=[...Array(mapH)].map((_,y)=>[...Array(mapW)].map((_,x)=>{if(x===0||y===0||x===mapW-1||y===mapH-1)return 1;return 0;}));
-// 固定配置
-const innPos={x:5,y:4};const shopPos={x:9,y:6};world[innPos.y][innPos.x]=2;world[shopPos.y][shopPos.x]=3;
-const colors={0:'#264653',1:'#1d3557',2:'#2a9d8f',3:'#a44f9d',player:'#ffb703'};
-function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);for(let y=0;y<mapH;y++){for(let x=0;x<mapW;x++){ctx.fillStyle=colors[world[y][x]];ctx.fillRect(x*tile,y*tile,tile,tile);if(world[y][x]===2){drawGlyph(x,y,'宿');}else if(world[y][x]===3){drawGlyph(x,y,'武');}}}if(state){ctx.fillStyle=colors.player;ctx.fillRect(player.x*tile+4,player.y*tile+4,tile-8,tile-8);}updateProximityUI();}
-function drawGlyph(x,y,ch){ctx.fillStyle='#fff';ctx.font='16px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(ch,x*tile+tile/2,y*tile+tile/2);} 
-// 近接UI
-let proxEl=document.getElementById('proxUI');if(!proxEl){proxEl=document.createElement('div');proxEl.id='proxUI';proxEl.style.position='absolute';proxEl.style.left='8px';proxEl.style.top='8px';proxEl.style.zIndex='5';proxEl.style.display='flex';proxEl.style.flexDirection='column';proxEl.style.gap='6px';canvas.parentElement.appendChild(proxEl);} 
-function updateProximityUI(){if(!state){proxEl.innerHTML='';return;}const nearInn = Math.abs(player.x-innPos.x)<=1 && Math.abs(player.y-innPos.y)<=1;const nearShop = Math.abs(player.x-shopPos.x)<=1 && Math.abs(player.y-shopPos.y)<=1;let html='';if(nearInn){html+=`<button data-prox-act="healPercent" style="background:#2a9d8f;color:#fff;border:none;padding:4px 6px;border-radius:6px;font-size:11px;">宿屋(所持金10%で全回復)</button>`;}if(nearShop){html+=`<button data-prox-act="buy-sword" style="background:#a44f9d;color:#fff;border:none;padding:4px 6px;border-radius:6px;font-size:11px;">剣 50G</button><button data-prox-act="buy-armor" style="background:#a44f9d;color:#fff;border:none;padding:4px 6px;border-radius:6px;font-size:11px;">防具 50G</button>`;}proxEl.innerHTML=html;proxEl.querySelectorAll('button').forEach(b=>b.onclick=()=>{const act=b.getAttribute('data-prox-act');if(act==='healPercent')doAction('heal');else if(act==='buy-sword')doAction('equip-sword');else if(act==='buy-armor')doAction('equip-armor');}); }
-let player={x:2,y:2};
-function flashEncounter(){const f=document.createElement('div');f.className='encounter-flash';canvas.parentElement.appendChild(f);setTimeout(()=>f.remove(),600);} 
-function fadeMessage(msg){const el=document.getElementById('fadeMsg');el.textContent=msg;el.style.display='block';el.classList.remove('run');void el.offsetWidth;el.classList.add('run');setTimeout(()=>{el.style.display='none';},2200);} 
-function log(msg){const box=document.getElementById('rpgLog');const d=document.createElement('div');d.textContent=new Date().toLocaleTimeString()+' '+msg;box.prepend(d);while(box.children.length>120)box.removeChild(box.lastChild);} 
-async function api(action, payload){if(!currentPlayerId)return;const body={staffId:currentPlayerId,action,payload};const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!res.ok){log('通信失敗:'+action);return null;}return await res.json();}
-function updateStats(){if(!state){document.getElementById('statsBox').textContent='-';return;}const {level,hp,maxHp,gold,exp,nextExp,atk,def,equips,bossDefeated}=state;document.getElementById('statsBox').innerHTML=`Lv${level} HP ${hp}/${maxHp}<div class='hp-bar'><span style='width:${(hp/maxHp*100).toFixed(1)}%'></span></div>EXP ${exp}/${nextExp} G:${gold}<br>ATK:${atk} DEF:${def||0} 装備:${(equips||[]).join(',')||'-'} ${bossDefeated?' <span class=badge>BOSS</span>':''}`;}
-async function initPlayer(){if(!currentPlayerId)return;const r=await api('init');if(r&&r.state){state=r.state;updateStats();log('ロード完了');draw();}}
-function ensurePlayerSelect(){
-    const sel=document.getElementById('playerSelectRpg');
-    const sorted=[...staffCache].sort((a,b)=>{const ak=(a.kana||a.name||'').toLowerCase();const bk=(b.kana||b.name||'').toLowerCase();if(ak<bk)return -1;if(ak>bk)return 1;return 0;});
-    sel.innerHTML='<option value="">-- プレイヤー選択 (全スタッフ) --</option>'+sorted.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
-    if(!currentPlayerId && sorted.length){ currentPlayerId = sorted[0].id; }
-    sel.value=currentPlayerId||'';
-    sel.onchange=()=>{ currentPlayerId=Number(sel.value)||null; if(currentPlayerId){try{localStorage.setItem('gameSelectedStaffId', String(currentPlayerId));}catch{}} initPlayer(); };
-}
-async function loadStaff(){const res=await fetch('/api/staff');if(res.ok){staffCache=await res.json();ensurePlayerSelect();if(presetStaffId&&!staffCache.some(s=>s.id===Number(presetStaffId))){alert('指定されたプレイヤーが存在しません');currentPlayerId=null;} if(!currentPlayerId){alert('プレイヤーを選択してください');} initPlayer();}}
-async function doAction(k){if(!state)return; if(k==='battle'){const r=await api('battle'); if(r&&r.state){state=r.state;updateStats();log('戦闘: '+(r.result?.victory?'勝利':'敗北'));} } else if(k==='heal'){const r=await api('heal'); if(r&&r.state){state=r.state;updateStats();log(r.result?.msg||'回復');} } else if(k==='equip-sword'){const r=await api('equip',{type:'sword'}); if(r&&r.state){state=r.state;updateStats();log(r.result?.msg);} } else if(k==='equip-armor'){const r=await api('equip',{type:'armor'}); if(r&&r.state){state=r.state;updateStats();log(r.result?.msg);} } else if(k==='boss'){const r=await api('boss'); if(r&&r.state){state=r.state;updateStats();log('ボス戦: '+(r.result?.victory?'勝利!':'結果:'+ (r.result?.log?.slice(-1)[0]||'')));}} }
-function attemptEncounter(){ if(!autoEncounter) return; if(Math.random()<0.18){ walking=false; flashEncounter(); fadeMessage('エンカウント!'); doAction('battle'); } }
-window.addEventListener('keydown',e=>{ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){ e.preventDefault(); movePlayer(e.key); }});
-function movePlayer(key){ let dx=0,dy=0; if(key==='ArrowUp')dy=-1; else if(key==='ArrowDown')dy=1; else if(key==='ArrowLeft')dx=-1; else if(key==='ArrowRight')dx=1; const nx=player.x+dx, ny=player.y+dy; if(nx<1||ny<1||nx>=mapW-1||ny>=mapH-1)return; player.x=nx; player.y=ny; walking=true; encounterStep=(encounterStep+1)%4; if(encounterStep===0) attemptEncounter(); draw(); }
-function loop(){ requestAnimationFrame(loop); }
-loop();
-// タッチスワイプ簡易移動
-let touchStart=null;canvas.addEventListener('touchstart',e=>{touchStart=e.touches[0];},{passive:true});canvas.addEventListener('touchend',e=>{ if(!touchStart)return; const dx=e.changedTouches[0].clientX-touchStart.clientX; const dy=e.changedTouches[0].clientY-touchStart.clientY; if(Math.abs(dx)>Math.abs(dy)){ if(dx>20) movePlayer('ArrowRight'); else if(dx<-20) movePlayer('ArrowLeft'); } else { if(dy>20) movePlayer('ArrowDown'); else if(dy<-20) movePlayer('ArrowUp'); } touchStart=null; });
-// ボタン操作
- document.querySelectorAll('.rpg-actions button').forEach(b=> b.addEventListener('click',()=> doAction(b.getAttribute('data-act'))));
- document.getElementById('toggleAutoEncounter').addEventListener('click',()=>{ autoEncounter=!autoEncounter; document.getElementById('toggleAutoEncounter').textContent= autoEncounter? '自動エンカON':'自動エンカOFF';});
-loadStaff();
-</script>
-</body></html>
+    <script>
+      const API = "/api/games/rpg";
+      const params = new URLSearchParams(location.search);
+      const presetStaffId = params.get("staffId");
+      let staffCache = [];
+      let currentPlayerId = presetStaffId
+        ? Number(presetStaffId)
+        : Number(localStorage.getItem("gameSelectedStaffId")) || null;
+      let state = null;
+      let autoEncounter = true;
+      let walking = false;
+      let encounterStep = 0;
+      const canvas = document.getElementById("rpgCanvas");
+      const ctx = canvas.getContext("2d");
+      const tile = 32;
+      const mapW = 15,
+        mapH = 10;
+      // 0:草 1:壁 2:宿屋 3:武器屋
+      const world = [...Array(mapH)].map((_, y) =>
+        [...Array(mapW)].map((_, x) => {
+          if (x === 0 || y === 0 || x === mapW - 1 || y === mapH - 1) return 1;
+          return 0;
+        })
+      );
+      // 固定配置
+      const innPos = { x: 5, y: 4 };
+      const shopPos = { x: 9, y: 6 };
+      world[innPos.y][innPos.x] = 2;
+      world[shopPos.y][shopPos.x] = 3;
+      const colors = {
+        0: "#264653",
+        1: "#1d3557",
+        2: "#2a9d8f",
+        3: "#a44f9d",
+        player: "#ffb703",
+      };
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let y = 0; y < mapH; y++) {
+          for (let x = 0; x < mapW; x++) {
+            ctx.fillStyle = colors[world[y][x]];
+            ctx.fillRect(x * tile, y * tile, tile, tile);
+            if (world[y][x] === 2) {
+              drawGlyph(x, y, "宿");
+            } else if (world[y][x] === 3) {
+              drawGlyph(x, y, "武");
+            }
+          }
+        }
+        if (state) {
+          ctx.fillStyle = colors.player;
+          ctx.fillRect(
+            player.x * tile + 4,
+            player.y * tile + 4,
+            tile - 8,
+            tile - 8
+          );
+        }
+        updateProximityUI();
+      }
+      function drawGlyph(x, y, ch) {
+        ctx.fillStyle = "#fff";
+        ctx.font = "16px monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(ch, x * tile + tile / 2, y * tile + tile / 2);
+      }
+      // 近接UI
+      let proxEl = document.getElementById("proxUI");
+      if (!proxEl) {
+        proxEl = document.createElement("div");
+        proxEl.id = "proxUI";
+        proxEl.style.position = "absolute";
+        proxEl.style.left = "8px";
+        proxEl.style.top = "8px";
+        proxEl.style.zIndex = "5";
+        proxEl.style.display = "flex";
+        proxEl.style.flexDirection = "column";
+        proxEl.style.gap = "6px";
+        canvas.parentElement.appendChild(proxEl);
+      }
+      function updateProximityUI() {
+        if (!state) {
+          proxEl.innerHTML = "";
+          return;
+        }
+        const nearInn =
+          Math.abs(player.x - innPos.x) <= 1 &&
+          Math.abs(player.y - innPos.y) <= 1;
+        const nearShop =
+          Math.abs(player.x - shopPos.x) <= 1 &&
+          Math.abs(player.y - shopPos.y) <= 1;
+        let html = "";
+        if (nearInn) {
+          html += `<button data-prox-act="healPercent" style="background:#2a9d8f;color:#fff;border:none;padding:4px 6px;border-radius:6px;font-size:11px;">宿屋(所持金10%で全回復)</button>`;
+        }
+        if (nearShop) {
+          html += `<button data-prox-act="buy-sword" style="background:#a44f9d;color:#fff;border:none;padding:4px 6px;border-radius:6px;font-size:11px;">剣 50G</button><button data-prox-act="buy-armor" style="background:#a44f9d;color:#fff;border:none;padding:4px 6px;border-radius:6px;font-size:11px;">防具 50G</button>`;
+        }
+        proxEl.innerHTML = html;
+        proxEl.querySelectorAll("button").forEach(
+          (b) =>
+            (b.onclick = () => {
+              const act = b.getAttribute("data-prox-act");
+              if (act === "healPercent") doAction("heal");
+              else if (act === "buy-sword") doAction("equip-sword");
+              else if (act === "buy-armor") doAction("equip-armor");
+            })
+        );
+      }
+      let player = { x: 2, y: 2 };
+      function flashEncounter() {
+        const f = document.createElement("div");
+        f.className = "encounter-flash";
+        canvas.parentElement.appendChild(f);
+        setTimeout(() => f.remove(), 600);
+      }
+      function fadeMessage(msg) {
+        const el = document.getElementById("fadeMsg");
+        el.textContent = msg;
+        el.style.display = "block";
+        el.classList.remove("run");
+        void el.offsetWidth;
+        el.classList.add("run");
+        setTimeout(() => {
+          el.style.display = "none";
+        }, 2200);
+      }
+      function log(msg) {
+        const box = document.getElementById("rpgLog");
+        const d = document.createElement("div");
+        d.textContent = new Date().toLocaleTimeString() + " " + msg;
+        box.prepend(d);
+        while (box.children.length > 120) box.removeChild(box.lastChild);
+      }
+      async function api(action, payload) {
+        if (!currentPlayerId) return;
+        const body = { staffId: currentPlayerId, action, payload };
+        const res = await fetch(API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          log("通信失敗:" + action);
+          return null;
+        }
+        return await res.json();
+      }
+      function updateStats() {
+        if (!state) {
+          document.getElementById("statsBox").textContent = "-";
+          return;
+        }
+        const {
+          level,
+          hp,
+          maxHp,
+          gold,
+          exp,
+          nextExp,
+          atk,
+          def,
+          equips,
+          bossDefeated,
+        } = state;
+        document.getElementById(
+          "statsBox"
+        ).innerHTML = `Lv${level} HP ${hp}/${maxHp}<div class='hp-bar'><span style='width:${(
+          (hp / maxHp) *
+          100
+        ).toFixed(
+          1
+        )}%'></span></div>EXP ${exp}/${nextExp} G:${gold}<br>ATK:${atk} DEF:${
+          def || 0
+        } 装備:${(equips || []).join(",") || "-"} ${
+          bossDefeated ? " <span class=badge>BOSS</span>" : ""
+        }`;
+      }
+      async function initPlayer() {
+        if (!currentPlayerId) return;
+        const r = await api("init");
+        if (r && r.state) {
+          state = r.state;
+          updateStats();
+          log("ロード完了");
+          draw();
+        }
+      }
+      function ensurePlayerSelect() {
+        const sel = document.getElementById("playerSelectRpg");
+        const sorted = [...staffCache].sort((a, b) => {
+          const ak = (a.kana || a.name || "").toLowerCase();
+          const bk = (b.kana || b.name || "").toLowerCase();
+          if (ak < bk) return -1;
+          if (ak > bk) return 1;
+          return 0;
+        });
+        sel.innerHTML =
+          '<option value="">-- プレイヤー選択 (全スタッフ) --</option>' +
+          sorted
+            .map((s) => `<option value="${s.id}">${s.name}</option>`)
+            .join("");
+        if (!currentPlayerId && sorted.length) {
+          currentPlayerId = sorted[0].id;
+        }
+        sel.value = currentPlayerId || "";
+        sel.onchange = () => {
+          currentPlayerId = Number(sel.value) || null;
+          if (currentPlayerId) {
+            try {
+              localStorage.setItem(
+                "gameSelectedStaffId",
+                String(currentPlayerId)
+              );
+            } catch {}
+          }
+          initPlayer();
+        };
+      }
+      async function loadStaff() {
+        const res = await fetch("/api/staff");
+        if (res.ok) {
+          staffCache = await res.json();
+          ensurePlayerSelect();
+          if (
+            presetStaffId &&
+            !staffCache.some((s) => s.id === Number(presetStaffId))
+          ) {
+            alert("指定されたプレイヤーが存在しません");
+            currentPlayerId = null;
+          }
+          if (!currentPlayerId) {
+            alert("プレイヤーを選択してください");
+          }
+          initPlayer();
+        }
+      }
+      async function doAction(k) {
+        if (!state) return;
+        if (k === "battle") {
+          const r = await api("battle");
+          if (r && r.state) {
+            state = r.state;
+            updateStats();
+            log("戦闘: " + (r.result?.victory ? "勝利" : "敗北"));
+          }
+        } else if (k === "heal") {
+          const r = await api("heal");
+          if (r && r.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg || "回復");
+          }
+        } else if (k === "equip-sword") {
+          const r = await api("equip", { type: "sword" });
+          if (r && r.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg);
+          }
+        } else if (k === "equip-armor") {
+          const r = await api("equip", { type: "armor" });
+          if (r && r.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg);
+          }
+        } else if (k === "boss") {
+          const r = await api("boss");
+          if (r && r.state) {
+            state = r.state;
+            updateStats();
+            log(
+              "ボス戦: " +
+                (r.result?.victory
+                  ? "勝利!"
+                  : "結果:" + (r.result?.log?.slice(-1)[0] || ""))
+            );
+          }
+        }
+      }
+      function attemptEncounter() {
+        if (!autoEncounter) return;
+        if (Math.random() < 0.18) {
+          walking = false;
+          flashEncounter();
+          fadeMessage("エンカウント!");
+          doAction("battle");
+        }
+      }
+      window.addEventListener("keydown", (e) => {
+        if (
+          ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)
+        ) {
+          e.preventDefault();
+          movePlayer(e.key);
+        }
+      });
+      function movePlayer(key) {
+        let dx = 0,
+          dy = 0;
+        if (key === "ArrowUp") dy = -1;
+        else if (key === "ArrowDown") dy = 1;
+        else if (key === "ArrowLeft") dx = -1;
+        else if (key === "ArrowRight") dx = 1;
+        const nx = player.x + dx,
+          ny = player.y + dy;
+        if (nx < 1 || ny < 1 || nx >= mapW - 1 || ny >= mapH - 1) return;
+        player.x = nx;
+        player.y = ny;
+        walking = true;
+        encounterStep = (encounterStep + 1) % 4;
+        if (encounterStep === 0) attemptEncounter();
+        draw();
+      }
+      function loop() {
+        requestAnimationFrame(loop);
+      }
+      loop();
+      // タッチスワイプ簡易移動
+      let touchStart = null;
+      canvas.addEventListener(
+        "touchstart",
+        (e) => {
+          touchStart = e.touches[0];
+        },
+        { passive: true }
+      );
+      canvas.addEventListener("touchend", (e) => {
+        if (!touchStart) return;
+        const dx = e.changedTouches[0].clientX - touchStart.clientX;
+        const dy = e.changedTouches[0].clientY - touchStart.clientY;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          if (dx > 20) movePlayer("ArrowRight");
+          else if (dx < -20) movePlayer("ArrowLeft");
+        } else {
+          if (dy > 20) movePlayer("ArrowDown");
+          else if (dy < -20) movePlayer("ArrowUp");
+        }
+        touchStart = null;
+      });
+      // ボタン操作
+      document
+        .querySelectorAll(".rpg-actions button")
+        .forEach((b) =>
+          b.addEventListener("click", () =>
+            doAction(b.getAttribute("data-act"))
+          )
+        );
+      document
+        .getElementById("toggleAutoEncounter")
+        .addEventListener("click", () => {
+          autoEncounter = !autoEncounter;
+          document.getElementById("toggleAutoEncounter").textContent =
+            autoEncounter ? "自動エンカON" : "自動エンカOFF";
+        });
+      loadStaff();
+    </script>
+  </body>
+</html>
