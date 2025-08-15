@@ -1340,9 +1340,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function refreshPlayerSelect(){
         if(!playerSelect) return;
-        const staff = (window.paManager?.currentStaff)||[];
-        const prev = playerSelect.value;
-        let html = '<option value="">-- プレイヤー選択 --</option>' + staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+        const staffRaw = (window.paManager?.currentStaff)||[];
+        // かな(存在すれば) / 名前 でソートして全スタッフを選択肢化
+        const staff = [...staffRaw].sort((a,b)=>{
+            const ak = (a.kana||a.name||'').toLowerCase();
+            const bk = (b.kana||b.name||'').toLowerCase();
+            if (ak < bk) return -1; if (ak > bk) return 1; return 0;
+        });
+        const prev = playerSelect.value || localStorage.getItem('gameSelectedStaffId') || '';
+        let html = '<option value="">-- プレイヤー選択 (全スタッフ) --</option>' + staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
         playerSelect.innerHTML = html;
         if (prev && staff.some(s => String(s.id)===prev)) {
             playerSelect.value = prev;
@@ -1372,5 +1378,10 @@ document.addEventListener('DOMContentLoaded', () => {
     async function submitScore(game, value, extra){ try { const sid = Number(playerSelect.value); if(!sid) return; await fetch('/api/games/scores',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ game, staffId:sid, value, extra }) }); } catch(e){ console.warn('score submit failed', e); } }
 
     // RPG
-    if(playerSelect) playerSelect.addEventListener('change', ()=>{ loadRankingsAll(); });
+    if(playerSelect) playerSelect.addEventListener('change', ()=>{ 
+        if(playerSelect.value){
+            try{ localStorage.setItem('gameSelectedStaffId', playerSelect.value); }catch{}
+        }
+        loadRankingsAll(); 
+    });
 });
