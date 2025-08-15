@@ -377,6 +377,7 @@ class PAManager {
             }
             this.currentStaff = await response.json();
             this.renderStaff();
+            if (window._refreshGamePlayerSelect) window._refreshGamePlayerSelect();
         } catch (error) {
             console.error('スタッフデータ読み込みエラー:', error);
             // ユーザーに通知
@@ -1337,7 +1338,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function refreshPlayerSelect(){ if(!playerSelect) return; const staff = (window.paManager?.currentStaff)||[]; playerSelect.innerHTML = staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join(''); }
+    function refreshPlayerSelect(){
+        if(!playerSelect) return;
+        const staff = (window.paManager?.currentStaff)||[];
+        const prev = playerSelect.value;
+        let html = '<option value="">-- プレイヤー選択 --</option>' + staff.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+        playerSelect.innerHTML = html;
+        if (prev && staff.some(s => String(s.id)===prev)) {
+            playerSelect.value = prev;
+        }
+    }
+    // スタッフ読み込み後に自動反映できるようグローバルフック
+    window._refreshGamePlayerSelect = refreshPlayerSelect;
     // Rankings
     async function loadRanking(game){ const el = rankingEls[game]; if(!el) return; try { el.innerHTML='<li>読み込み中...</li>'; const res = await fetch(`/api/games/scores?game=${game}`); if(!res.ok) throw 0; const data = await res.json(); if(!Array.isArray(data)||!data.length){ el.innerHTML='<li>なし</li>'; return; } el.innerHTML = data.map((r,i)=>{ let v = r.value; if(game==='twenty'){ v = `${v}ms (実 ${r.extra||''}ms)`; } if(game==='reaction'){ v = v+'ms'; } if(game==='rpg'){ v = 'Lv'+v+(r.meta?.bossDefeated?' ⭐':'' ); } return `<li><span>${i+1}. ${r.staff?.name||'?'}</span><span>${v}</span></li>`; }).join(''); } catch{ el.innerHTML='<li>取得失敗</li>'; } }
     function loadRankingsAll(){ ['reaction','twenty','rpg'].forEach(g=> loadRanking(g)); }
