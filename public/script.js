@@ -1579,10 +1579,27 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
 
     function showGameHub() {
       if (!gameHub) return;
-      gameHub.style.display = "block";
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      refreshPlayerSelect();
-      loadRankingsAll();
+      const loader = document.getElementById('gameHubLoader');
+      gameHub.style.display = 'block';
+      if (loader) loader.style.display = 'flex';
+      const doSync = async () => {
+        // 1) スタッフ (未ロード/空ならロード)
+        try {
+          if (!window.paManager || !Array.isArray(window.paManager.currentStaff)) {
+            console.warn('[GameHub] paManager 未初期化');
+          } else if (!window.paManager.currentStaff.length) {
+            await window.paManager.loadStaff();
+          }
+        } catch(e){ console.warn('[GameHub] staff load err', e); }
+        // 2) セレクト更新
+        try { refreshPlayerSelect(); } catch {}
+        // 3) ランキング並列ロード
+        try { await Promise.all(['reaction','twenty','rpg'].map(g=>loadRanking(g))); } catch {}
+      };
+      doSync().finally(()=>{
+        if (loader) loader.style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
     }
     function hideGameHub() {
       if (!gameHub) return;

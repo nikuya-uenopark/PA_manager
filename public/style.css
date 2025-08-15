@@ -2426,6 +2426,9 @@ body.logged-in .login-overlay {
   justify-content: space-between;
   margin-bottom: 1rem;
 }
+@keyframes spin { to { transform: rotate(360deg);} }
+@keyframes fadeInScale { 0% {opacity:0; transform:scale(.95);} 100% {opacity:1; transform:scale(1);} }
+#gameHubLoader { animation: fadeInScale .25s ease; }
 .game-player-select {
   margin-bottom: 1.25rem;
 }
