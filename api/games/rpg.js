@@ -51,6 +51,13 @@ function applyBattle(state, enemy){
 
 export default async function handler(req,res){
   try {
+    if (req.method === 'GET') {
+      const { staffId } = req.query || {};
+      if(!staffId) return res.status(400).json({ error:'staffId required'});
+      const key = { game_staffId:{ game:'rpg', staffId:Number(staffId) } };
+      const record = await prisma.gameScore.findUnique({ where:key });
+      return res.json({ state: record?.meta || null, record });
+    }
     if (req.method !== 'POST') return res.status(405).json({ error:'Method not allowed' });
     const { staffId, action, payload } = req.body || {};
     if (!staffId || !action) return res.status(400).json({ error:'staffId & action required' });
