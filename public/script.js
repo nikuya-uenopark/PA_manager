@@ -511,8 +511,14 @@ class PAManager {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       this.currentStaff = await response.json();
+      console.log('[loadStaff] loaded staff count =', this.currentStaff.length);
       this.renderStaff();
-      if (window._refreshGamePlayerSelect) window._refreshGamePlayerSelect();
+      if (window._refreshGamePlayerSelect) {
+        console.log('[loadStaff] calling _refreshGamePlayerSelect');
+        window._refreshGamePlayerSelect();
+      } else {
+        console.warn('[loadStaff] _refreshGamePlayerSelect not defined yet');
+      }
     } catch (error) {
       console.error("スタッフデータ読み込みエラー:", error);
       // ユーザーに通知
@@ -1609,6 +1615,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
     function refreshPlayerSelect() {
       if (!playerSelect) return;
       const staffRaw = window.paManager?.currentStaff || [];
+  console.log('[GameHub] refreshPlayerSelect staffRaw length=', staffRaw.length);
       // かな(存在すれば) / 名前 でソートして全スタッフを選択肢化
       const staff = [...staffRaw].sort((a, b) => {
         const ak = (a.kana || a.name || "").toLowerCase();
@@ -1626,10 +1633,12 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
       if (prev && staff.some((s) => String(s.id) === prev)) {
         playerSelect.value = prev;
       }
+  console.log('[GameHub] refreshPlayerSelect done options=', playerSelect.options.length);
     }
     // スタッフ読み込み後に自動反映できるようグローバルフック（常に最新参照）
     window._refreshGamePlayerSelect = () => {
       try {
+  console.log('[GameHub] _refreshGamePlayerSelect called');
         refreshPlayerSelect();
       } catch (e) {
         console.warn("refreshPlayerSelect failed", e);
@@ -1642,6 +1651,14 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
       window.paManager.currentStaff.length
     ) {
       window._refreshGamePlayerSelect();
+    } else if (window.paManager) {
+      // まだロードされていない場合、ログイン後まで待たず先行ロード試行（PIN未完了でも公開情報として扱う想定なら可）
+      try {
+        console.log('[GameHub] staff not loaded yet -> triggering early loadStaff');
+        window.paManager.loadStaff();
+      } catch (e) {
+        console.warn('[GameHub] early loadStaff failed', e);
+      }
     }
     // Rankings
     async function loadRanking(game) {
