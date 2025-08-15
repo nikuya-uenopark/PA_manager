@@ -224,16 +224,26 @@ class PAManager {
     if (staffForm) {
       staffForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        console.log("[staffForm] submit start (editingStaffId=", this.editingStaffId, ")");
+        console.log(
+          "[staffForm] submit start (editingStaffId=",
+          this.editingStaffId,
+          ")"
+        );
         const nameEl = document.getElementById("staffName");
         const name = nameEl?.value?.trim();
-        const kana = document.getElementById("staffKana")?.value?.trim() || null;
-        const position = document.getElementById("staffPositionType")?.value || null;
-        const birth_date = document.getElementById("staffBirthDate")?.value || null;
+        const kana =
+          document.getElementById("staffKana")?.value?.trim() || null;
+        const position =
+          document.getElementById("staffPositionType")?.value || null;
+        const birth_date =
+          document.getElementById("staffBirthDate")?.value || null;
         let mgmtCode = document.getElementById("staffMgmtCode")?.value?.trim();
         if (mgmtCode === "") mgmtCode = null;
         if (mgmtCode && !/^\d{4}$/.test(mgmtCode)) {
-          this.showNotification("管理番号は4桁の数字で入力してください (例 0123)", "error");
+          this.showNotification(
+            "管理番号は4桁の数字で入力してください (例 0123)",
+            "error"
+          );
           console.warn("[staffForm] invalid mgmtCode", mgmtCode);
           return;
         }
@@ -250,29 +260,44 @@ class PAManager {
         const submitBtn = staffForm.querySelector('button[type="submit"]');
         if (submitBtn) submitBtn.disabled = true;
         submitBtn && (submitBtn.dataset.originalText = submitBtn.innerHTML);
-        if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
+        if (submitBtn)
+          submitBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> 保存中...';
         try {
           const isEdit = !!this.editingStaffId;
-          const url = isEdit ? `/api/staff?id=${this.editingStaffId}` : "/api/staff";
+          const url = isEdit
+            ? `/api/staff?id=${this.editingStaffId}`
+            : "/api/staff";
           const method = isEdit ? "PUT" : "POST";
           console.log("[staffForm] fetch", method, url);
           const res = await fetch(url, {
             method,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, kana, position, birth_date, mgmtCode }),
+            body: JSON.stringify({
+              name,
+              kana,
+              position,
+              birth_date,
+              mgmtCode,
+            }),
           });
           let payload = null;
-          try { payload = await res.json(); } catch {}
+          try {
+            payload = await res.json();
+          } catch {}
           if (!res.ok) {
             console.error("[staffForm] server error", res.status, payload);
             this.showNotification(
-              (payload && payload.error) || `保存に失敗しました (${res.status})`,
+              (payload && payload.error) ||
+                `保存に失敗しました (${res.status})`,
               "error"
             );
             return;
           }
           console.log("[staffForm] success", payload);
-            this.showNotification(isEdit ? "スタッフを更新しました" : "スタッフを追加しました");
+          this.showNotification(
+            isEdit ? "スタッフを更新しました" : "スタッフを追加しました"
+          );
           this.closeModal("staffModal");
           staffForm.reset();
           this.editingStaffId = null;
@@ -287,7 +312,9 @@ class PAManager {
           this._isSavingStaff = false;
           if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = submitBtn.dataset.originalText || '<i class="fas fa-save"></i> 保存';
+            submitBtn.innerHTML =
+              submitBtn.dataset.originalText ||
+              '<i class="fas fa-save"></i> 保存';
           }
         }
       });
@@ -397,16 +424,18 @@ class PAManager {
       // 初期は追加モード想定で無効。編集モードで開いたら editStaff 内で再度有効化。
       staffSaveBtn.disabled = true;
       const recompute = () => {
-        const nameVal = document.getElementById('staffName')?.value?.trim();
-        const mgVal = document.getElementById('staffMgmtCode')?.value?.trim();
-        const ok = !!nameVal && (mgVal === '' || /^\d{4}$/.test(mgVal));
+        const nameVal = document.getElementById("staffName")?.value?.trim();
+        const mgVal = document.getElementById("staffMgmtCode")?.value?.trim();
+        const ok = !!nameVal && (mgVal === "" || /^\d{4}$/.test(mgVal));
         // 追加モード (editingStaffId null) でも条件満たせば活性化
         if (!this.editingStaffId && !ok) staffSaveBtn.disabled = true;
         else staffSaveBtn.disabled = !ok;
       };
-      ['input','change'].forEach(ev=>{
-        document.getElementById('staffName')?.addEventListener(ev,recompute);
-        document.getElementById('staffMgmtCode')?.addEventListener(ev,recompute);
+      ["input", "change"].forEach((ev) => {
+        document.getElementById("staffName")?.addEventListener(ev, recompute);
+        document
+          .getElementById("staffMgmtCode")
+          ?.addEventListener(ev, recompute);
       });
     }
   }
@@ -511,13 +540,13 @@ class PAManager {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       this.currentStaff = await response.json();
-      console.log('[loadStaff] loaded staff count =', this.currentStaff.length);
+      console.log("[loadStaff] loaded staff count =", this.currentStaff.length);
       this.renderStaff();
       if (window._refreshGamePlayerSelect) {
-        console.log('[loadStaff] calling _refreshGamePlayerSelect');
+        console.log("[loadStaff] calling _refreshGamePlayerSelect");
         window._refreshGamePlayerSelect();
       } else {
-        console.warn('[loadStaff] _refreshGamePlayerSelect not defined yet');
+        console.warn("[loadStaff] _refreshGamePlayerSelect not defined yet");
       }
     } catch (error) {
       console.error("スタッフデータ読み込みエラー:", error);
@@ -1060,6 +1089,10 @@ function saveSharedNote() {
 
 // グローバル変数とインスタンス (GameHub IIFE より前に生成する必要あり)
 let paManager = new PAManager();
+// window へ公開 (top-level let では window プロパティにならないため)
+try {
+  window.paManager = paManager;
+} catch {}
 
 // 共有メモ フォントサイズ切替
 document.addEventListener("DOMContentLoaded", () => {
@@ -1442,7 +1475,7 @@ PAManager.prototype.openStaffDetail = async function (staffId) {
 };
 
 PAManager.prototype.renderStaffEvaluations = async function (staffId) {
-  const container = document.getElementById('staffEvaluations');
+  const container = document.getElementById("staffEvaluations");
   if (!container) return;
   container.innerHTML = '<div class="loading">読み込み中...</div>';
   try {
@@ -1454,362 +1487,579 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
     if (!this._staffEvalTestCache) this._staffEvalTestCache = new Map();
     this._staffEvalTestCache.clear();
     for (const ev of evals) {
-      this._staffEvalCache.set(`${ev.staffId}:${ev.criteriaId}`, ev.status || 'not-started');
+      this._staffEvalCache.set(
+        `${ev.staffId}:${ev.criteriaId}`,
+        ev.status || "not-started"
+      );
       if (ev.comments) {
         try {
           const c = JSON.parse(ev.comments);
           if (c && (c.testedBy || c.testedBy === 0)) {
-            this._staffEvalTestCache.set(`${ev.staffId}:${ev.criteriaId}`, { testedBy: typeof c.testedBy === 'number' ? c.testedBy : null, testedAt: c.testedAt || null });
+            this._staffEvalTestCache.set(`${ev.staffId}:${ev.criteriaId}`, {
+              testedBy: typeof c.testedBy === "number" ? c.testedBy : null,
+              testedAt: c.testedAt || null,
+            });
           }
         } catch {}
       }
     }
     // 基準（criteria）が0件なら案内
     if (!this.currentCriteria || this.currentCriteria.length === 0) {
-      container.innerHTML = '<div class="empty-state">評価項目がありません。右上の「項目追加」から作成してください。</div>';
+      container.innerHTML =
+        '<div class="empty-state">評価項目がありません。右上の「項目追加」から作成してください。</div>';
       return;
     }
     // フィルタ選択取得
-    const statusChecks = Array.from(document.querySelectorAll('input[name="evalStatusFilter[]"]:checked')).map(i=>i.value);
-    const catChecks = Array.from(document.querySelectorAll('input[name="evalCategoryFilter[]"]:checked')).map(i=>i.value);
-    const isTested = (key)=> this._staffEvalTestCache && this._staffEvalTestCache.has(key);
-    const filteredCriteria = (this.currentCriteria||[]).filter(cr => catChecks.length===0 || catChecks.includes(cr.category || '共通'));
+    const statusChecks = Array.from(
+      document.querySelectorAll('input[name="evalStatusFilter[]"]:checked')
+    ).map((i) => i.value);
+    const catChecks = Array.from(
+      document.querySelectorAll('input[name="evalCategoryFilter[]"]:checked')
+    ).map((i) => i.value);
+    const isTested = (key) =>
+      this._staffEvalTestCache && this._staffEvalTestCache.has(key);
+    const filteredCriteria = (this.currentCriteria || []).filter(
+      (cr) =>
+        catChecks.length === 0 || catChecks.includes(cr.category || "共通")
+    );
     if (!this._pendingEvalChanges) this._pendingEvalChanges = new Map();
-    container.innerHTML = filteredCriteria.map(cr => {
-      const key = `${staffId}:${cr.id}`;
-      const status = this._staffEvalCache.get(key) || 'not-started';
-      const color = status==='done' ? '#00d4aa' : status==='learning' ? '#ff9f43' : '#f1f2f6';
-      const label = status==='done' ? '習得済み' : status==='learning' ? '学習中' : '未着手';
-      const tinfo = this._staffEvalTestCache.get(key);
-      const testedById = tinfo?.testedBy ?? null;
-      const testerName = testedById ? (this.currentStaff.find(s=>s.id===testedById)?.name || '歴代の猛者') : '';
-      const testedText = testedById ? `完璧！${testerName}がテスト済み！` : '';
-      const options = (this.currentStaff||[]).map(s=>`<option value="${s.id}" ${testedById===s.id?'selected':''}>${s.name}</option>`).join('');
-      const logicalStatusValues = [status];
-      if (testedById) logicalStatusValues.push('tested');
-      const statusMatch = statusChecks.length===0 || statusChecks.some(v=> logicalStatusValues.includes(v));
-      if(!statusMatch) return '';
-      return `<div class="criteria-chip" data-staff="${staffId}" data-criteria="${cr.id}" style="border:1px solid #eaeaea; padding:12px; border-radius:10px; cursor:pointer; display:flex; flex-direction:column; gap:8px;">
+    container.innerHTML = filteredCriteria
+      .map((cr) => {
+        const key = `${staffId}:${cr.id}`;
+        const status = this._staffEvalCache.get(key) || "not-started";
+        const color =
+          status === "done"
+            ? "#00d4aa"
+            : status === "learning"
+            ? "#ff9f43"
+            : "#f1f2f6";
+        const label =
+          status === "done"
+            ? "習得済み"
+            : status === "learning"
+            ? "学習中"
+            : "未着手";
+        const tinfo = this._staffEvalTestCache.get(key);
+        const testedById = tinfo?.testedBy ?? null;
+        const testerName = testedById
+          ? this.currentStaff.find((s) => s.id === testedById)?.name ||
+            "歴代の猛者"
+          : "";
+        const testedText = testedById
+          ? `完璧！${testerName}がテスト済み！`
+          : "";
+        const options = (this.currentStaff || [])
+          .map(
+            (s) =>
+              `<option value="${s.id}" ${
+                testedById === s.id ? "selected" : ""
+              }>${s.name}</option>`
+          )
+          .join("");
+        const logicalStatusValues = [status];
+        if (testedById) logicalStatusValues.push("tested");
+        const statusMatch =
+          statusChecks.length === 0 ||
+          statusChecks.some((v) => logicalStatusValues.includes(v));
+        if (!statusMatch) return "";
+        return `<div class="criteria-chip" data-staff="${staffId}" data-criteria="${
+          cr.id
+        }" style="border:1px solid #eaeaea; padding:12px; border-radius:10px; cursor:pointer; display:flex; flex-direction:column; gap:8px;">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-          <div><div style="font-weight:600">${cr.name}</div><small style="color:#6b7280">${cr.category||'共通'}</small></div>
+          <div><div style="font-weight:600">${
+            cr.name
+          }</div><small style="color:#6b7280">${
+          cr.category || "共通"
+        }</small></div>
           <span class="status-badge" style="background:${color}; color:#111; padding:6px 10px; border-radius:9999px; font-size:12px; white-space:nowrap;">${label}</span>
         </div>
-        ${cr.description ? `<div class=\"criteria-chip-desc\">${cr.description}</div>` : ''}
+        ${
+          cr.description
+            ? `<div class=\"criteria-chip-desc\">${cr.description}</div>`
+            : ""
+        }
         <div class="tested-block" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-          ${testedById ? `<span class=\"tested-text tested\">完璧！${testerName}がテスト済み！</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>` : `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`}
+          ${
+            testedById
+              ? `<span class=\"tested-text tested\">完璧！${testerName}がテスト済み！</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>`
+              : `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`
+          }
         </div>
       </div>`;
-    }).join('');
+      })
+      .join("");
     if (!this._evalFilterBound) {
       this._evalFilterBound = true;
-      document.querySelectorAll('#evaluationFilters input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', ()=> this.renderStaffEvaluations(staffId));
-      });
+      document
+        .querySelectorAll('#evaluationFilters input[type="checkbox"]')
+        .forEach((cb) => {
+          cb.addEventListener("change", () =>
+            this.renderStaffEvaluations(staffId)
+          );
+        });
     }
-    container.querySelectorAll('.criteria-chip').forEach(el=>{
-      el.addEventListener('click', ev=>{
-        if (ev.target && ev.target.classList && (ev.target.classList.contains('open-tester-modal-btn') || ev.target.classList.contains('reset-tested-btn'))) return;
-        const sid = Number(el.getAttribute('data-staff'));
-        const cid = Number(el.getAttribute('data-criteria'));
+    container.querySelectorAll(".criteria-chip").forEach((el) => {
+      el.addEventListener("click", (ev) => {
+        if (
+          ev.target &&
+          ev.target.classList &&
+          (ev.target.classList.contains("open-tester-modal-btn") ||
+            ev.target.classList.contains("reset-tested-btn"))
+        )
+          return;
+        const sid = Number(el.getAttribute("data-staff"));
+        const cid = Number(el.getAttribute("data-criteria"));
         const key = `${sid}:${cid}`;
-        const current = this._staffEvalCache.get(key)||'not-started';
-        const next = current==='not-started' ? 'learning' : current==='learning' ? 'done' : 'not-started';
+        const current = this._staffEvalCache.get(key) || "not-started";
+        const next =
+          current === "not-started"
+            ? "learning"
+            : current === "learning"
+            ? "done"
+            : "not-started";
         this._staffEvalCache.set(key, next);
         this._pendingEvalChanges.set(key, next);
-        const badge = el.querySelector('.status-badge');
-        const color2 = next==='done' ? '#00d4aa' : next==='learning' ? '#ff9f43' : '#f1f2f6';
-        const label2 = next==='done' ? '習得済み' : next==='learning' ? '学習中' : '未着手';
-        badge.style.background = color2; badge.textContent = label2;
+        const badge = el.querySelector(".status-badge");
+        const color2 =
+          next === "done"
+            ? "#00d4aa"
+            : next === "learning"
+            ? "#ff9f43"
+            : "#f1f2f6";
+        const label2 =
+          next === "done"
+            ? "習得済み"
+            : next === "learning"
+            ? "学習中"
+            : "未着手";
+        badge.style.background = color2;
+        badge.textContent = label2;
       });
-      const openBtn = el.querySelector('.open-tester-modal-btn');
-      if(openBtn){ openBtn.addEventListener('click', e=>{ e.stopPropagation(); const sid=Number(el.getAttribute('data-staff')); const cid=Number(el.getAttribute('data-criteria')); const key=`${sid}:${cid}`; const sel=document.getElementById('testerSelect'); if(sel){ sel.innerHTML = `<option value=\"\">選択してください</option>` + (this.currentStaff||[]).map(s=>`<option value=\"${s.id}\">${s.name}</option>`).join(''); sel.value=''; } this._pendingTesterTarget={ key, el }; this.showModal('testerSelectModal'); }); }
-      const resetBtn = el.querySelector('.reset-tested-btn');
-      if(resetBtn){ resetBtn.addEventListener('click', e=>{ e.stopPropagation(); const sid=Number(el.getAttribute('data-staff')); const cid=Number(el.getAttribute('data-criteria')); const key=`${sid}:${cid}`; const block = el.querySelector('.tested-block'); if(block){ block.innerHTML = `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`; const openBtn2 = block.querySelector('.open-tester-modal-btn'); if(openBtn2){ openBtn2.addEventListener('click', ev=>{ ev.stopPropagation(); const sel=document.getElementById('testerSelect'); if(sel){ sel.innerHTML = `<option value=\"\">選択してください</option>` + (this.currentStaff||[]).map(s=>`<option value=\"${s.id}\">${s.name}</option>`).join(''); sel.value=''; } this._pendingTesterTarget={ key, el }; this.showModal('testerSelectModal'); }); } }
-        if(!this._pendingEvalTests) this._pendingEvalTests = new Map(); this._pendingEvalTests.set(key,{ clear:true }); if(!this._pendingEvalChanges) this._pendingEvalChanges = new Map(); if(!this._pendingEvalChanges.has(key)){ const curStatus=this._staffEvalCache.get(key)||'not-started'; this._pendingEvalChanges.set(key, curStatus);} if(this._staffEvalTestCache) this._staffEvalTestCache.delete(key); }); }
+      const openBtn = el.querySelector(".open-tester-modal-btn");
+      if (openBtn) {
+        openBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const sid = Number(el.getAttribute("data-staff"));
+          const cid = Number(el.getAttribute("data-criteria"));
+          const key = `${sid}:${cid}`;
+          const sel = document.getElementById("testerSelect");
+          if (sel) {
+            sel.innerHTML =
+              `<option value=\"\">選択してください</option>` +
+              (this.currentStaff || [])
+                .map((s) => `<option value=\"${s.id}\">${s.name}</option>`)
+                .join("");
+            sel.value = "";
+          }
+          this._pendingTesterTarget = { key, el };
+          this.showModal("testerSelectModal");
+        });
+      }
+      const resetBtn = el.querySelector(".reset-tested-btn");
+      if (resetBtn) {
+        resetBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const sid = Number(el.getAttribute("data-staff"));
+          const cid = Number(el.getAttribute("data-criteria"));
+          const key = `${sid}:${cid}`;
+          const block = el.querySelector(".tested-block");
+          if (block) {
+            block.innerHTML = `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
+            const openBtn2 = block.querySelector(".open-tester-modal-btn");
+            if (openBtn2) {
+              openBtn2.addEventListener("click", (ev) => {
+                ev.stopPropagation();
+                const sel = document.getElementById("testerSelect");
+                if (sel) {
+                  sel.innerHTML =
+                    `<option value=\"\">選択してください</option>` +
+                    (this.currentStaff || [])
+                      .map(
+                        (s) => `<option value=\"${s.id}\">${s.name}</option>`
+                      )
+                      .join("");
+                  sel.value = "";
+                }
+                this._pendingTesterTarget = { key, el };
+                this.showModal("testerSelectModal");
+              });
+            }
+          }
+          if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
+          this._pendingEvalTests.set(key, { clear: true });
+          if (!this._pendingEvalChanges) this._pendingEvalChanges = new Map();
+          if (!this._pendingEvalChanges.has(key)) {
+            const curStatus = this._staffEvalCache.get(key) || "not-started";
+            this._pendingEvalChanges.set(key, curStatus);
+          }
+          if (this._staffEvalTestCache) this._staffEvalTestCache.delete(key);
+        });
+      }
     });
-    const confirmBtn = document.getElementById('confirmTesterBtn');
-    if(confirmBtn){ confirmBtn.onclick = ()=>{ const sel=document.getElementById('testerSelect'); const val = sel && sel.value ? Number(sel.value):null; if(!val || !this._pendingTesterTarget){ this.closeModal('testerSelectModal'); return; } const { key, el } = this._pendingTesterTarget; const tester=(this.currentStaff||[]).find(s=>s.id===val); const block = el.querySelector('.tested-block'); if(block){ const displayName = tester?.name || '歴代の猛者'; block.innerHTML = `<span class=\"tested-text tested\">完璧！${displayName}がテスト済み！</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>`; const resetBtn2 = block.querySelector('.reset-tested-btn'); if(resetBtn2){ resetBtn2.addEventListener('click', e=>{ e.stopPropagation(); block.innerHTML = `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`; if(this._pendingEvalTests) this._pendingEvalTests.delete(key); if(this._staffEvalTestCache) this._staffEvalTestCache.delete(key); const openBtn3 = block.querySelector('.open-tester-modal-btn'); if(openBtn3){ openBtn3.addEventListener('click', ev=>{ ev.stopPropagation(); const sel2=document.getElementById('testerSelect'); if(sel2){ sel2.innerHTML = `<option value=\"\">選択してください</option>` + (this.currentStaff||[]).map(s=>`<option value=\"${s.id}\">${s.name}</option>`).join(''); sel2.value=''; } this._pendingTesterTarget={ key, el }; this.showModal('testerSelectModal'); }); } }); } }
-      if(!this._pendingEvalTests) this._pendingEvalTests = new Map(); this._pendingEvalTests.set(key,{ testedBy: val, testedAt: new Date().toISOString() }); if(this._staffEvalTestCache) this._staffEvalTestCache.set(key,{ testedBy: val, testedAt: new Date().toISOString() }); if(!this._pendingEvalChanges) this._pendingEvalChanges = new Map(); if(!this._pendingEvalChanges.has(key)){ const curStatus=this._staffEvalCache.get(key)||'not-started'; this._pendingEvalChanges.set(key, curStatus);} this._pendingTesterTarget = null; this.closeModal('testerSelectModal'); } }
-  } catch(e){
-    console.error('評価一覧読み込みエラー:', e);
-    container.innerHTML = '<div class="empty-state">評価一覧の取得に失敗しました</div>';
+    const confirmBtn = document.getElementById("confirmTesterBtn");
+    if (confirmBtn) {
+      confirmBtn.onclick = () => {
+        const sel = document.getElementById("testerSelect");
+        const val = sel && sel.value ? Number(sel.value) : null;
+        if (!val || !this._pendingTesterTarget) {
+          this.closeModal("testerSelectModal");
+          return;
+        }
+        const { key, el } = this._pendingTesterTarget;
+        const tester = (this.currentStaff || []).find((s) => s.id === val);
+        const block = el.querySelector(".tested-block");
+        if (block) {
+          const displayName = tester?.name || "歴代の猛者";
+          block.innerHTML = `<span class=\"tested-text tested\">完璧！${displayName}がテスト済み！</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>`;
+          const resetBtn2 = block.querySelector(".reset-tested-btn");
+          if (resetBtn2) {
+            resetBtn2.addEventListener("click", (e) => {
+              e.stopPropagation();
+              block.innerHTML = `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
+              if (this._pendingEvalTests) this._pendingEvalTests.delete(key);
+              if (this._staffEvalTestCache)
+                this._staffEvalTestCache.delete(key);
+              const openBtn3 = block.querySelector(".open-tester-modal-btn");
+              if (openBtn3) {
+                openBtn3.addEventListener("click", (ev) => {
+                  ev.stopPropagation();
+                  const sel2 = document.getElementById("testerSelect");
+                  if (sel2) {
+                    sel2.innerHTML =
+                      `<option value=\"\">選択してください</option>` +
+                      (this.currentStaff || [])
+                        .map(
+                          (s) => `<option value=\"${s.id}\">${s.name}</option>`
+                        )
+                        .join("");
+                    sel2.value = "";
+                  }
+                  this._pendingTesterTarget = { key, el };
+                  this.showModal("testerSelectModal");
+                });
+              }
+            });
+          }
+        }
+        if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
+        this._pendingEvalTests.set(key, {
+          testedBy: val,
+          testedAt: new Date().toISOString(),
+        });
+        if (this._staffEvalTestCache)
+          this._staffEvalTestCache.set(key, {
+            testedBy: val,
+            testedAt: new Date().toISOString(),
+          });
+        if (!this._pendingEvalChanges) this._pendingEvalChanges = new Map();
+        if (!this._pendingEvalChanges.has(key)) {
+          const curStatus = this._staffEvalCache.get(key) || "not-started";
+          this._pendingEvalChanges.set(key, curStatus);
+        }
+        this._pendingTesterTarget = null;
+        this.closeModal("testerSelectModal");
+      };
+    }
+  } catch (e) {
+    console.error("評価一覧読み込みエラー:", e);
+    container.innerHTML =
+      '<div class="empty-state">評価一覧の取得に失敗しました</div>';
   }
 };
 
 // ====== ゲームセンター機能 ======
 // DOMContentLoaded が既に発火済みでも初期化されるよう即時IIFE化
 (function initGameHub() {
-    if (initGameHub._inited) return; // 再入防止
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", initGameHub, {
-        once: true,
-      });
-      return;
-    }
-    initGameHub._inited = true;
-    const header = document.getElementById("mainHeader");
-    const gameHub = document.getElementById("gameHub");
-    const backBtn = document.getElementById("backToMain");
-    const playerSelect = document.getElementById("gamePlayerSelect");
-    const rankingEls = {
-      reaction: document.getElementById("rankingReaction"),
-      twenty: document.getElementById("rankingTwenty"),
-      rpg: document.getElementById("rankingRpg"),
-    };
-    const openRpgLink = document.getElementById("openRpgLink");
-    let reactionState = {
-      timerId: null,
-      startWait: 0,
-      started: false,
-      reacted: false,
-      startTime: 0,
-    };
-    let twentyState = { startTime: 0, running: false };
-    const reactionStartBtn = document.getElementById("reactionStartBtn");
-    const reactionStopBtn = document.getElementById("reactionStopBtn");
-    const reactionStatus = document.getElementById("reactionStatus");
-    const reactionBest = document.getElementById("reactionBest");
-    const twentyStartBtn = document.getElementById("twentyStartBtn");
-    const twentyStopBtn = document.getElementById("twentyStopBtn");
-    const twentyStatus = document.getElementById("twentyStatus");
-    const twentyBest = document.getElementById("twentyBest");
+  if (initGameHub._inited) return; // 再入防止
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initGameHub, {
+      once: true,
+    });
+    return;
+  }
+  initGameHub._inited = true;
+  const header = document.getElementById("mainHeader");
+  const gameHub = document.getElementById("gameHub");
+  const backBtn = document.getElementById("backToMain");
+  const playerSelect = document.getElementById("gamePlayerSelect");
+  const rankingEls = {
+    reaction: document.getElementById("rankingReaction"),
+    twenty: document.getElementById("rankingTwenty"),
+    rpg: document.getElementById("rankingRpg"),
+  };
+  const openRpgLink = document.getElementById("openRpgLink");
+  let reactionState = {
+    timerId: null,
+    startWait: 0,
+    started: false,
+    reacted: false,
+    startTime: 0,
+  };
+  let twentyState = { startTime: 0, running: false };
+  const reactionStartBtn = document.getElementById("reactionStartBtn");
+  const reactionStopBtn = document.getElementById("reactionStopBtn");
+  const reactionStatus = document.getElementById("reactionStatus");
+  const reactionBest = document.getElementById("reactionBest");
+  const twentyStartBtn = document.getElementById("twentyStartBtn");
+  const twentyStopBtn = document.getElementById("twentyStopBtn");
+  const twentyStatus = document.getElementById("twentyStatus");
+  const twentyBest = document.getElementById("twentyBest");
 
-    function showGameHub() {
-      if (!gameHub) return;
-      const loader = document.getElementById('gameHubLoader');
-      gameHub.style.display = 'block';
-      if (loader) loader.style.display = 'flex';
-      const doSync = async () => {
-        // 1) スタッフ (未ロード/空ならロード)
-        try {
-          if (!window.paManager || !Array.isArray(window.paManager.currentStaff)) {
-            console.warn('[GameHub] paManager 未初期化');
-          } else if (!window.paManager.currentStaff.length) {
-            await window.paManager.loadStaff();
-          }
-        } catch(e){ console.warn('[GameHub] staff load err', e); }
-        // 2) セレクト更新
-        try { refreshPlayerSelect(); } catch {}
-        // 3) ランキング並列ロード
-        try { await Promise.all(['reaction','twenty','rpg'].map(g=>loadRanking(g))); } catch {}
-      };
-      doSync().finally(()=>{
-        if (loader) loader.style.display = 'none';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-    }
-    function hideGameHub() {
-      if (!gameHub) return;
-      gameHub.style.display = "none";
-    }
-    if (header) {
-      header.addEventListener("click", () => showGameHub());
-      header.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          showGameHub();
-        }
-      });
-    }
-    if (backBtn) backBtn.addEventListener("click", () => hideGameHub());
-    if (openRpgLink) {
-      openRpgLink.addEventListener("click", (e) => {
-        if (!playerSelect.value) {
-          e.preventDefault();
-          alert("プレイヤーを選択してください");
-          return;
-        }
-        // クエリ引き継ぎ
-        openRpgLink.href = `/rpg.html?staffId=${encodeURIComponent(
-          playerSelect.value
-        )}`;
-      });
-    }
-
-    function refreshPlayerSelect() {
-      if (!playerSelect) return;
-      const staffRaw = window.paManager?.currentStaff || [];
-  console.log('[GameHub] refreshPlayerSelect staffRaw length=', staffRaw.length);
-      // かな(存在すれば) / 名前 でソートして全スタッフを選択肢化
-      const staff = [...staffRaw].sort((a, b) => {
-        const ak = (a.kana || a.name || "").toLowerCase();
-        const bk = (b.kana || b.name || "").toLowerCase();
-        if (ak < bk) return -1;
-        if (ak > bk) return 1;
-        return 0;
-      });
-      const prev =
-        playerSelect.value || localStorage.getItem("gameSelectedStaffId") || "";
-      let html =
-        '<option value="">-- プレイヤー選択 (全スタッフ) --</option>' +
-        staff.map((s) => `<option value="${s.id}">${s.name}</option>`).join("");
-      playerSelect.innerHTML = html;
-      if (prev && staff.some((s) => String(s.id) === prev)) {
-        playerSelect.value = prev;
-      }
-  console.log('[GameHub] refreshPlayerSelect done options=', playerSelect.options.length);
-    }
-    // スタッフ読み込み後に自動反映できるようグローバルフック（常に最新参照）
-    window._refreshGamePlayerSelect = () => {
+  function showGameHub() {
+    if (!gameHub) return;
+    const loader = document.getElementById("gameHubLoader");
+    gameHub.style.display = "block";
+    if (loader) loader.style.display = "flex";
+    const doSync = async () => {
+      // 1) スタッフ (未ロード/空ならロード)
       try {
-  console.log('[GameHub] _refreshGamePlayerSelect called');
+        if (
+          !window.paManager ||
+          !Array.isArray(window.paManager.currentStaff)
+        ) {
+          console.warn("[GameHub] paManager 未初期化");
+        } else if (!window.paManager.currentStaff.length) {
+          await window.paManager.loadStaff();
+        }
+      } catch (e) {
+        console.warn("[GameHub] staff load err", e);
+      }
+      // 2) セレクト更新
+      try {
         refreshPlayerSelect();
-      } catch (e) {
-        console.warn("refreshPlayerSelect failed", e);
-      }
+      } catch {}
+      // 3) ランキング並列ロード
+      try {
+        await Promise.all(
+          ["reaction", "twenty", "rpg"].map((g) => loadRanking(g))
+        );
+      } catch {}
     };
-    // 既に staff がロード済みの場合は即反映
-    if (
-      window.paManager &&
-      Array.isArray(window.paManager.currentStaff) &&
-      window.paManager.currentStaff.length
-    ) {
-      window._refreshGamePlayerSelect();
-    } else if (window.paManager) {
-      // まだロードされていない場合、ログイン後まで待たず先行ロード試行（PIN未完了でも公開情報として扱う想定なら可）
-      try {
-        console.log('[GameHub] staff not loaded yet -> triggering early loadStaff');
-        window.paManager.loadStaff();
-      } catch (e) {
-        console.warn('[GameHub] early loadStaff failed', e);
+    doSync().finally(() => {
+      if (loader) loader.style.display = "none";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+  function hideGameHub() {
+    if (!gameHub) return;
+    gameHub.style.display = "none";
+  }
+  if (header) {
+    header.addEventListener("click", () => showGameHub());
+    header.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        showGameHub();
       }
-    }
-    // Rankings
-    async function loadRanking(game) {
-      const el = rankingEls[game];
-      if (!el) return;
-      try {
-        el.innerHTML = "<li>読み込み中...</li>";
-        const res = await fetch(`/api/games/scores?game=${game}`);
-        if (!res.ok) throw 0;
-        const data = await res.json();
-        if (!Array.isArray(data) || !data.length) {
-          el.innerHTML = "<li>なし</li>";
-          return;
-        }
-        el.innerHTML = data
-          .map((r, i) => {
-            let v = r.value;
-            if (game === "twenty") {
-              v = `${v}ms (実 ${r.extra || ""}ms)`;
-            }
-            if (game === "reaction") {
-              v = v + "ms";
-            }
-            if (game === "rpg") {
-              v = "Lv" + v + (r.meta?.bossDefeated ? " ⭐" : "");
-            }
-            return `<li><span>${i + 1}. ${
-              r.staff?.name || "?"
-            }</span><span>${v}</span></li>`;
-          })
-          .join("");
-      } catch {
-        el.innerHTML = "<li>取得失敗</li>";
+    });
+  }
+  if (backBtn) backBtn.addEventListener("click", () => hideGameHub());
+  if (openRpgLink) {
+    openRpgLink.addEventListener("click", (e) => {
+      if (!playerSelect.value) {
+        e.preventDefault();
+        alert("プレイヤーを選択してください");
+        return;
       }
+      // クエリ引き継ぎ
+      openRpgLink.href = `/rpg.html?staffId=${encodeURIComponent(
+        playerSelect.value
+      )}`;
+    });
+  }
+
+  function refreshPlayerSelect() {
+    if (!playerSelect) return;
+    const staffRaw = window.paManager?.currentStaff || [];
+    console.log(
+      "[GameHub] refreshPlayerSelect staffRaw length=",
+      staffRaw.length
+    );
+    // かな(存在すれば) / 名前 でソートして全スタッフを選択肢化
+    const staff = [...staffRaw].sort((a, b) => {
+      const ak = (a.kana || a.name || "").toLowerCase();
+      const bk = (b.kana || b.name || "").toLowerCase();
+      if (ak < bk) return -1;
+      if (ak > bk) return 1;
+      return 0;
+    });
+    const prev =
+      playerSelect.value || localStorage.getItem("gameSelectedStaffId") || "";
+    let html =
+      '<option value="">-- プレイヤー選択 (全スタッフ) --</option>' +
+      staff.map((s) => `<option value="${s.id}">${s.name}</option>`).join("");
+    playerSelect.innerHTML = html;
+    if (prev && staff.some((s) => String(s.id) === prev)) {
+      playerSelect.value = prev;
     }
-    function loadRankingsAll() {
-      ["reaction", "twenty", "rpg"].forEach((g) => loadRanking(g));
+    console.log(
+      "[GameHub] refreshPlayerSelect done options=",
+      playerSelect.options.length
+    );
+  }
+  // スタッフ読み込み後に自動反映できるようグローバルフック（常に最新参照）
+  window._refreshGamePlayerSelect = () => {
+    try {
+      console.log("[GameHub] _refreshGamePlayerSelect called");
+      refreshPlayerSelect();
+    } catch (e) {
+      console.warn("refreshPlayerSelect failed", e);
     }
-
-    // Reaction Game
-    if (reactionStartBtn)
-      reactionStartBtn.addEventListener("click", () => {
-        if (!playerSelect.value) {
-          alert("プレイヤーを選択してください");
-          return;
-        }
-        if (reactionState.timerId) clearTimeout(reactionState.timerId);
-        reactionState = {
-          timerId: null,
-          startWait: Date.now(),
-          started: false,
-          reacted: false,
-          startTime: 0,
-        };
-        reactionStatus.textContent = "ランダム待ち...";
-        reactionStopBtn.disabled = true;
-        reactionStartBtn.disabled = true;
-        reactionStatus.style.color = "";
-        const wait = 800 + Math.random() * 2200;
-        reactionState.timerId = setTimeout(() => {
-          reactionState.started = true;
-          reactionState.startTime = performance.now();
-          reactionStatus.textContent = "今！ストップ！";
-          reactionStopBtn.disabled = false;
-          reactionStatus.style.color = "#dc2626";
-        }, wait);
-      });
-    if (reactionStopBtn)
-      reactionStopBtn.addEventListener("click", async () => {
-        if (!reactionState.started || reactionState.reacted) return;
-        reactionState.reacted = true;
-        const elapsed = Math.round(performance.now() - reactionState.startTime);
-        reactionStatus.textContent = `結果: ${elapsed}ms`;
-        reactionStartBtn.disabled = false;
-        reactionStopBtn.disabled = true;
-        submitScore("reaction", elapsed, null);
-        const curBest = reactionBest.getAttribute("data-best");
-        if (!curBest || elapsed < Number(curBest)) {
-          reactionBest.setAttribute("data-best", elapsed);
-          reactionBest.textContent = "自己ベスト: " + elapsed + "ms";
-        }
-        loadRanking("reaction");
-      });
-
-    // Twenty Game
-    if (twentyStartBtn)
-      twentyStartBtn.addEventListener("click", () => {
-        if (!playerSelect.value) {
-          alert("プレイヤーを選択してください");
-          return;
-        }
-        twentyState.startTime = performance.now();
-        twentyState.running = true;
-        twentyStartBtn.disabled = true;
-        twentyStopBtn.disabled = false;
-        twentyStatus.textContent = "カウント中...";
-      });
-    if (twentyStopBtn)
-      twentyStopBtn.addEventListener("click", () => {
-        if (!twentyState.running) return;
-        twentyState.running = false;
-        const actual = Math.round(performance.now() - twentyState.startTime);
-        twentyStartBtn.disabled = false;
-        twentyStopBtn.disabled = true;
-        const diff = Math.abs(actual - 20000);
-        twentyStatus.textContent = `差: ${diff}ms (実 ${actual}ms)`;
-        submitScore("twenty", diff, actual);
-        const curBest = twentyBest.getAttribute("data-best");
-        if (!curBest || diff < Number(curBest)) {
-          twentyBest.setAttribute("data-best", diff);
-          twentyBest.textContent = "自己ベスト: 差 " + diff + "ms";
-        }
-        loadRanking("twenty");
-      });
-
-    async function submitScore(game, value, extra) {
-      try {
-        const sid = Number(playerSelect.value);
-        if (!sid) return;
-        await fetch("/api/games/scores", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ game, staffId: sid, value, extra }),
-        });
-      } catch (e) {
-        console.warn("score submit failed", e);
+  };
+  // 既に staff がロード済みの場合は即反映
+  if (
+    window.paManager &&
+    Array.isArray(window.paManager.currentStaff) &&
+    window.paManager.currentStaff.length
+  ) {
+    window._refreshGamePlayerSelect();
+  } else if (window.paManager) {
+    // まだロードされていない場合、ログイン後まで待たず先行ロード試行（PIN未完了でも公開情報として扱う想定なら可）
+    try {
+      console.log(
+        "[GameHub] staff not loaded yet -> triggering early loadStaff"
+      );
+      window.paManager.loadStaff();
+    } catch (e) {
+      console.warn("[GameHub] early loadStaff failed", e);
+    }
+  }
+  // Rankings
+  async function loadRanking(game) {
+    const el = rankingEls[game];
+    if (!el) return;
+    try {
+      el.innerHTML = "<li>読み込み中...</li>";
+      const res = await fetch(`/api/games/scores?game=${game}`);
+      if (!res.ok) throw 0;
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) {
+        el.innerHTML = "<li>なし</li>";
+        return;
       }
+      el.innerHTML = data
+        .map((r, i) => {
+          let v = r.value;
+          if (game === "twenty") {
+            v = `${v}ms (実 ${r.extra || ""}ms)`;
+          }
+          if (game === "reaction") {
+            v = v + "ms";
+          }
+          if (game === "rpg") {
+            v = "Lv" + v + (r.meta?.bossDefeated ? " ⭐" : "");
+          }
+          return `<li><span>${i + 1}. ${
+            r.staff?.name || "?"
+          }</span><span>${v}</span></li>`;
+        })
+        .join("");
+    } catch {
+      el.innerHTML = "<li>取得失敗</li>";
     }
+  }
+  function loadRankingsAll() {
+    ["reaction", "twenty", "rpg"].forEach((g) => loadRanking(g));
+  }
 
-    // RPG
-    if (playerSelect)
-      playerSelect.addEventListener("change", () => {
-        if (playerSelect.value) {
-          try {
-            localStorage.setItem("gameSelectedStaffId", playerSelect.value);
-          } catch {}
-        }
-        loadRankingsAll();
+  // Reaction Game
+  if (reactionStartBtn)
+    reactionStartBtn.addEventListener("click", () => {
+      if (!playerSelect.value) {
+        alert("プレイヤーを選択してください");
+        return;
+      }
+      if (reactionState.timerId) clearTimeout(reactionState.timerId);
+      reactionState = {
+        timerId: null,
+        startWait: Date.now(),
+        started: false,
+        reacted: false,
+        startTime: 0,
+      };
+      reactionStatus.textContent = "ランダム待ち...";
+      reactionStopBtn.disabled = true;
+      reactionStartBtn.disabled = true;
+      reactionStatus.style.color = "";
+      const wait = 800 + Math.random() * 2200;
+      reactionState.timerId = setTimeout(() => {
+        reactionState.started = true;
+        reactionState.startTime = performance.now();
+        reactionStatus.textContent = "今！ストップ！";
+        reactionStopBtn.disabled = false;
+        reactionStatus.style.color = "#dc2626";
+      }, wait);
+    });
+  if (reactionStopBtn)
+    reactionStopBtn.addEventListener("click", async () => {
+      if (!reactionState.started || reactionState.reacted) return;
+      reactionState.reacted = true;
+      const elapsed = Math.round(performance.now() - reactionState.startTime);
+      reactionStatus.textContent = `結果: ${elapsed}ms`;
+      reactionStartBtn.disabled = false;
+      reactionStopBtn.disabled = true;
+      submitScore("reaction", elapsed, null);
+      const curBest = reactionBest.getAttribute("data-best");
+      if (!curBest || elapsed < Number(curBest)) {
+        reactionBest.setAttribute("data-best", elapsed);
+        reactionBest.textContent = "自己ベスト: " + elapsed + "ms";
+      }
+      loadRanking("reaction");
+    });
+
+  // Twenty Game
+  if (twentyStartBtn)
+    twentyStartBtn.addEventListener("click", () => {
+      if (!playerSelect.value) {
+        alert("プレイヤーを選択してください");
+        return;
+      }
+      twentyState.startTime = performance.now();
+      twentyState.running = true;
+      twentyStartBtn.disabled = true;
+      twentyStopBtn.disabled = false;
+      twentyStatus.textContent = "カウント中...";
+    });
+  if (twentyStopBtn)
+    twentyStopBtn.addEventListener("click", () => {
+      if (!twentyState.running) return;
+      twentyState.running = false;
+      const actual = Math.round(performance.now() - twentyState.startTime);
+      twentyStartBtn.disabled = false;
+      twentyStopBtn.disabled = true;
+      const diff = Math.abs(actual - 20000);
+      twentyStatus.textContent = `差: ${diff}ms (実 ${actual}ms)`;
+      submitScore("twenty", diff, actual);
+      const curBest = twentyBest.getAttribute("data-best");
+      if (!curBest || diff < Number(curBest)) {
+        twentyBest.setAttribute("data-best", diff);
+        twentyBest.textContent = "自己ベスト: 差 " + diff + "ms";
+      }
+      loadRanking("twenty");
+    });
+
+  async function submitScore(game, value, extra) {
+    try {
+      const sid = Number(playerSelect.value);
+      if (!sid) return;
+      await fetch("/api/games/scores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ game, staffId: sid, value, extra }),
       });
+    } catch (e) {
+      console.warn("score submit failed", e);
+    }
+  }
+
+  // RPG
+  if (playerSelect)
+    playerSelect.addEventListener("change", () => {
+      if (playerSelect.value) {
+        try {
+          localStorage.setItem("gameSelectedStaffId", playerSelect.value);
+        } catch {}
+      }
+      loadRankingsAll();
+    });
 })();
