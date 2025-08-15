@@ -14,40 +14,41 @@ datasource db {
 }
 
 model Staff {
-  id         Int       @id @default(autoincrement())
-  name       String
-  kana       String?   @db.VarChar(255)
-  position   String?   @db.VarChar(255)
-  joined     DateTime? @db.Date
-  birthDate  DateTime? @db.Date @map("birth_date")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  mgmtCode   String?   @db.VarChar(5) @map("mgmt_code") // 管理番号(最大5桁) 重複許容
+  id        Int       @id @default(autoincrement())
+  name      String
+  kana      String?   @db.VarChar(255)
+  position  String?   @db.VarChar(255)
+  joined    DateTime? @db.Date
+  birthDate DateTime? @map("birth_date") @db.Date
+  createdAt DateTime  @default(now()) @map("created_at")
+  mgmtCode  String?   @map("mgmt_code") @db.VarChar(5) // 管理番号(最大5桁) 重複許容
 
   evaluations Evaluation[]
+  gameScores  GameScore[]
 }
 
 model Criteria {
-  id         Int       @id @default(autoincrement())
-  name       String
+  id          Int      @id @default(autoincrement())
+  name        String
   description String?
-  category   String    @default("共通") @db.VarChar(100)
-  sortOrder  Int       @default(0) @map("sort_order")
-  createdAt  DateTime  @default(now()) @map("created_at")
+  category    String   @default("共通") @db.VarChar(100)
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   evaluations Evaluation[]
 }
 
 model Evaluation {
-  id         Int       @id @default(autoincrement())
-  staff      Staff     @relation(fields: [staffId], references: [id])
-  staffId    Int
-  criteria   Criteria  @relation(fields: [criteriaId], references: [id])
-  criteriaId Int
-  status     String    @default("not-started") @db.VarChar(50)
-  score      Int?
-  comments   String?
+  id          Int       @id @default(autoincrement())
+  staff       Staff     @relation(fields: [staffId], references: [id])
+  staffId     Int
+  criteria    Criteria  @relation(fields: [criteriaId], references: [id])
+  criteriaId  Int
+  status      String    @default("not-started") @db.VarChar(50)
+  score       Int?
+  comments    String?
   evaluatedAt DateTime? @map("evaluated_at")
-  createdAt  DateTime  @default(now()) @map("created_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
 
   @@index([staffId])
   @@index([criteriaId])
@@ -66,13 +67,13 @@ model GameScore {
   staff     Staff    @relation(fields: [staffId], references: [id])
   staffId   Int
   game      String   @db.VarChar(50) // 'reaction' | 'twenty' | 'rpg'
-  value     Int?     // 主指標 (reaction: 反応ms / twenty: 差分ms(小さい程良) / rpg: level )
-  extra     Int?     // 補助 (twenty: 実測ms, rpg: 所持金等別用途可)
+  value     Int? // 主指標 (reaction: 反応ms / twenty: 差分ms(小さい程良) / rpg: level )
+  extra     Int? // 補助 (twenty: 実測ms, rpg: 所持金等別用途可)
   meta      Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([game, staffId]) // rpg は常に1件, 他ゲームは最新の結果を保持 (最小値更新時に上書き)
   @@index([game])
   @@index([staffId])
-  @@unique([game, staffId]) // rpg は常に1件, 他ゲームは最新の結果を保持 (最小値更新時に上書き)
 }
