@@ -1412,328 +1412,104 @@ PAManager.prototype.openStaffDetail = async function (staffId) {
   this.showModal("staffDetailModal");
 };
 
-PAManager.prototype.renderStaffEvaluations = (async function (staffId) {
-  const container = document.getElementById("staffEvaluations");
+PAManager.prototype.renderStaffEvaluations = async function (staffId) {
+  const container = document.getElementById('staffEvaluations');
   if (!container) return;
   container.innerHTML = '<div class="loading">読み込み中...</div>';
-
   try {
     // 既存評価の取得
     const res = await fetch(`/api/evaluations?staffId=${staffId}`);
     const evals = res.ok ? await res.json() : [];
+    if (!this._staffEvalCache) this._staffEvalCache = new Map();
     this._staffEvalCache.clear();
     if (!this._staffEvalTestCache) this._staffEvalTestCache = new Map();
     this._staffEvalTestCache.clear();
     for (const ev of evals) {
-      this._staffEvalCache.set(
-        `${ev.staffId}:${ev.criteriaId}`,
-        ev.status || "not-started"
-      );
+      this._staffEvalCache.set(`${ev.staffId}:${ev.criteriaId}`, ev.status || 'not-started');
       if (ev.comments) {
         try {
           const c = JSON.parse(ev.comments);
           if (c && (c.testedBy || c.testedBy === 0)) {
-            this._staffEvalTestCache.set(`${ev.staffId}:${ev.criteriaId}`, {
-              testedBy: typeof c.testedBy === "number" ? c.testedBy : null,
-              testedAt: c.testedAt || null,
-            });
+            this._staffEvalTestCache.set(`${ev.staffId}:${ev.criteriaId}`, { testedBy: typeof c.testedBy === 'number' ? c.testedBy : null, testedAt: c.testedAt || null });
           }
         } catch {}
       }
     }
-
     // 基準（criteria）が0件なら案内
     if (!this.currentCriteria || this.currentCriteria.length === 0) {
-      container.innerHTML =
-        '<div class="empty-state">評価項目がありません。右上の「項目追加」から作成してください。</div>';
+      container.innerHTML = '<div class="empty-state">評価項目がありません。右上の「項目追加」から作成してください。</div>';
       return;
     }
-
     // フィルタ選択取得
-    const statusChecks = Array.from(
-      document.querySelectorAll('input[name="evalStatusFilter[]"]:checked')
-    ).map((i) => i.value);
-    const catChecks = Array.from(
-      document.querySelectorAll('input[name="evalCategoryFilter[]"]:checked')
-    ).map((i) => i.value);
-    // ステータス判定関数 (tested: commentsにtestedByがある)
-    const isTested = (key) =>
-      this._staffEvalTestCache && this._staffEvalTestCache.has(key);
-    const filteredCriteria = (this.currentCriteria || []).filter(
-      (cr) =>
-        catChecks.length === 0 || catChecks.includes(cr.category || "共通")
-    );
-
-    // 描画
+    const statusChecks = Array.from(document.querySelectorAll('input[name="evalStatusFilter[]"]:checked')).map(i=>i.value);
+    const catChecks = Array.from(document.querySelectorAll('input[name="evalCategoryFilter[]"]:checked')).map(i=>i.value);
+    const isTested = (key)=> this._staffEvalTestCache && this._staffEvalTestCache.has(key);
+    const filteredCriteria = (this.currentCriteria||[]).filter(cr => catChecks.length===0 || catChecks.includes(cr.category || '共通'));
     if (!this._pendingEvalChanges) this._pendingEvalChanges = new Map();
-    container.innerHTML = filteredCriteria
-      .map((cr) => {
-        const key = `${staffId}:${cr.id}`;
-        const status = this._staffEvalCache.get(key) || "not-started";
-        const color =
-          status === "done"
-            ? "#00d4aa"
-            : status === "learning"
-            ? "#ff9f43"
-            : "#f1f2f6";
-        const label =
-          status === "done"
-            ? "習得済み"
-            : status === "learning"
-            ? "学習中"
-            : "未着手";
-        const tinfo = this._staffEvalTestCache.get(key);
-        const testedById = tinfo?.testedBy ?? null;
-        const testerName = testedById
-          ? this.currentStaff.find((s) => s.id === testedById)?.name ||
-            "歴代の猛者"
-          : "";
-        const testedText = testedById
-          ? `完璧！${testerName}がテスト済み！`
-          : "";
-        const testedClass = testedById ? "tested" : "";
-        const options = (this.currentStaff || [])
-          .map(
-            (s) =>
-              `<option value="${s.id}" ${
-                testedById === s.id ? "selected" : ""
-              }>${s.name}</option>`
-          )
-          .join("");
-        // ステータスフィルタ適合判定
-        const logicalStatusValues = [];
-        logicalStatusValues.push(status); // not-started | learning | done
-        if (testedById) logicalStatusValues.push("tested");
-        const statusMatch =
-          statusChecks.length === 0 ||
-          statusChecks.some((v) => logicalStatusValues.includes(v));
-        if (!statusMatch) return ""; // 非表示
-        return `
-                <div class="criteria-chip" data-staff="${staffId}" data-criteria="${
-          cr.id
-        }" style="border:1px solid #eaeaea; padding:12px; border-radius:10px; cursor:pointer; display:flex; flex-direction:column; gap:8px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-                        <div>
-                            <div style="font-weight:600">${cr.name}</div>
-                            <small style="color:#6b7280">${
-                              cr.category || "共通"
-                            }</small>
-                        </div>
-                        <span class="status-badge" style="background:${color}; color:#111; padding:6px 10px; border-radius:9999px; font-size:12px; white-space:nowrap;">${label}</span>
-                    </div>
-                    ${
-                      cr.description
-                        ? `<div class="criteria-chip-desc">${cr.description}</div>`
-                        : ""
-                    }
-                    <div class="tested-block" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                        ${
-                          testedById
-                            ? `<span class=\"tested-text tested\">${testedText}</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>`
-                            : `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`
-                        }
-                    </div>
-                </div>
-            `;
-      })
-      .join("");
-
-    // フィルタ更新イベント（初期登録は1回）
+    container.innerHTML = filteredCriteria.map(cr => {
+      const key = `${staffId}:${cr.id}`;
+      const status = this._staffEvalCache.get(key) || 'not-started';
+      const color = status==='done' ? '#00d4aa' : status==='learning' ? '#ff9f43' : '#f1f2f6';
+      const label = status==='done' ? '習得済み' : status==='learning' ? '学習中' : '未着手';
+      const tinfo = this._staffEvalTestCache.get(key);
+      const testedById = tinfo?.testedBy ?? null;
+      const testerName = testedById ? (this.currentStaff.find(s=>s.id===testedById)?.name || '歴代の猛者') : '';
+      const testedText = testedById ? `完璧！${testerName}がテスト済み！` : '';
+      const options = (this.currentStaff||[]).map(s=>`<option value="${s.id}" ${testedById===s.id?'selected':''}>${s.name}</option>`).join('');
+      const logicalStatusValues = [status];
+      if (testedById) logicalStatusValues.push('tested');
+      const statusMatch = statusChecks.length===0 || statusChecks.some(v=> logicalStatusValues.includes(v));
+      if(!statusMatch) return '';
+      return `<div class="criteria-chip" data-staff="${staffId}" data-criteria="${cr.id}" style="border:1px solid #eaeaea; padding:12px; border-radius:10px; cursor:pointer; display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <div><div style="font-weight:600">${cr.name}</div><small style="color:#6b7280">${cr.category||'共通'}</small></div>
+          <span class="status-badge" style="background:${color}; color:#111; padding:6px 10px; border-radius:9999px; font-size:12px; white-space:nowrap;">${label}</span>
+        </div>
+        ${cr.description ? `<div class=\"criteria-chip-desc\">${cr.description}</div>` : ''}
+        <div class="tested-block" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          ${testedById ? `<span class=\"tested-text tested\">完璧！${testerName}がテスト済み！</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>` : `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`}
+        </div>
+      </div>`;
+    }).join('');
     if (!this._evalFilterBound) {
       this._evalFilterBound = true;
-      document
-        .querySelectorAll('#evaluationFilters input[type="checkbox"]')
-        .forEach((cb) => {
-          cb.addEventListener("change", () => {
-            // 再描画（キャッシュ/変更マップは保持）
-            this.renderStaffEvaluations(staffId);
-          });
-        });
+      document.querySelectorAll('#evaluationFilters input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', ()=> this.renderStaffEvaluations(staffId));
+      });
     }
-
-    // クリックで状態トグル＆保存
-    container.querySelectorAll(".criteria-chip").forEach((el) => {
-      // テスト系ボタンは無視
-      el.addEventListener("click", async (ev) => {
-        // テスト系ボタンは無視
-        if (
-          ev.target &&
-          ev.target.classList &&
-          (ev.target.classList.contains("open-tester-modal-btn") ||
-            ev.target.classList.contains("reset-tested-btn"))
-        )
-          return;
-        const sid = Number(el.getAttribute("data-staff"));
-        const cid = Number(el.getAttribute("data-criteria"));
+    container.querySelectorAll('.criteria-chip').forEach(el=>{
+      el.addEventListener('click', ev=>{
+        if (ev.target && ev.target.classList && (ev.target.classList.contains('open-tester-modal-btn') || ev.target.classList.contains('reset-tested-btn'))) return;
+        const sid = Number(el.getAttribute('data-staff'));
+        const cid = Number(el.getAttribute('data-criteria'));
         const key = `${sid}:${cid}`;
-        const current = this._staffEvalCache.get(key) || "not-started";
-        const next =
-          current === "not-started"
-            ? "learning"
-            : current === "learning"
-            ? "done"
-            : "not-started";
-        // 先に表示を更新（楽観的UI）
+        const current = this._staffEvalCache.get(key)||'not-started';
+        const next = current==='not-started' ? 'learning' : current==='learning' ? 'done' : 'not-started';
         this._staffEvalCache.set(key, next);
         this._pendingEvalChanges.set(key, next);
-        const badge = el.querySelector(".status-badge");
-        const color =
-          next === "done"
-            ? "#00d4aa"
-            : next === "learning"
-            ? "#ff9f43"
-            : "#f1f2f6";
-        const label =
-          next === "done"
-            ? "習得済み"
-            : next === "learning"
-            ? "学習中"
-            : "未着手";
-        badge.style.background = color;
-        badge.textContent = label;
+        const badge = el.querySelector('.status-badge');
+        const color2 = next==='done' ? '#00d4aa' : next==='learning' ? '#ff9f43' : '#f1f2f6';
+        const label2 = next==='done' ? '習得済み' : next==='learning' ? '学習中' : '未着手';
+        badge.style.background = color2; badge.textContent = label2;
       });
-
-      // 「未テスト」→ モーダルで確認者選択
-      const openBtn = el.querySelector(".open-tester-modal-btn");
-      if (openBtn) {
-        openBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const sid = Number(el.getAttribute("data-staff"));
-          const cid = Number(el.getAttribute("data-criteria"));
-          const key = `${sid}:${cid}`;
-          const sel = document.getElementById("testerSelect");
-          if (sel) {
-            sel.innerHTML =
-              `<option value=\"\">選択してください</option>` +
-              (this.currentStaff || [])
-                .map((s) => `<option value=\"${s.id}\">${s.name}</option>`)
-                .join("");
-            sel.value = "";
-          }
-          this._pendingTesterTarget = { key, el };
-          this.showModal("testerSelectModal");
-        });
-      }
-      // 「未テストに戻す」
-      const resetBtn = el.querySelector(".reset-tested-btn");
-      if (resetBtn) {
-        resetBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const sid = Number(el.getAttribute("data-staff"));
-          const cid = Number(el.getAttribute("data-criteria"));
-          const key = `${sid}:${cid}`;
-          const block = el.querySelector(".tested-block");
-          if (block) {
-            block.innerHTML = `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
-            const openBtn2 = block.querySelector(".open-tester-modal-btn");
-            if (openBtn2) {
-              openBtn2.addEventListener("click", (ev) => {
-                ev.stopPropagation();
-                const sel = document.getElementById("testerSelect");
-                if (sel) {
-                  sel.innerHTML =
-                    `<option value=\"\">選択してください</option>` +
-                    (this.currentStaff || [])
-                      .map(
-                        (s) => `<option value=\"${s.id}\">${s.name}</option>`
-                      )
-                      .join("");
-                  sel.value = "";
-                }
-                this._pendingTesterTarget = { key, el };
-                this.showModal("testerSelectModal");
-              });
-            }
-          }
-          if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
-          // DB側も未テスト化するため clear 指定
-          this._pendingEvalTests.set(key, { clear: true });
-          // ステータスを維持するため、変更セットに現在値を入れておく（未送信による not-started 初期化防止）
-          if (!this._pendingEvalChanges) this._pendingEvalChanges = new Map();
-          if (!this._pendingEvalChanges.has(key)) {
-            const curStatus = this._staffEvalCache.get(key) || "not-started";
-            this._pendingEvalChanges.set(key, curStatus);
-          }
-          if (this._staffEvalTestCache) this._staffEvalTestCache.delete(key);
-        });
-      }
+      const openBtn = el.querySelector('.open-tester-modal-btn');
+      if(openBtn){ openBtn.addEventListener('click', e=>{ e.stopPropagation(); const sid=Number(el.getAttribute('data-staff')); const cid=Number(el.getAttribute('data-criteria')); const key=`${sid}:${cid}`; const sel=document.getElementById('testerSelect'); if(sel){ sel.innerHTML = `<option value=\"\">選択してください</option>` + (this.currentStaff||[]).map(s=>`<option value=\"${s.id}\">${s.name}</option>`).join(''); sel.value=''; } this._pendingTesterTarget={ key, el }; this.showModal('testerSelectModal'); }); }
+      const resetBtn = el.querySelector('.reset-tested-btn');
+      if(resetBtn){ resetBtn.addEventListener('click', e=>{ e.stopPropagation(); const sid=Number(el.getAttribute('data-staff')); const cid=Number(el.getAttribute('data-criteria')); const key=`${sid}:${cid}`; const block = el.querySelector('.tested-block'); if(block){ block.innerHTML = `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`; const openBtn2 = block.querySelector('.open-tester-modal-btn'); if(openBtn2){ openBtn2.addEventListener('click', ev=>{ ev.stopPropagation(); const sel=document.getElementById('testerSelect'); if(sel){ sel.innerHTML = `<option value=\"\">選択してください</option>` + (this.currentStaff||[]).map(s=>`<option value=\"${s.id}\">${s.name}</option>`).join(''); sel.value=''; } this._pendingTesterTarget={ key, el }; this.showModal('testerSelectModal'); }); } }
+        if(!this._pendingEvalTests) this._pendingEvalTests = new Map(); this._pendingEvalTests.set(key,{ clear:true }); if(!this._pendingEvalChanges) this._pendingEvalChanges = new Map(); if(!this._pendingEvalChanges.has(key)){ const curStatus=this._staffEvalCache.get(key)||'not-started'; this._pendingEvalChanges.set(key, curStatus);} if(this._staffEvalTestCache) this._staffEvalTestCache.delete(key); }); }
     });
-
-    // モーダルの「決定」ボタン
-    const confirmBtn = document.getElementById("confirmTesterBtn");
-    if (confirmBtn) {
-      confirmBtn.onclick = () => {
-        const sel = document.getElementById("testerSelect");
-        const val = sel && sel.value ? Number(sel.value) : null;
-        if (!val || !this._pendingTesterTarget) {
-          this.closeModal("testerSelectModal");
-          return;
-        }
-        const { key, el } = this._pendingTesterTarget;
-        const tester = (this.currentStaff || []).find((s) => s.id === val);
-        const block = el.querySelector(".tested-block");
-        if (block) {
-          const displayName = tester?.name || "歴代の猛者";
-          block.innerHTML = `<span class=\"tested-text tested\">完璧！${displayName}がテスト済み！</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>`;
-          const resetBtn2 = block.querySelector(".reset-tested-btn");
-          if (resetBtn2) {
-            resetBtn2.addEventListener("click", (e) => {
-              e.stopPropagation();
-              block.innerHTML = `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`;
-              if (this._pendingEvalTests) this._pendingEvalTests.delete(key);
-              if (this._staffEvalTestCache)
-                this._staffEvalTestCache.delete(key);
-              const openBtn3 = block.querySelector(".open-tester-modal-btn");
-              if (openBtn3) {
-                openBtn3.addEventListener("click", (ev) => {
-                  ev.stopPropagation();
-                  const sel2 = document.getElementById("testerSelect");
-                  if (sel2) {
-                    sel2.innerHTML =
-                      `<option value=\"\">選択してください</option>` +
-                      (this.currentStaff || [])
-                        .map(
-                          (s) => `<option value=\"${s.id}\">${s.name}</option>`
-                        )
-                        .join("");
-                    sel2.value = "";
-                  }
-                  this._pendingTesterTarget = { key, el };
-                  this.showModal("testerSelectModal");
-                });
-              }
-            });
-          }
-        }
-        if (!this._pendingEvalTests) this._pendingEvalTests = new Map();
-        this._pendingEvalTests.set(key, {
-          testedBy: val,
-          testedAt: new Date().toISOString(),
-        });
-        if (this._staffEvalTestCache)
-          this._staffEvalTestCache.set(key, {
-            testedBy: val,
-            testedAt: new Date().toISOString(),
-          });
-        // ステータス未変更でも現状値を送ることでサーバ側で not-started へ初期化されるのを防止
-        if (!this._pendingEvalChanges) this._pendingEvalChanges = new Map();
-        if (!this._pendingEvalChanges.has(key)) {
-          const curStatus = this._staffEvalCache.get(key) || "not-started";
-          this._pendingEvalChanges.set(key, curStatus);
-        }
-        this._pendingTesterTarget = null;
-        this.closeModal("testerSelectModal");
-      };
-    }
-  } catch (e) {
-    console.error("評価一覧読み込みエラー:", e);
-    container.innerHTML =
-      '<div class="empty-state">評価一覧の取得に失敗しました</div>';
+    const confirmBtn = document.getElementById('confirmTesterBtn');
+    if(confirmBtn){ confirmBtn.onclick = ()=>{ const sel=document.getElementById('testerSelect'); const val = sel && sel.value ? Number(sel.value):null; if(!val || !this._pendingTesterTarget){ this.closeModal('testerSelectModal'); return; } const { key, el } = this._pendingTesterTarget; const tester=(this.currentStaff||[]).find(s=>s.id===val); const block = el.querySelector('.tested-block'); if(block){ const displayName = tester?.name || '歴代の猛者'; block.innerHTML = `<span class=\"tested-text tested\">完璧！${displayName}がテスト済み！</span><button class=\"btn btn-secondary btn-small reset-tested-btn\" type=\"button\">未テストに戻す</button>`; const resetBtn2 = block.querySelector('.reset-tested-btn'); if(resetBtn2){ resetBtn2.addEventListener('click', e=>{ e.stopPropagation(); block.innerHTML = `<button class=\"btn btn-primary btn-small open-tester-modal-btn\" type=\"button\">未テスト</button>`; if(this._pendingEvalTests) this._pendingEvalTests.delete(key); if(this._staffEvalTestCache) this._staffEvalTestCache.delete(key); const openBtn3 = block.querySelector('.open-tester-modal-btn'); if(openBtn3){ openBtn3.addEventListener('click', ev=>{ ev.stopPropagation(); const sel2=document.getElementById('testerSelect'); if(sel2){ sel2.innerHTML = `<option value=\"\">選択してください</option>` + (this.currentStaff||[]).map(s=>`<option value=\"${s.id}\">${s.name}</option>`).join(''); sel2.value=''; } this._pendingTesterTarget={ key, el }; this.showModal('testerSelectModal'); }); } }); } }
+      if(!this._pendingEvalTests) this._pendingEvalTests = new Map(); this._pendingEvalTests.set(key,{ testedBy: val, testedAt: new Date().toISOString() }); if(this._staffEvalTestCache) this._staffEvalTestCache.set(key,{ testedBy: val, testedAt: new Date().toISOString() }); if(!this._pendingEvalChanges) this._pendingEvalChanges = new Map(); if(!this._pendingEvalChanges.has(key)){ const curStatus=this._staffEvalCache.get(key)||'not-started'; this._pendingEvalChanges.set(key, curStatus);} this._pendingTesterTarget = null; this.closeModal('testerSelectModal'); } }
+  } catch(e){
+    console.error('評価一覧読み込みエラー:', e);
+    container.innerHTML = '<div class="empty-state">評価一覧の取得に失敗しました</div>';
   }
-})(
-  // ====== ゲームセンター機能 ======
-  // DOMContentLoaded が既に発火済みでも初期化されるよう即時IIFE化
-  function initGameHub() {
+};
+
+// ====== ゲームセンター機能 ======
+// DOMContentLoaded が既に発火済みでも初期化されるよう即時IIFE化
+(function initGameHub() {
     if (initGameHub._inited) return; // 再入防止
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initGameHub, {
@@ -1979,5 +1755,4 @@ PAManager.prototype.renderStaffEvaluations = (async function (staffId) {
         }
         loadRankingsAll();
       });
-  }
-)();
+})();
