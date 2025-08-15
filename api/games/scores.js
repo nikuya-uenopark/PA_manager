@@ -1,11 +1,12 @@
-import { prisma } from "../_prisma";
-import { logEvent } from "../_log";
+// CommonJS へ統一（他 API と同様）
+const prisma = require('../_prisma');
+const { addLog } = require('../_log');
 
 // GET /api/games/scores?game=reaction|twenty|rpg
 //  - reaction: 反応が速い(数値小)順
 //  - twenty:   20秒との差分が小さい順 (abs(value))
 //  - rpg:      レベル(value)高い順
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     const { method } = req;
     if (method === "GET") {
@@ -45,10 +46,7 @@ export default async function handler(req, res) {
         update: { value, extra, meta },
         create: { game, staffId: Number(staffId), value, extra, meta },
       });
-      await logEvent(
-        "game_score",
-        `${game} score updated by staff#${staffId} -> ${value}`
-      );
+  try { await addLog('game_score', `${game} score updated by staff#${staffId} -> ${value}`); } catch {}
       return res.json(saved);
     }
     return res.status(405).json({ error: "Method not allowed" });
