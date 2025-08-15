@@ -162,12 +162,10 @@ ID：${id}
 ID：${id} (既に存在しない)`
         ).catch(() => {});
       }
-      res
-        .status(200)
-        .json({
-          message: "スタッフを削除しました",
-          deletedEvaluations: result.evals,
-        });
+      res.status(200).json({
+        message: "スタッフを削除しました",
+        deletedEvaluations: result.evals,
+      });
     } catch (error) {
       console.error("Staff DELETE error:", error);
       res
@@ -253,12 +251,10 @@ ID：${updated.id}
         res.status(200).json({ message: "スタッフを更新しました" });
       } catch (error) {
         console.error("Staff PUT error:", error);
-        res
-          .status(500)
-          .json({
-            error: "スタッフの更新に失敗しました",
-            detail: error.message,
-          });
+        res.status(500).json({
+          error: "スタッフの更新に失敗しました",
+          detail: error.message,
+        });
       }
     } else {
       res.status(405).json({ error: "Method Not Allowed" });
