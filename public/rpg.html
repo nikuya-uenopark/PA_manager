@@ -521,6 +521,14 @@
       // タイル & プレイヤースプライト (配置はユーザーが public/assets/rpg/ に配置)
       // ===== アセット読み込み =====
       const tilesImg = new Image();
+      tilesImg.onload = () => {
+        console.info("[RPG] tiles image loaded", tilesImg.naturalWidth, tilesImg.naturalHeight);
+        draw();
+      };
+      tilesImg.onerror = () => {
+        console.warn("[RPG] tiles image failed to load; using fallback colors");
+        draw();
+      };
       tilesImg.src = "/assets/rpg/0x72_DungeonTilesetII_v1.7.png"; // 16x16 tiles
       // プレイヤー: dwarf_m (idle/run 4枚)
       const playerIdleFrames = [0, 1, 2, 3].map(
@@ -793,22 +801,50 @@
       }
       function drawTile(t, x, y) {
         const uv = tileMap[t] || tileMap[0];
-        if (!tilesImg.complete) {
-          ctx.fillStyle = "#222";
+        // 画像未ロード or ロード失敗時(naturalWidth=0) は色分けフォールバック
+        if (!tilesImg.complete || !tilesImg.naturalWidth) {
+          switch (t) {
+            case 1:
+              ctx.fillStyle = "#1e293b"; // wall
+              break;
+            case 2:
+              ctx.fillStyle = "#2a9d8f"; // inn
+              break;
+            case 3:
+              ctx.fillStyle = "#a44f9d"; // shop
+              break;
+            case 4:
+              ctx.fillStyle = "#b7791f"; // chest closed
+              break;
+            case 5:
+              ctx.fillStyle = "#d6a34f"; // chest open
+              break;
+            case 6:
+              ctx.fillStyle = "#e63946"; // boss
+              break;
+            default:
+              ctx.fillStyle = "#0f172a"; // floor
+          }
           ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
           return;
         }
-        ctx.drawImage(
-          tilesImg,
-          uv[0] * TILE_BASE,
-          uv[1] * TILE_BASE,
-          TILE_BASE,
-          TILE_BASE,
-          x * TILE,
-          y * TILE,
-          TILE,
-          TILE
-        );
+        try {
+          ctx.drawImage(
+            tilesImg,
+            uv[0] * TILE_BASE,
+            uv[1] * TILE_BASE,
+            TILE_BASE,
+            TILE_BASE,
+            x * TILE,
+            y * TILE,
+            TILE,
+            TILE
+          );
+        } catch (e) {
+          // 予期せぬ描画失敗時もフォールバック
+          ctx.fillStyle = "#334155";
+          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+        }
       }
       function drawPlayer() {
         const frames = player.running ? playerImgsRun : playerImgsIdle;
