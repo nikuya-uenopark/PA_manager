@@ -653,6 +653,7 @@
       let bossAnimTime=0;
       function drawBossField(){
         const frames = bossImgsIdle;
+  if(state?.bossDefeated) return; // 撃破後は非表示
         if(!frames.length || !frames[0].complete){ ctx.fillStyle='#e63946'; ctx.fillRect(bossPos.x*TILE+2,bossPos.y*TILE+2,TILE-4,TILE-4); return; }
         const idx=Math.floor(bossAnimTime/300)%frames.length; const img=frames[idx];
         ctx.drawImage(img, bossPos.x*TILE - (TILE*0.25), bossPos.y*TILE - (TILE*0.5), TILE*1.5, TILE*1.5);
@@ -712,7 +713,7 @@
         const nearShop =
           Math.abs(player.x - shopPos.x) <= 1 &&
           Math.abs(player.y - shopPos.y) <= 1;
-        const nearBoss =
+        const nearBoss = !state.bossDefeated &&
           Math.abs(player.x - bossPos.x) <= 1 &&
           Math.abs(player.y - bossPos.y) <= 1;
         proxEl.innerHTML = [
@@ -722,7 +723,7 @@
           nearShop
             ? '<span class="badge" style="background:#a44f9d">店</span>'
             : "",
-          nearBoss
+          (nearBoss && !state.bossDefeated)
             ? '<span class="badge" style="background:#e63946">ボス</span>'
             : "",
         ]
