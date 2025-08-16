@@ -481,18 +481,16 @@
       const mapW = 40,
         mapH = 22; // 論理グリッド
       function resizeCanvasScale() {
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        let scaleTile = Math.floor(vw / mapW);
-        if (scaleTile < 4) scaleTile = 4;
-        if (scaleTile * mapH > vh) {
-          scaleTile = Math.floor(vh / mapH);
-        }
-        TILE = scaleTile;
-        canvas.width = mapW * TILE;
-        canvas.height = mapH * TILE;
-        canvas.style.width = canvas.width + "px";
-        canvas.style.height = canvas.height + "px";
+  const vw = window.innerWidth;
+  // 横幅をちょうど埋めるスケール (高さ制約は無視して拡大)
+  TILE = vw / mapW; // 小数許容 (ピクセル比率維持) ※ピクセルアートの滲みが気になる場合は Math.floor に変更
+  // 内部キャンバスは整数ピクセルに丸め (描画計算は TILE そのまま)
+  const pixelW = Math.round(mapW * TILE);
+  const pixelH = Math.round(mapH * TILE);
+  canvas.width = pixelW;
+  canvas.height = pixelH;
+  canvas.style.width = vw + "px"; // 画面幅にフィット
+  canvas.style.height = pixelH + "px";
         draw();
       }
       window.addEventListener("resize", resizeCanvasScale);
@@ -522,7 +520,11 @@
       // ===== アセット読み込み =====
       const tilesImg = new Image();
       tilesImg.onload = () => {
-        console.info("[RPG] tiles image loaded", tilesImg.naturalWidth, tilesImg.naturalHeight);
+        console.info(
+          "[RPG] tiles image loaded",
+          tilesImg.naturalWidth,
+          tilesImg.naturalHeight
+        );
         draw();
       };
       tilesImg.onerror = () => {
@@ -795,9 +797,9 @@
             drawTile(t, x, y);
           }
         }
-  drawBossField();
-  // state が未初期化でもプレイヤーを表示 (プレースホルダ or 待機アニメ)
-  drawPlayer();
+        drawBossField();
+        // state が未初期化でもプレイヤーを表示 (プレースホルダ or 待機アニメ)
+        drawPlayer();
         updateProximityUI();
       }
       function drawTile(t, x, y) {
@@ -847,7 +849,7 @@
           ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
         }
       }
-  function drawPlayer() {
+      function drawPlayer() {
         const frames = player.running ? playerImgsRun : playerImgsIdle;
         if (!frames.length || !frames[0].complete) {
           ctx.fillStyle = "#ffb703";
