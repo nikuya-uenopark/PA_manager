@@ -1382,7 +1382,8 @@
             state.maxHp
           } EXP ${state.exp}/${state.nextExp} G:${state.gold}</div>
         <div style='font-size:12px;'>ATK ${state.atk}</div>
-        <div style='font-size:12px;'>装備: ${equips.join(",") || "-"}</div>
+  <div style='font-size:12px;'>装備: ${equips.join(",") || "-"}</div>
+  <div style='font-size:12px;'>ボス討伐数: ${state.bossKills || 0}</div>
       </div>`;
           document.getElementById("manualSaveBtn").onclick = async () => {
             const r = await api("save");

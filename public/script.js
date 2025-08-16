@@ -1786,6 +1786,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
     reaction: document.getElementById("rankingReaction"),
     twenty: document.getElementById("rankingTwenty"),
     rpg: document.getElementById("rankingRpg"),
+    rpgBoss: document.getElementById("rankingRpgBoss"),
   };
   const openRpgLink = document.getElementById("openRpgLink");
   let reactionState = {
@@ -1833,6 +1834,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
         await Promise.all(
           ["reaction", "twenty", "rpg"].map((g) => loadRanking(g))
         );
+        await loadBossRanking();
       } catch {}
     };
     doSync().finally(() => {
@@ -1964,8 +1966,23 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
       el.innerHTML = "<li>取得失敗</li>";
     }
   }
+  async function loadBossRanking() {
+    const el = rankingEls.rpgBoss;
+    if (!el) return;
+    try {
+      el.innerHTML = "<li>読み込み中...</li>";
+      const res = await fetch('/api/games/bossKills');
+      if (!res.ok) throw 0;
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) { el.innerHTML = '<li>なし</li>'; return; }
+      el.innerHTML = data.map((r,i)=>`<li><span>${i+1}. ${r.name}</span><span>${r.bossKills}回</span></li>`).join('');
+    } catch {
+      el.innerHTML = '<li>取得失敗</li>';
+    }
+  }
   function loadRankingsAll() {
     ["reaction", "twenty", "rpg"].forEach((g) => loadRanking(g));
+    loadBossRanking();
   }
 
   // Reaction Game

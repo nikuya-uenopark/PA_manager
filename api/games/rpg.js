@@ -23,6 +23,7 @@ function newState(name) {
     equips: [],
   // boss再挑戦仕様に変更: defeatフラグは使用しないが互換のため残す
   bossDefeated: false,
+  bossKills: 0, // 連続/累計討伐数
     nextExp: levelNeeded(1),
     items: [
       {
@@ -139,7 +140,8 @@ module.exports = async function handler(req, res) {
       const record = await prisma.gameScore.findUnique({ where: key });
       let st = record?.meta || null;
       // 互換: 旧データで bossDefeated 未設定なら false 付与
-      if (st && typeof st.bossDefeated !== 'boolean') st.bossDefeated = false;
+  if (st && typeof st.bossDefeated !== 'boolean') st.bossDefeated = false;
+  if (st && typeof st.bossKills !== 'number') st.bossKills = 0;
       st = st ? recomputeDerived(st) : null;
       return res.json({
         state: st,
@@ -163,6 +165,7 @@ module.exports = async function handler(req, res) {
   if (!state) state = newState(staff.name);
   // 互換: bossDefeated が未定義なら false に固定
   if (state && typeof state.bossDefeated !== 'boolean') state.bossDefeated = false;
+  if (state && typeof state.bossKills !== 'number') state.bossKills = 0;
     recomputeDerived(state); // 破損/旧データ対策
 
     let result = null;
@@ -227,7 +230,10 @@ module.exports = async function handler(req, res) {
         key: CFG.BOSS_SPRITE_KEY,
       };
       const r = applyBattle(state, { ...boss });
-      // 旧クライアント互換: 勝利しても bossDefeated は触らない (再挑戦可)
+      if (r.victory) {
+        if (typeof state.bossKills !== 'number') state.bossKills = 0;
+        state.bossKills += 1;
+      }
       result = { ...r, enemy: boss };
     } else if (action === "equip") {
       const { type } = payload || {};
