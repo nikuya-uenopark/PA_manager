@@ -777,7 +777,7 @@
     modalTitle.textContent='バトル';
         modalBody.innerHTML=`<div id='battleArea' style='display:flex;flex-direction:column;gap:10px;'>
           <div style='display:flex;justify-content:space-between;font-size:12px;'>
-      <div>${enemySet.label||'敵'} Lv${enemy.level}</div>
+            <div>${enemy.name || enemySet.label || '敵'} Lv${enemy.level}</div>
             <div>HP <span id='enemyHpText'>${enemy.hp}/${enemy.maxHp}</span></div>
           </div>
           <div class='bar hp'><span id='enemyHpBar' style='width:100%'></span></div>
@@ -790,7 +790,7 @@
               </div>
               <div style='display:flex;flex-direction:column;align-items:center;gap:4px;'>
                 <img id='enemySprite' style='image-rendering:pixelated;width:64px;height:64px;' src='${eIdle[0].src}' />
-                <div style='font-size:10px;'>${enemySet.label||'敵'}</div>
+                <div style='font-size:10px;'>${enemy.name || enemySet.label || '敵'}</div>
               </div>
             </div>
           </div>

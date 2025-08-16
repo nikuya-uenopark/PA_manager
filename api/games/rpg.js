@@ -144,14 +144,16 @@ module.exports = async function handler(req, res) {
         result = { msg: "ゴールド不足" };
       }
     } else if (action === "battle") {
-      // レベルスケーリング敵生成 (プレイヤー±10, 最低1)
+      // プレイヤー±10 で敵レベル決定し、敵種はコンフィグ ENEMIES からランダム
+      const enemyDefs = CFG.ENEMIES || [];
+      const chosen = enemyDefs.length ? enemyDefs[Math.floor(Math.random()*enemyDefs.length)] : { key:'chort', name:'インプ' };
       const enemyLevel = Math.max(1, state.level + randInt(-10, 10));
       const variance = () => (Math.random() * 0.2 + 0.9); // 0.9 - 1.1
       const baseHp = Math.round((18 + enemyLevel * 5) * variance());
       const baseAtk = Math.round((3 + enemyLevel * 1.2) * variance());
       const baseExp = Math.round((5 + enemyLevel * 4) * variance());
       const baseGold = Math.round((4 + enemyLevel * 3) * variance());
-      const enemy = { level: enemyLevel, maxHp: baseHp, hp: baseHp, atk: baseAtk, exp: baseExp, gold: baseGold };
+      const enemy = { key: chosen.key, name: chosen.name, level: enemyLevel, maxHp: baseHp, hp: baseHp, atk: baseAtk, exp: baseExp, gold: baseGold };
       const battle = applyBattle(state, { ...enemy });
       result = { ...battle, enemy };
     } else if (action === "boss") {
