@@ -317,7 +317,7 @@
       <div
         class="vc-left"
         id="vcLeft"
-        style="position: fixed; left: 16px; bottom: 32px; z-index: 30"
+  style="position: fixed; left: 16px; bottom: 32px; z-index: 80"
       >
         <div
           class="dpad"
@@ -352,7 +352,7 @@
           position: fixed;
           right: 0;
           bottom: 0;
-          z-index: 30;
+          z-index: 80;
           pointer-events: none;
         "
       >
@@ -1193,11 +1193,26 @@
         const start = () => {
           if (currentModal) {
             modalNavigate(dir);
+            // オートリピート開始
+            const iv = setInterval(() => {
+              if (!currentModal) {
+                clearInterval(iv);
+                return;
+              }
+              modalNavigate(dir);
+            }, 240);
+            el._repeat = iv;
           } else {
             heldDirs.add(dir);
           }
         };
-        const end = () => heldDirs.delete(dir);
+        const end = () => {
+          heldDirs.delete(dir);
+          if (el._repeat) {
+            clearInterval(el._repeat);
+            el._repeat = null;
+          }
+        };
         el.addEventListener(
           "touchstart",
           (e) => {
