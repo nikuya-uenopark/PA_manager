@@ -136,7 +136,10 @@ module.exports = async function handler(req, res) {
       if (!staffId) return res.status(400).json({ error: "staffId required" });
       const key = { game_staffId: { game: "rpg", staffId: Number(staffId) } };
       const record = await prisma.gameScore.findUnique({ where: key });
-      const st = record?.meta ? recomputeDerived(record.meta) : null;
+      let st = record?.meta || null;
+      // 互換: 旧データで bossDefeated 未設定なら false 付与
+      if (st && typeof st.bossDefeated !== 'boolean') st.bossDefeated = false;
+      st = st ? recomputeDerived(st) : null;
       return res.json({
         state: st,
         record,
@@ -155,8 +158,10 @@ module.exports = async function handler(req, res) {
     if (!staff) return res.status(404).json({ error: "staff not found" });
     const key = { game_staffId: { game: "rpg", staffId: Number(staffId) } };
     let record = await prisma.gameScore.findUnique({ where: key });
-    let state = record?.meta || null;
-    if (!state) state = newState(staff.name);
+  let state = record?.meta || null;
+  if (!state) state = newState(staff.name);
+  // 互換: bossDefeated が未定義なら false に固定
+  if (state && typeof state.bossDefeated !== 'boolean') state.bossDefeated = false;
     recomputeDerived(state); // 破損/旧データ対策
 
     let result = null;
