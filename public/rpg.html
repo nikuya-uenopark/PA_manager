@@ -795,8 +795,9 @@
             drawTile(t, x, y);
           }
         }
-        drawBossField();
-        if (state) drawPlayer();
+  drawBossField();
+  // state が未初期化でもプレイヤーを表示 (プレースホルダ or 待機アニメ)
+  drawPlayer();
         updateProximityUI();
       }
       function drawTile(t, x, y) {
@@ -846,7 +847,7 @@
           ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
         }
       }
-      function drawPlayer() {
+  function drawPlayer() {
         const frames = player.running ? playerImgsRun : playerImgsIdle;
         if (!frames.length || !frames[0].complete) {
           ctx.fillStyle = "#ffb703";
