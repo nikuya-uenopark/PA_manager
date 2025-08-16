@@ -3,15 +3,15 @@
 
 module.exports = {
   WEAPON_BONUS: {
-    dagger: 4,
-    sword: 5,
-    staff: 7,
-    axe: 8,
-    spear: 9,
-    wand: 9,
-    longsword: 10,
-    mystic_staff: 12,
-    greatsword: 14,
+    dagger: 40,
+    sword: 500,
+    staff: 7000,
+    axe: 80000,
+    spear: 90000,
+    wand: 15000000,
+    longsword: 180000000,
+    mystic_staff: 2400000000,
+    greatsword: 50000000000,
   },
   SHOP_ITEMS: {
     dagger: { cost: 700, msg: "短剣を購入 (+ATK40)", atk: 40 },

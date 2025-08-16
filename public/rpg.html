@@ -648,6 +648,15 @@
         }
       }
       // ===== 描画 =====
+      const bossIdleFrames = [0,1,2,3].map(i=>`/assets/rpg/big_demon_idle_anim_f${i}.png`);
+      const bossImgsIdle = []; bossIdleFrames.forEach(src=>{ const im=new Image(); im.src=src; bossImgsIdle.push(im); });
+      let bossAnimTime=0;
+      function drawBossField(){
+        const frames = bossImgsIdle;
+        if(!frames.length || !frames[0].complete){ ctx.fillStyle='#e63946'; ctx.fillRect(bossPos.x*TILE+2,bossPos.y*TILE+2,TILE-4,TILE-4); return; }
+        const idx=Math.floor(bossAnimTime/300)%frames.length; const img=frames[idx];
+        ctx.drawImage(img, bossPos.x*TILE - (TILE*0.25), bossPos.y*TILE - (TILE*0.5), TILE*1.5, TILE*1.5);
+      }
       function draw() {
         ctx.imageSmoothingEnabled = false;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -655,14 +664,13 @@
           for (let x = 0; x < mapW; x++) {
             let t = world[y][x];
             if (t === 4 || t === 5) {
-              const chest = (state?.items || []).find(
-                (it) => it.type === "chest" && it.x === x && it.y === y
-              );
+              const chest = (state?.items || []).find(it=> it.type==='chest' && it.x===x && it.y===y);
               if (chest) t = chest.opened ? 5 : 4;
             }
             drawTile(t, x, y);
           }
         }
+        drawBossField();
         if (state) drawPlayer();
         updateProximityUI();
       }
@@ -750,6 +758,8 @@
       }
       // アニメーションタイマー
       function animLoop(ts){ if(!player.lastMoveTs) player.lastMoveTs=ts; player.animTime = ts; if(ts - player.lastMoveTs > 400) player.running=false; draw(); requestAnimationFrame(animLoop);} requestAnimationFrame(animLoop);
+  // ボススプライト用アニメ時間も更新
+  (function bossLoop(t0){ bossAnimTime = performance.now(); requestAnimationFrame(bossLoop); })();
       // ===== 戦闘モーダル =====
       async function startBattle(){
         const r = await api('battle'); if(!r?.state || !r.result) return;
