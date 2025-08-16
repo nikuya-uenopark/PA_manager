@@ -22,6 +22,10 @@ function newState(name) {
     equips: [],
     bossDefeated: false,
     nextExp: levelNeeded(1),
+    items: [
+      { type: 'chest', x: 7, y: 3, opened: false, reward: { gold: 30, exp: 10 } },
+      { type: 'chest', x: 10, y: 7, opened: false, reward: { gold: 50, exp: 0 } }
+    ],
   };
 }
 
@@ -167,6 +171,35 @@ module.exports = async function handler(req, res) {
         } else result = { msg: "G不足(50G必要)" };
       } else {
         result = { msg: "不明な装備" };
+      }
+    } else if (action === 'pickup') {
+      const { x, y } = payload || {};
+      if (typeof x === 'number' && typeof y === 'number') {
+        const item = (state.items||[]).find(it=>it.type==='chest' && it.x===x && it.y===y);
+        if (item) {
+          if (item.opened) {
+            result = { msg: '空の宝箱だ' };
+          } else {
+            item.opened = true;
+            const rw = item.reward||{};
+            if (rw.gold) state.gold += rw.gold;
+            if (rw.exp) {
+              state.exp += rw.exp;
+              // レベルアップ判定再利用
+              while (state.exp >= levelNeeded(state.level)) {
+                state.exp -= levelNeeded(state.level);
+                state.level += 1;
+                recomputeDerived(state);
+                state.hp = state.maxHp;
+              }
+            }
+            result = { msg: `宝箱を開けた! +${rw.gold||0}G ${rw.exp?'+EXP'+rw.exp:''}` };
+          }
+        } else {
+          result = { msg: '何もない' };
+        }
+      } else {
+        result = { msg: '座標不正' };
       }
     } else if (action === "save") {
       /* explicit save only */
