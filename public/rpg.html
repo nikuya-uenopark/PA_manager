@@ -195,48 +195,222 @@
     </style>
   </head>
   <body class="rpg-body">
-    <div class="rpg-topbar" id="topBar">
-      <button class="rpg-btn" onclick="location.href='/'">戻る</button>
-      <span id="rpgStatusText" class="rpg-status-text" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-      <button id="toggleAutoEncounter" class="rpg-btn warn">自動エンカON</button>
+    <div
+      class="rpg-topbar"
+      id="topBar"
+      style="
+        height: auto;
+        padding: 4px 8px;
+        gap: 12px;
+        align-items: flex-start;
+        flex-direction: column;
+        background: transparent;
+        pointer-events: none;
+      "
+    >
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          pointer-events: auto;
+        "
+      >
+        <button
+          class="rpg-btn"
+          onclick="location.href='/'"
+          style="background: #1c2541; border: 1px solid #2f4564"
+        >
+          戻る
+        </button>
+        <div
+          id="hudLevel"
+          style="font-size: 12px; font-weight: 600; letter-spacing: 0.5px"
+        >
+          Lv -
+        </div>
+      </div>
+      <div
+        id="hudBars"
+        style="
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          width: 220px;
+          background: rgba(0, 0, 0, 0.35);
+          padding: 6px 8px;
+          border: 1px solid #223246;
+          border-radius: 8px;
+          backdrop-filter: blur(4px);
+          pointer-events: auto;
+        "
+      >
+        <div
+          style="
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <span>HP</span><span id="hudHpText">-</span>
+        </div>
+        <div class="bar hp"><span id="hudHpBar"></span></div>
+        <div
+          style="
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2px;
+          "
+        >
+          <span>EXP</span><span id="hudExpText">-</span>
+        </div>
+        <div class="bar exp"><span id="hudExpBar"></span></div>
+        <div style="font-size: 11px; margin-top: 2px">
+          GOLD: <span id="hudGold">0</span>
+        </div>
+      </div>
     </div>
-    <div class="rpg-wrapper" style="inset:46px 0 0 0;display:flex;">
-      <div class="rpg-canvas-wrap" id="canvasWrap">
+    <div class="rpg-wrapper" style="inset: 0 0 0 0; display: flex">
+      <div class="rpg-canvas-wrap" id="canvasWrap" style="margin: auto">
         <canvas id="rpgCanvas" width="640" height="360"></canvas>
-        <div class="enemy-window" id="enemyWindow" style="display:none"></div>
-        <div class="fade-msg" id="fadeMsg" style="display:none"></div>
+        <div class="fade-msg" id="fadeMsg" style="display: none"></div>
       </div>
-      <div class="rpg-sidepanels" style="width:260px;display:flex;flex-direction:column;gap:8px;padding:8px 10px;overflow:auto;background:linear-gradient(180deg,#1c2541,#0b132b);">
-        <div class="rpg-panel compact" id="panelStats" style="min-height:86px">
-          <div id="statsBox">-</div>
-          <button id="manualSaveBtn" class="rpg-btn mini" style="margin-top:6px">手動セーブ</button>
+      <div
+        class="vc-left"
+        id="vcLeft"
+        style="position: fixed; left: 16px; bottom: 32px; z-index: 30"
+      >
+        <div
+          class="dpad"
+          style="position: relative; width: 140px; height: 140px"
+        >
+          <button
+            data-dir="up"
+            class="dpad-btn"
+            style="top: 0; left: 50%; transform: translate(-50%, 0)"
+          ></button>
+          <button
+            data-dir="left"
+            class="dpad-btn"
+            style="left: 0; top: 50%; transform: translate(0, -50%)"
+          ></button>
+          <button
+            data-dir="right"
+            class="dpad-btn"
+            style="right: 0; top: 50%; transform: translate(0, -50%)"
+          ></button>
+          <button
+            data-dir="down"
+            class="dpad-btn"
+            style="bottom: 0; left: 50%; transform: translate(-50%, 0)"
+          ></button>
         </div>
-        <div class="rpg-panel compact" id="panelActions">
-          <div class="rpg-actions" style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
-              <button data-act="battle">戦闘</button>
-              <button data-act="heal">宿屋</button>
-              <button data-act="equip-sword">剣</button>
-              <button data-act="equip-armor">防具</button>
-              <button data-act="pickup" class="wide" style="grid-column:span 3">調べる(A)</button>
+      </div>
+      <div
+        class="vc-right"
+        id="vcRight"
+        style="
+          position: fixed;
+          right: 24px;
+          bottom: 40px;
+          z-index: 30;
+          display: flex;
+          gap: 26px;
+        "
+      >
+        <div
+          class="buttons"
+          style="position: relative; width: 220px; height: 200px"
+        >
+          <button
+            data-btn="settings"
+            class="btn-round btn-settings"
+            style="right: 0; bottom: 16px"
+          >
+            設定
+          </button>
+          <button
+            data-btn="dash"
+            class="btn-round btn-dash"
+            style="left: 12px; top: 0"
+          >
+            走
+          </button>
+          <button
+            data-btn="inspect"
+            class="btn-round btn-inspect"
+            style="right: 70px; bottom: 92px"
+          >
+            調
+          </button>
+        </div>
+      </div>
+      <!-- Modal Overlay -->
+      <div
+        id="modalOverlay"
+        style="
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(2px);
+          z-index: 50;
+          align-items: center;
+          justify-content: center;
+        "
+      >
+        <div
+          id="modalWindow"
+          style="
+            background: #16263a;
+            border: 1px solid #2a3f57;
+            border-radius: 12px;
+            min-width: 320px;
+            max-width: 420px;
+            padding: 14px 16px;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
+            <h3
+              id="modalTitle"
+              style="margin: 0; font-size: 15px; letter-spacing: 1px"
+            >
+              設定
+            </h3>
+            <button
+              id="modalCloseBtn"
+              style="
+                background: #243b55;
+                color: #fff;
+                border: 1px solid #2f4e6d;
+                border-radius: 6px;
+                padding: 4px 8px;
+                font-size: 11px;
+              "
+            >
+              ×
+            </button>
           </div>
-        </div>
-        <div class="rpg-panel" id="panelLog">
-          <h3 style="margin:0 0 4px;font-size:13px;">ログ</h3>
-          <div id="rpgLog" style="max-height:220px;overflow:auto;font-family:ui-monospace,monospace;background:#0d1b2a;border:1px solid #223246;padding:6px 8px;border-radius:6px;font-size:11px;"></div>
-        </div>
-      </div>
-      <div class="vc-left" id="vcLeft" style="position:fixed;left:16px;bottom:32px;z-index:20;">
-        <div class="dpad" style="position:relative;width:140px;height:140px;">
-          <button data-dir="up" class="dpad-btn" style="top:0;left:50%;transform:translate(-50%,0);"></button>
-          <button data-dir="left" class="dpad-btn" style="left:0;top:50%;transform:translate(0,-50%);"></button>
-          <button data-dir="right" class="dpad-btn" style="right:0;top:50%;transform:translate(0,-50%);"></button>
-          <button data-dir="down" class="dpad-btn" style="bottom:0;left:50%;transform:translate(-50%,0);"></button>
-        </div>
-      </div>
-      <div class="vc-right" id="vcRight" style="position:fixed;right:32px;bottom:48px;z-index:20;display:flex;gap:18px;">
-        <div class="buttons" style="position:relative;width:180px;height:160px;">
-            <button data-btn="a" class="btn-round btn-a" style="right:0;bottom:14px;">A</button>
-            <button data-btn="b" class="btn-round btn-b" style="left:0;top:0;">B</button>
+          <div
+            id="modalBody"
+            style="max-height: 360px; overflow: auto; line-height: 1.5"
+          ></div>
+          <div id="modalHint" style="font-size: 10px; color: #94a3b8">
+            D-Pad上下で選択 / 調べる=決定 / 設定=閉じる
+          </div>
         </div>
       </div>
     </div>
@@ -244,71 +418,627 @@
       // ===== 基本設定 =====
       const API = "/api/games/rpg";
       const params = new URLSearchParams(location.search);
-      const currentPlayerId = Number(params.get('staffId')) || Number(localStorage.getItem('gameSelectedStaffId')) || null;
-      if(!currentPlayerId){ alert('スタッフ未選択: ゲームハブから入ってください'); }
-      let state = null; let autoEncounter = true; let walking=false; let encounterStep=0;
-      const canvas = document.getElementById('rpgCanvas'); const ctx = canvas.getContext('2d');
-      const TILE = 16; const mapW = 40, mapH = 22; // 640x352 使用
-      // 0 floor,1 wall,2 inn,3 shop,4 chestClosed,5 chestOpen
-      const world = Array.from({length: mapH},(_,y)=>Array.from({length:mapW},(_,x)=> (x===0||y===0||x===mapW-1||y===mapH-1)?1:0));
-      const innPos={x:6,y:6}; const shopPos={x:10,y:6}; world[innPos.y][innPos.x]=2; world[shopPos.y][shopPos.x]=3;
-      const chestSeeds=[{x:14,y:5},{x:20,y:10},{x:30,y:8}]; chestSeeds.forEach(c=>{ if(world[c.y][c.x]===0) world[c.y][c.x]=4; });
-  const bossPos = {x:34,y:14};
-  world[bossPos.y][bossPos.x] = 6; // boss tile code
-      // タイル & プレイヤースプライト (配置はユーザーが public/assets/rpg/ に配置)
-      const tilesImg = new Image(); tilesImg.src='/assets/rpg/tileset.png';
-      const playerImg = new Image(); playerImg.src='/assets/rpg/player.png';
-  const tileMap = { 0:[0,0], 1:[1,0], 2:[10,4], 3:[11,4], 4:[4,6], 5:[5,6], 6:[15,4] }; // 6: boss(仮)
-      let player = {x:2,y:2,dir:0,frame:0}; // dir 0down1left2right3up
-      // ===== ユーティリティ =====
-      function log(msg){ const box=document.getElementById('rpgLog'); const d=document.createElement('div'); d.textContent=new Date().toLocaleTimeString()+" "+msg; box.prepend(d); while(box.children.length>120) box.removeChild(box.lastChild); }
-      function fadeMessage(msg){ const el=document.getElementById('fadeMsg'); el.textContent=msg; el.style.display='block'; el.classList.remove('run'); void el.offsetWidth; el.classList.add('run'); setTimeout(()=>el.style.display='none',2200); }
-      function flashEncounter(){ const f=document.createElement('div'); f.className='encounter-flash'; canvas.parentElement.appendChild(f); setTimeout(()=>f.remove(),600); }
-      function renderStatus(){ if(!state){ document.getElementById('rpgStatusText').textContent='-'; return;} document.getElementById('rpgStatusText').textContent=`Lv${state.level} HP ${state.hp}/${state.maxHp} G:${state.gold}`; }
-      function updateStats(){ if(!state){ document.getElementById('statsBox').textContent='-'; return;} const {level,hp,maxHp,gold,exp,nextExp,atk,equips,bossDefeated}=state; document.getElementById('statsBox').innerHTML=`Lv${level} HP ${hp}/${maxHp}<div class='hp-bar'><span style='width:${((hp/maxHp)*100).toFixed(1)}%'></span></div>EXP ${exp}/${nextExp} G:${gold}<br>ATK:${atk} 装備:${(equips||[]).join(',')||'-'} ${bossDefeated?"<span class=badge>BOSS</span>":''}`; renderStatus(); }
-      async function api(action,payload){ if(!currentPlayerId) return; const body={staffId:currentPlayerId,action,payload}; const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!res.ok){ log('通信失敗:'+action); return null;} return await res.json(); }
-      async function initPlayer(){ if(!currentPlayerId) return; const r = await api('init'); if(r&&r.state){ state=r.state; updateStats(); log('ロード完了'); draw(); }}
-      async function doAction(k,payload){ if(!state) return; let r=null; if(k==='battle'){ r=await api('battle'); if(r?.state){ state=r.state; updateStats(); log('戦闘:'+(r.result?.victory?'勝利':'敗北')); }} else if(k==='heal'){ r=await api('heal'); if(r?.state){ state=r.state; updateStats(); log(r.result?.msg||'回復'); }} else if(k==='equip-sword'){ r=await api('equip',{type:'sword'}); if(r?.state){ state=r.state; updateStats(); log(r.result?.msg); }} else if(k==='equip-armor'){ r=await api('equip',{type:'armor'}); if(r?.state){ state=r.state; updateStats(); log(r.result?.msg); }} else if(k==='boss'){ r=await api('boss'); if(r?.state){ state=r.state; updateStats(); log('ボス戦:'+(r.result?.victory?'勝利!':(r.result?.log?.slice(-1)[0]||''))); }} else if(k==='pickup'){ r=await api('pickup',payload); if(r?.state){ state=r.state; updateStats(); log(r.result?.msg||'取得'); }} if(r?.state) draw(); }
-      function attemptEncounter(){ if(!autoEncounter) return; if(Math.random()<0.18){ walking=false; flashEncounter(); fadeMessage('エンカウント!'); doAction('battle'); } }
-      // ===== 描画 =====
-      function draw(){ ctx.imageSmoothingEnabled=false; ctx.clearRect(0,0,canvas.width,canvas.height); for(let y=0;y<mapH;y++){ for(let x=0;x<mapW;x++){ let t=world[y][x]; if(t===4||t===5){ const chest=(state?.items||[]).find(it=>it.type==='chest'&&it.x===x&&it.y===y); if(chest) t= chest.opened?5:4; } drawTile(t,x,y); }} if(state) drawPlayer(); updateProximityUI(); }
-      function drawTile(t,x,y){ const uv=tileMap[t]||tileMap[0]; if(!tilesImg.complete){ ctx.fillStyle='#222'; ctx.fillRect(x*TILE,y*TILE,TILE,TILE); return;} ctx.drawImage(tilesImg, uv[0]*TILE, uv[1]*TILE, TILE, TILE, x*TILE, y*TILE, TILE, TILE); }
-      function drawPlayer(){ if(!playerImg.complete){ ctx.fillStyle='#ffb703'; ctx.fillRect(player.x*TILE+2, player.y*TILE+2, TILE-4, TILE-4); return;} const fw=TILE, fh=TILE; const sy=player.dir; const sx=player.frame%4; ctx.drawImage(playerImg, sx*fw, sy*fh, fw, fh, player.x*TILE, player.y*TILE, fw, fh); }
-      // 近接インジケータ
-      let proxEl=document.getElementById('proxUI'); if(!proxEl){ proxEl=document.createElement('div'); proxEl.id='proxUI'; proxEl.style.position='absolute'; proxEl.style.left='8px'; proxEl.style.top='8px'; proxEl.style.zIndex='5'; proxEl.style.display='flex'; proxEl.style.gap='6px'; canvas.parentElement.appendChild(proxEl);} 
-  function updateProximityUI(){ if(!state){ proxEl.innerHTML=''; return;} const nearInn=Math.abs(player.x-innPos.x)<=1&&Math.abs(player.y-innPos.y)<=1; const nearShop=Math.abs(player.x-shopPos.x)<=1&&Math.abs(player.y-shopPos.y)<=1; const nearBoss=Math.abs(player.x-bossPos.x)<=1&&Math.abs(player.y-bossPos.y)<=1; proxEl.innerHTML=[ nearInn?'<span class="badge" style="background:#2a9d8f">宿屋</span>':'', nearShop?'<span class="badge" style="background:#a44f9d">店</span>':'', nearBoss?'<span class="badge" style="background:#e63946">ボス</span>':'' ].filter(Boolean).join(''); }
-      // ===== 移動/操作 =====
-      function movePlayerDir(dir){ let dx=0,dy=0; if(dir==='up'){dy=-1;player.dir=3;} else if(dir==='down'){dy=1;player.dir=0;} else if(dir==='left'){dx=-1;player.dir=1;} else if(dir==='right'){dx=1;player.dir=2;} const nx=player.x+dx, ny=player.y+dy; if(nx<1||ny<1||nx>=mapW-1||ny>=mapH-1) return; if(world[ny][nx]===1) return; player.x=nx; player.y=ny; player.frame=(player.frame+1)%60; walking=true; encounterStep=(encounterStep+1)%4; if(encounterStep===0) attemptEncounter(); draw(); }
-      function actionPickup(){
-        // 宝箱
-        const chest=(state?.items||[]).find(it=>it.type==='chest'&&it.x===player.x&&it.y===player.y);
-        if(chest && !chest.opened){ doAction('pickup',{x:player.x,y:player.y}); return; }
-        // ボス (接触 or 隣接 調べるで開始)
-        if(Math.abs(player.x-bossPos.x)<=1 && Math.abs(player.y-bossPos.y)<=1){ doAction('boss'); return; }
-        // 宿屋
-        const nearInn=Math.abs(player.x-innPos.x)<=1&&Math.abs(player.y-innPos.y)<=1; if(nearInn){ doAction('heal'); return; }
-        // 店: 自動購入優先
-        const nearShop=Math.abs(player.x-shopPos.x)<=1&&Math.abs(player.y-shopPos.y)<=1; if(nearShop){ if(!(state.equips||[]).includes('sword')) doAction('equip-sword'); else if(!(state.equips||[]).includes('armor')) doAction('equip-armor'); else fadeMessage('特になし'); return; }
-        fadeMessage('何もない');
+      const currentPlayerId =
+        Number(params.get("staffId")) ||
+        Number(localStorage.getItem("gameSelectedStaffId")) ||
+        null;
+      if (!currentPlayerId) {
+        alert("スタッフ未選択: ゲームハブから入ってください");
       }
-  window.addEventListener('keydown',e=>{ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){ e.preventDefault(); movePlayerDir(e.key.replace('Arrow','').toLowerCase()); } else if(e.key==='a'){ actionPickup(); } else if(e.key==='b'){ dashHeld=true; } });
-  window.addEventListener('keyup',e=>{ if(e.key==='b') dashHeld=false; });
+      let state = null;
+      let walking = false;
+      let encounterStep = 0; // 自動エンカのみ
+      const canvas = document.getElementById("rpgCanvas");
+      const ctx = canvas.getContext("2d");
+      const TILE = 16;
+      const mapW = 40,
+        mapH = 22; // 640x352 使用
+      // 0 floor,1 wall,2 inn,3 shop,4 chestClosed,5 chestOpen
+      const world = Array.from({ length: mapH }, (_, y) =>
+        Array.from({ length: mapW }, (_, x) =>
+          x === 0 || y === 0 || x === mapW - 1 || y === mapH - 1 ? 1 : 0
+        )
+      );
+      const innPos = { x: 6, y: 6 };
+      const shopPos = { x: 10, y: 6 };
+      world[innPos.y][innPos.x] = 2;
+      world[shopPos.y][shopPos.x] = 3;
+      const chestSeeds = [
+        { x: 14, y: 5 },
+        { x: 20, y: 10 },
+        { x: 30, y: 8 },
+      ];
+      chestSeeds.forEach((c) => {
+        if (world[c.y][c.x] === 0) world[c.y][c.x] = 4;
+      });
+      const bossPos = { x: 34, y: 14 };
+      world[bossPos.y][bossPos.x] = 6; // boss tile code
+      // タイル & プレイヤースプライト (配置はユーザーが public/assets/rpg/ に配置)
+      const tilesImg = new Image();
+      tilesImg.src = "/assets/rpg/tileset.png";
+      const playerImg = new Image();
+      playerImg.src = "/assets/rpg/player.png";
+      const tileMap = {
+        0: [0, 0],
+        1: [1, 0],
+        2: [10, 4],
+        3: [11, 4],
+        4: [4, 6],
+        5: [5, 6],
+        6: [15, 4],
+      }; // 6: boss(仮)
+      let player = { x: 2, y: 2, dir: 0, frame: 0 }; // dir 0down1left2right3up
+      // ===== ユーティリティ =====
+      function log(msg) {
+        /* ログUI削除済み -> no-op (必要なら console) */
+      }
+      function fadeMessage(msg) {
+        const el = document.getElementById("fadeMsg");
+        el.textContent = msg;
+        el.style.display = "block";
+        el.classList.remove("run");
+        void el.offsetWidth;
+        el.classList.add("run");
+        setTimeout(() => (el.style.display = "none"), 2200);
+      }
+      function flashEncounter() {
+        const f = document.createElement("div");
+        f.className = "encounter-flash";
+        canvas.parentElement.appendChild(f);
+        setTimeout(() => f.remove(), 600);
+      }
+      function updateHUD() {
+        if (!state) return;
+        const { level, hp, maxHp, exp, nextExp, gold } = state;
+        const hpPct = (hp / maxHp) * 100;
+        const expPct = (exp / nextExp) * 100;
+        document.getElementById("hudLevel").textContent = `Lv${level}`;
+        document.getElementById("hudHpText").textContent = `${hp}/${maxHp}`;
+        document.getElementById("hudHpBar").style.width =
+          hpPct.toFixed(1) + "%";
+        document.getElementById("hudExpText").textContent = `${exp}/${nextExp}`;
+        document.getElementById("hudExpBar").style.width =
+          expPct.toFixed(1) + "%";
+        document.getElementById("hudGold").textContent = gold;
+      }
+      function updateStats() {
+        updateHUD();
+        if (currentModal) refreshModal();
+      }
+      async function api(action, payload) {
+        if (!currentPlayerId) return;
+        const body = { staffId: currentPlayerId, action, payload };
+        const res = await fetch(API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          log("通信失敗:" + action);
+          return null;
+        }
+        return await res.json();
+      }
+      async function initPlayer() {
+        if (!currentPlayerId) return;
+        const r = await api("init");
+        if (r && r.state) {
+          state = r.state;
+          updateStats();
+          draw();
+          fadeMessage("ロード完了");
+        }
+      }
+      async function doAction(k, payload) {
+        if (!state) return;
+        let r = null;
+        if (k === "battle") {
+          r = await api("battle");
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log("戦闘:" + (r.result?.victory ? "勝利" : "敗北"));
+          }
+        } else if (k === "heal") {
+          r = await api("heal");
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg || "回復");
+          }
+        } else if (k === "equip-sword") {
+          r = await api("equip", { type: "sword" });
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg);
+          }
+        } else if (k === "equip-dagger") {
+          r = await api("equip", { type: "dagger" });
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg);
+          }
+        } else if (k === "equip-staff") {
+          r = await api("equip", { type: "staff" });
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg);
+          }
+        } else if (k === "equip-axe") {
+          r = await api("equip", { type: "axe" });
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg);
+          }
+        } else if (k === "equip-armor") {
+          r = await api("equip", { type: "armor" });
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg);
+          }
+        } else if (k === "boss") {
+          r = await api("boss");
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(
+              "ボス戦:" +
+                (r.result?.victory
+                  ? "勝利!"
+                  : r.result?.log?.slice(-1)[0] || "")
+            );
+          }
+        } else if (k === "pickup") {
+          r = await api("pickup", payload);
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg || "取得");
+          }
+        }
+        if (r?.state) draw();
+      }
+      function attemptEncounter() {
+        if (Math.random() < 0.18) {
+          walking = false;
+          flashEncounter();
+          fadeMessage("エンカウント!");
+          doAction("battle");
+        }
+      }
+      // ===== 描画 =====
+      function draw() {
+        ctx.imageSmoothingEnabled = false;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let y = 0; y < mapH; y++) {
+          for (let x = 0; x < mapW; x++) {
+            let t = world[y][x];
+            if (t === 4 || t === 5) {
+              const chest = (state?.items || []).find(
+                (it) => it.type === "chest" && it.x === x && it.y === y
+              );
+              if (chest) t = chest.opened ? 5 : 4;
+            }
+            drawTile(t, x, y);
+          }
+        }
+        if (state) drawPlayer();
+        updateProximityUI();
+      }
+      function drawTile(t, x, y) {
+        const uv = tileMap[t] || tileMap[0];
+        if (!tilesImg.complete) {
+          ctx.fillStyle = "#222";
+          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+          return;
+        }
+        ctx.drawImage(
+          tilesImg,
+          uv[0] * TILE,
+          uv[1] * TILE,
+          TILE,
+          TILE,
+          x * TILE,
+          y * TILE,
+          TILE,
+          TILE
+        );
+      }
+      function drawPlayer() {
+        if (!playerImg.complete) {
+          ctx.fillStyle = "#ffb703";
+          ctx.fillRect(
+            player.x * TILE + 2,
+            player.y * TILE + 2,
+            TILE - 4,
+            TILE - 4
+          );
+          return;
+        }
+        const fw = TILE,
+          fh = TILE;
+        const sy = player.dir;
+        const sx = player.frame % 4;
+        ctx.drawImage(
+          playerImg,
+          sx * fw,
+          sy * fh,
+          fw,
+          fh,
+          player.x * TILE,
+          player.y * TILE,
+          fw,
+          fh
+        );
+      }
+      // 近接インジケータ
+      let proxEl = document.getElementById("proxUI");
+      if (!proxEl) {
+        proxEl = document.createElement("div");
+        proxEl.id = "proxUI";
+        proxEl.style.position = "absolute";
+        proxEl.style.left = "8px";
+        proxEl.style.top = "8px";
+        proxEl.style.zIndex = "5";
+        proxEl.style.display = "flex";
+        proxEl.style.gap = "4px";
+        canvas.parentElement.appendChild(proxEl);
+      }
+      function updateProximityUI() {
+        if (!state) {
+          proxEl.innerHTML = "";
+          return;
+        }
+        const nearInn =
+          Math.abs(player.x - innPos.x) <= 1 &&
+          Math.abs(player.y - innPos.y) <= 1;
+        const nearShop =
+          Math.abs(player.x - shopPos.x) <= 1 &&
+          Math.abs(player.y - shopPos.y) <= 1;
+        const nearBoss =
+          Math.abs(player.x - bossPos.x) <= 1 &&
+          Math.abs(player.y - bossPos.y) <= 1;
+        proxEl.innerHTML = [
+          nearInn
+            ? '<span class="badge" style="background:#2a9d8f">宿屋</span>'
+            : "",
+          nearShop
+            ? '<span class="badge" style="background:#a44f9d">店</span>'
+            : "",
+          nearBoss
+            ? '<span class="badge" style="background:#e63946">ボス</span>'
+            : "",
+        ]
+          .filter(Boolean)
+          .join("");
+      }
+      // ===== 移動/操作 =====
+      function movePlayerDir(dir) {
+        let dx = 0,
+          dy = 0;
+        if (dir === "up") {
+          dy = -1;
+          player.dir = 3;
+        } else if (dir === "down") {
+          dy = 1;
+          player.dir = 0;
+        } else if (dir === "left") {
+          dx = -1;
+          player.dir = 1;
+        } else if (dir === "right") {
+          dx = 1;
+          player.dir = 2;
+        }
+        const nx = player.x + dx,
+          ny = player.y + dy;
+        if (nx < 1 || ny < 1 || nx >= mapW - 1 || ny >= mapH - 1) return;
+        if (world[ny][nx] === 1) return;
+        player.x = nx;
+        player.y = ny;
+        player.frame = (player.frame + 1) % 60;
+        walking = true;
+        encounterStep = (encounterStep + 1) % 4;
+        if (encounterStep === 0) attemptEncounter();
+        draw();
+      }
+      function actionInspect() {
+        // 宝箱
+        const chest = (state?.items || []).find(
+          (it) => it.type === "chest" && it.x === player.x && it.y === player.y
+        );
+        if (chest && !chest.opened) {
+          doAction("pickup", { x: player.x, y: player.y });
+          return;
+        }
+        // ボス
+        if (
+          Math.abs(player.x - bossPos.x) <= 1 &&
+          Math.abs(player.y - bossPos.y) <= 1
+        ) {
+          openModal("bossConfirm");
+          return;
+        }
+        const nearInn =
+          Math.abs(player.x - innPos.x) <= 1 &&
+          Math.abs(player.y - innPos.y) <= 1;
+        if (nearInn) {
+          openModal("inn");
+          return;
+        }
+        const nearShop =
+          Math.abs(player.x - shopPos.x) <= 1 &&
+          Math.abs(player.y - shopPos.y) <= 1;
+        if (nearShop) {
+          openModal("shop");
+          return;
+        }
+        fadeMessage("何もない");
+      }
+      window.addEventListener("keydown", (e) => {
+        const dirMap = {
+          ArrowUp: "up",
+          ArrowDown: "down",
+          ArrowLeft: "left",
+          ArrowRight: "right",
+        };
+        if (dirMap[e.key]) {
+          e.preventDefault();
+          if (currentModal) modalNavigate(dirMap[e.key]);
+          else movePlayerDir(dirMap[e.key]);
+        } else if (e.key === "a") {
+          if (currentModal) modalConfirm();
+          else actionInspect();
+        } else if (e.key === "b") {
+          dashHeld = true;
+        } else if (e.key === "Escape") {
+          if (currentModal) closeModal();
+          else openModal("settings");
+        }
+      });
+      window.addEventListener("keyup", (e) => {
+        if (e.key === "b") dashHeld = false;
+      });
       // アクションボタン
-      document.querySelectorAll('.rpg-actions button').forEach(b=> b.addEventListener('click',()=>{ const act=b.getAttribute('data-act'); if(act==='pickup') actionPickup(); else doAction(act); }));
-      document.getElementById('toggleAutoEncounter').addEventListener('click',()=>{ autoEncounter=!autoEncounter; document.getElementById('toggleAutoEncounter').textContent= autoEncounter?'自動エンカON':'自動エンカOFF'; fadeMessage(autoEncounter?'自動エンカ ON':'自動エンカ OFF'); });
-      document.getElementById('manualSaveBtn').onclick= async ()=>{ if(!currentPlayerId){ alert('プレイヤー未選択'); return;} const r=await api('save'); if(r?.state){ state=r.state; updateStats(); log('手動セーブ完了'); }};
+      // 旧アクション群削除済み
       // ===== バーチャルコントローラー =====
-  function bindHold(el){ const dir=el.dataset.dir; const start=()=>heldDirs.add(dir); const end=()=>heldDirs.delete(dir); el.addEventListener('touchstart',e=>{e.preventDefault();start();},{passive:false}); el.addEventListener('mousedown',e=>{e.preventDefault();start();}); ['touchend','touchcancel','mouseup','mouseleave','contextmenu'].forEach(ev=> el.addEventListener(ev,end)); }
-  document.querySelectorAll('.dpad-btn').forEach(bindHold);
-  // 2ボタン: A=調べる, B=ダッシュ(押下中高速移動)
-  let dashHeld=false;
-  const btnA=document.querySelector('.buttons button[data-btn="a"]');
-  const btnB=document.querySelector('.buttons button[data-btn="b"]');
-  const dashStart=()=>{dashHeld=true;}; const dashEnd=()=>{dashHeld=false;};
-  btnA.addEventListener('click',()=> actionPickup());
-  ['touchstart','mousedown'].forEach(ev=> btnB.addEventListener(ev,e=>{e.preventDefault();dashStart();},{passive:false}));
-  ['touchend','touchcancel','mouseup','mouseleave','contextmenu'].forEach(ev=> btnB.addEventListener(ev,dashEnd));
-  const heldDirs=new Set(); function loopMove(){ if(heldDirs.size){ const dir=[...heldDirs].slice(-1)[0]; movePlayerDir(dir); if(dashHeld) movePlayerDir(dir); } requestAnimationFrame(loopMove);} loopMove();
+      function bindHold(el) {
+        const dir = el.dataset.dir;
+        const start = () => heldDirs.add(dir);
+        const end = () => heldDirs.delete(dir);
+        el.addEventListener(
+          "touchstart",
+          (e) => {
+            e.preventDefault();
+            start();
+          },
+          { passive: false }
+        );
+        el.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          start();
+        });
+        [
+          "touchend",
+          "touchcancel",
+          "mouseup",
+          "mouseleave",
+          "contextmenu",
+        ].forEach((ev) => el.addEventListener(ev, end));
+      }
+      document.querySelectorAll(".dpad-btn").forEach(bindHold);
+      let dashHeld = false;
+      const btnSettings = document.querySelector('[data-btn="settings"]');
+      const btnDash = document.querySelector('[data-btn="dash"]');
+      const btnInspect = document.querySelector('[data-btn="inspect"]');
+      btnSettings.addEventListener("click", () => {
+        if (currentModal === "settings") closeModal();
+        else openModal("settings");
+      });
+      const dashStart = () => {
+        dashHeld = true;
+      };
+      const dashEnd = () => {
+        dashHeld = false;
+      };
+      ["touchstart", "mousedown"].forEach((ev) =>
+        btnDash.addEventListener(
+          ev,
+          (e) => {
+            e.preventDefault();
+            dashStart();
+          },
+          { passive: false }
+        )
+      );
+      [
+        "touchend",
+        "touchcancel",
+        "mouseup",
+        "mouseleave",
+        "contextmenu",
+      ].forEach((ev) => btnDash.addEventListener(ev, dashEnd));
+      btnInspect.addEventListener("click", () => {
+        if (currentModal) modalConfirm();
+        else actionInspect();
+      });
+      const heldDirs = new Set();
+      function loopMove() {
+        if (heldDirs.size && !currentModal) {
+          const dir = [...heldDirs].slice(-1)[0];
+          movePlayerDir(dir);
+          if (dashHeld) movePlayerDir(dir);
+        }
+        requestAnimationFrame(loopMove);
+      }
+      loopMove();
+
+      // ===== モーダル管理 =====
+      let currentModal = null;
+      let modalFocus = 0;
+      let modalListLength = 0;
+      const overlay = document.getElementById("modalOverlay");
+      const modalBody = document.getElementById("modalBody");
+      const modalTitle = document.getElementById("modalTitle");
+      document.getElementById("modalCloseBtn").onclick = () => closeModal();
+      function openModal(type) {
+        currentModal = type;
+        modalFocus = 0;
+        overlay.style.display = "flex";
+        refreshModal();
+      }
+      function closeModal() {
+        currentModal = null;
+        overlay.style.display = "none";
+      }
+      function modalItems() {
+        if (currentModal === "settings") {
+          return [];
+        }
+        if (currentModal === "inn") {
+          return ["はい", "いいえ"];
+        }
+        if (currentModal === "bossConfirm") {
+          return ["戦う", "やめる"];
+        }
+        if (currentModal === "shop") {
+          return shopCatalog.map((i) => i.id);
+        }
+        return [];
+      }
+      function modalNavigate(dir) {
+        const items = modalItems();
+        if (!items.length) return;
+        if (dir === "up") {
+          modalFocus = (modalFocus - 1 + items.length) % items.length;
+          refreshModalFocus();
+        } else if (dir === "down") {
+          modalFocus = (modalFocus + 1) % items.length;
+          refreshModalFocus();
+        }
+      }
+      function modalConfirm() {
+        if (!currentModal) return;
+        if (currentModal === "settings") {
+          /* no selection; maybe ignore */ return;
+        }
+        const items = modalItems();
+        if (!items.length) return;
+        const choice = items[modalFocus];
+        if (currentModal === "inn") {
+          if (choice === "はい") {
+            doAction("heal");
+          }
+          closeModal();
+          return;
+        }
+        if (currentModal === "bossConfirm") {
+          if (choice === "戦う") doAction("boss");
+          closeModal();
+          return;
+        }
+        if (currentModal === "shop") {
+          const item = shopCatalog[modalFocus];
+          if (item) {
+            if (!(state.equips || []).includes(item.type))
+              doAction("equip-" + item.type);
+            else fadeMessage("既に所持");
+          }
+          refreshModal();
+          return;
+        }
+      }
+      function refreshModal() {
+        if (!currentModal) return;
+        const equips = state?.equips || [];
+        if (currentModal === "settings") {
+          modalTitle.textContent = "設定";
+          modalBody.innerHTML = `<div style='display:flex;flex-direction:column;gap:8px;'>
+        <button id='manualSaveBtn' style='background:#0d3b66;color:#fff;border:1px solid #1b4f7d;border-radius:6px;padding:6px 10px;font-size:12px;'>手動セーブ</button>
+        <div style='font-size:12px;'>Lv${state.level} HP ${state.hp}/${
+            state.maxHp
+          } EXP ${state.exp}/${state.nextExp} G:${state.gold}</div>
+        <div style='font-size:12px;'>ATK ${state.atk}</div>
+        <div style='font-size:12px;'>装備: ${equips.join(",") || "-"}</div>
+      </div>`;
+          document.getElementById("manualSaveBtn").onclick = async () => {
+            const r = await api("save");
+            if (r?.state) {
+              state = r.state;
+              updateStats();
+              fadeMessage("セーブ完了");
+            }
+          };
+        } else if (currentModal === "inn") {
+          modalTitle.textContent = "宿屋";
+          modalBody.innerHTML = `<p style='margin:0 0 6px;font-size:12px;'>全回復しますか？ (10%/最低1G)</p>${menuListHtml(
+            ["はい", "いいえ"]
+          )}`;
+        } else if (currentModal === "bossConfirm") {
+          modalTitle.textContent = "ボス";
+          modalBody.innerHTML = `<p style='margin:0 0 6px;font-size:12px;'>ラスボスに挑みますか？</p>${menuListHtml(
+            ["戦う", "やめる"]
+          )}`;
+        } else if (currentModal === "shop") {
+          modalTitle.textContent = "武器屋";
+          modalBody.innerHTML = shopListHtml();
+        }
+        refreshModalFocus();
+      }
+      function refreshModalFocus() {
+        const wrap = modalBody;
+        const focusables = wrap.querySelectorAll("[data-menu-index]");
+        focusables.forEach((el) => {
+          el.classList.toggle(
+            "focus",
+            Number(el.getAttribute("data-menu-index")) === modalFocus
+          );
+        });
+      }
+      function menuListHtml(arr) {
+        return `<ul style='list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px;'>${arr
+          .map(
+            (t, i) =>
+              `<li data-menu-index='${i}' style="padding:6px 8px;border:1px solid #2f4e6d;border-radius:6px;background:#1c2541;">${t}</li>`
+          )
+          .join("")}</ul>`;
+      }
+      const shopCatalog = [
+        { id: "剣 (+5 ATK) 50G", type: "sword", cost: 50, bonus: "+5", atk: 5 },
+        {
+          id: "短剣 (+4 ATK) 35G",
+          type: "dagger",
+          cost: 35,
+          bonus: "+4",
+          atk: 4,
+        },
+        { id: "杖 (+7 ATK) 60G", type: "staff", cost: 60, bonus: "+7", atk: 7 },
+        { id: "戦斧 (+8 ATK) 80G", type: "axe", cost: 80, bonus: "+8", atk: 8 },
+        {
+          id: "防具 (+15 HP) 50G",
+          type: "armor",
+          cost: 50,
+          bonus: "+15HP",
+          hp: 15,
+        },
+      ];
+      function shopListHtml() {
+        return `<div style='display:flex;flex-direction:column;gap:6px;'>${shopCatalog
+          .map((it, i) => {
+            const owned = (state?.equips || []).includes(it.type);
+            return `<div data-menu-index='${i}' style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border:1px solid #2f4e6d;border-radius:6px;background:#1c2541;font-size:12px;"> <span>${
+              it.id
+            }</span><span style='font-size:11px;${
+              owned ? "color:#06d6a0;font-weight:600;" : ""
+            }'>${owned ? "済" : "購入"}</span></div>`;
+          })
+          .join("")}</div>`;
+      }
+
       // ===== 初期化 =====
       initPlayer();
     </script>
