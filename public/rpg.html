@@ -739,6 +739,14 @@
         bossImgsIdle.push(im);
       });
       let bossAnimTime = 0;
+      // 明示フレームインデックス (ループ安定性向上)
+      let bossFrame = 0;
+      setInterval(() => {
+        if (state?.bossDefeated) return; // 撃破後は進めない
+        if (bossImgsIdle.length && bossImgsIdle[0].complete) {
+          bossFrame = (bossFrame + 1) % bossImgsIdle.length;
+        }
+      }, 300);
       function drawBossField() {
         const frames = bossImgsIdle;
         if (state?.bossDefeated) return; // 撃破後は非表示
@@ -752,8 +760,8 @@
           );
           return;
         }
-        const idx = Math.floor(bossAnimTime / 300) % frames.length;
-        const img = frames[idx];
+  // 明示カウンタで選択 (以前: performance.now() /300)
+  const img = frames[bossFrame % frames.length];
         ctx.drawImage(
           img,
           bossPos.x * TILE - TILE * 0.25,
