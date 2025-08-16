@@ -2,6 +2,14 @@
 // ここを変更すればフロント/バック両方に反映しやすくする（※フロント用は別ファイル rpg-config.js を参照）
 
 module.exports = {
+  ENEMIES: [
+    { key: 'chort', name: 'インプ', min:1, max:5 },
+    { key: 'big_zombie', name: 'ゾンビ', min:6, max:15 },
+    { key: 'doc', name: '狂賢者', min:16, max:30 },
+    { key: 'big_demon', name: 'デーモン', min:31, max:60 },
+    { key: 'angel', name: '堕天使', min:61, max:999999999 },
+  ],
+  BOSS_NAME: '魔王',
   WEAPON_BONUS: {
     dagger: 40,
     sword: 500,

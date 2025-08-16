@@ -2645,12 +2645,21 @@ body.rpg-body {
   width: 54px;
   height: 54px;
   border-radius: 12px;
-  background: #1e2a44;
+  background: linear-gradient(145deg,#213252,#162336);
   border: 2px solid #2f4764;
   box-shadow: 0 4px 0 #0b1626;
   color: #fff;
   font-weight: 600;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  text-shadow:0 2px 2px #000;
 }
+.dpad-btn[data-dir="up"]::before{ content:'▲'; }
+.dpad-btn[data-dir="down"]::before{ content:'▼'; }
+.dpad-btn[data-dir="left"]::before{ content:'◀'; }
+.dpad-btn[data-dir="right"]::before{ content:'▶'; }
 .dpad-btn:active {
   transform: translateY(2px);
   box-shadow: 0 2px 0 #0b1626;

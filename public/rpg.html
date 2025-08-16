@@ -487,11 +487,13 @@
       const playerImgsIdle = []; const playerImgsRun = [];
       playerIdleFrames.forEach(src=>{ const im=new Image(); im.src=src; playerImgsIdle.push(im); });
       playerRunFrames.forEach(src=>{ const im=new Image(); im.src=src; playerImgsRun.push(im); });
-      // 敵スプライト候補 (レベル帯で切替)
+      // 敵スプライト候補 (レベル帯で切替) 追加5種
       const enemySets = [
-        { min:1,  max:10,  key:'chort' },
-        { min:11, max:25,  key:'big_zombie' },
-        { min:26, max:999, key:'big_demon' }
+        { min:1,  max:5,  key:'chort', label:'インプ' },
+        { min:6,  max:15, key:'big_zombie', label:'ゾンビ' },
+        { min:16, max:30, key:'doc', label:'狂賢者' },
+        { min:31, max:60, key:'big_demon', label:'デーモン' },
+        { min:61, max:999999, key:'angel', label:'堕天使' },
       ];
       function enemyIdleFrames(key){ return [0,1,2,3].map(i=>`/assets/rpg/${key}_idle_anim_f${i}.png`); }
       function enemyRunFrames(key){ return [0,1,2,3].map(i=>`/assets/rpg/${key}_run_anim_f${i}.png`); }
@@ -771,11 +773,11 @@
         state = r.state; const { enemy, events, victory, reward } = r.result; openModal('battle');
         renderBossIntro(enemy); await playBattleSequence(enemy, events, enemy); renderBossResult(victory, reward, enemy); updateStats(); draw(); }
       function renderBattleIntro(enemy){
-        modalTitle.textContent='バトル';
-        const enemySet = selectEnemySet(enemy.level); const eIdle = enemyIdleFrames(enemySet.key).map(src=>{ const im=new Image(); im.src=src; return im; });
+    const enemySet = selectEnemySet(enemy.level); const eIdle = enemyIdleFrames(enemySet.key).map(src=>{ const im=new Image(); im.src=src; return im; });
+    modalTitle.textContent='バトル';
         modalBody.innerHTML=`<div id='battleArea' style='display:flex;flex-direction:column;gap:10px;'>
           <div style='display:flex;justify-content:space-between;font-size:12px;'>
-            <div>敵(${enemySet.key}) Lv${enemy.level}</div>
+      <div>${enemySet.label||'敵'} Lv${enemy.level}</div>
             <div>HP <span id='enemyHpText'>${enemy.hp}/${enemy.maxHp}</span></div>
           </div>
           <div class='bar hp'><span id='enemyHpBar' style='width:100%'></span></div>
@@ -788,7 +790,7 @@
               </div>
               <div style='display:flex;flex-direction:column;align-items:center;gap:4px;'>
                 <img id='enemySprite' style='image-rendering:pixelated;width:64px;height:64px;' src='${eIdle[0].src}' />
-                <div style='font-size:10px;'>敵</div>
+                <div style='font-size:10px;'>${enemySet.label||'敵'}</div>
               </div>
             </div>
           </div>
@@ -804,7 +806,7 @@
         // 特殊演出 (フラッシュ + 赤枠)
         modalBody.innerHTML = `<div id='battleArea' style='display:flex;flex-direction:column;gap:10px;'>
           <div style='display:flex;justify-content:space-between;font-size:12px;color:#f94144;font-weight:600;'>
-            <div>Lv${enemy.level} ラスボス</div><div>HP <span id='enemyHpText'>${enemy.hp}/${enemy.hp}</span></div>
+            <div>Lv${enemy.level} 魔王</div><div>HP <span id='enemyHpText'>${enemy.hp}/${enemy.hp}</span></div>
           </div>
           <div class='bar hp'><span id='enemyHpBar' style='width:100%;background:linear-gradient(90deg,#e63946,#9d0208)'></span></div>
           <div style='height:140px;position:relative;border:2px solid #e63946;border-radius:8px;background:#1a0f1c;overflow:hidden;'>
