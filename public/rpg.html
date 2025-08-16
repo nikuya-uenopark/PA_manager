@@ -347,28 +347,15 @@
         id="vcRight"
         style="
           position: fixed;
-          right: 24px;
-          bottom: 40px;
+          right: 0;
+          bottom: 0;
           z-index: 30;
-          display: flex;
-          gap: 0;
+          pointer-events:none;
         "
       >
-        <div
-          class="buttons"
-          style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 22px;
-          "
-        >
-          <button data-btn="settings" class="btn-round btn-settings">
-            設定
-          </button>
-          <button data-btn="dash" class="btn-round btn-dash">走</button>
-          <button data-btn="inspect" class="btn-round btn-inspect">調</button>
-        </div>
+        <button data-btn="settings" class="btn-round btn-settings" style="position:absolute;right:176px;bottom:24px;pointer-events:auto;">設定</button>
+        <button data-btn="dash" class="btn-round btn-dash" style="position:absolute;right:96px;bottom:24px;pointer-events:auto;">走</button>
+        <button data-btn="inspect" class="btn-round btn-inspect" style="position:absolute;right:16px;bottom:24px;pointer-events:auto;">調</button>
       </div>
       <!-- Modal Overlay -->
       <div
@@ -1122,7 +1109,9 @@
         }
         fadeMessage("何もない");
       }
-      window.addEventListener("keydown", (e) => {
+    let lastKeyMove = 0;
+    const KEY_INTERVAL = 180; // キーボード移動間隔
+    window.addEventListener("keydown", (e) => {
         const dirMap = {
           ArrowUp: "up",
           ArrowDown: "down",
@@ -1131,11 +1120,12 @@
         };
         if (dirMap[e.key]) {
           e.preventDefault();
-          if (currentModal) {
-            modalNavigate(dirMap[e.key]);
-          } else {
-            movePlayerDir(dirMap[e.key]);
-          }
+      const now = performance.now();
+      const need = dashOn ? KEY_INTERVAL/2 : KEY_INTERVAL;
+      if(now - lastKeyMove < need) return;
+      lastKeyMove = now;
+      if (currentModal) modalNavigate(dirMap[e.key]);
+      else movePlayerDir(dirMap[e.key]);
         } else if (e.key === "a") {
           if (currentModal) modalConfirm();
           else actionInspect();
@@ -1208,15 +1198,22 @@
         else actionInspect();
       });
       const heldDirs = new Set();
-      function loopMove() {
-        if (heldDirs.size && !currentModal) {
-          const dir = [...heldDirs].slice(-1)[0];
-          movePlayerDir(dir);
-          if (dashOn) movePlayerDir(dir);
+      const MOVE_INTERVAL = 180; // ms 基本移動間隔
+      const MOVE_INTERVAL_DASH = 95; // ダッシュ時
+      let lastStepTime = 0;
+      function loopMove(ts){
+        if(heldDirs.size && !currentModal){
+          const now = performance.now();
+          const interval = dashOn ? MOVE_INTERVAL_DASH : MOVE_INTERVAL;
+          if(now - lastStepTime >= interval){
+            const dir = [...heldDirs].slice(-1)[0];
+            movePlayerDir(dir);
+            lastStepTime = now;
+          }
         }
         requestAnimationFrame(loopMove);
       }
-      loopMove();
+      requestAnimationFrame(loopMove);
 
       // ===== モーダル管理 =====
       let currentModal = null;
