@@ -614,6 +614,7 @@
         if (r && r.state) {
           state = r.state;
           if (r.result?.shop) applyShopConfig(r.result.shop);
+          if (r.result?.boss) bossConfig = r.result.boss;
           updateStats();
           draw();
           fadeMessage("ロード完了");
@@ -957,7 +958,7 @@
         // 特殊演出 (フラッシュ + 赤枠)
         modalBody.innerHTML = `<div id='battleArea' style='display:flex;flex-direction:column;gap:10px;'>
           <div style='display:flex;justify-content:space-between;font-size:12px;color:#f94144;font-weight:600;'>
-            <div>Lv${enemy.level} 魔王</div><div>HP <span id='enemyHpText'>${enemy.hp}/${enemy.hp}</span></div>
+      <div>Lv${formatBig(enemy.level)} ${(enemy.name||'魔王')}</div><div>HP <span id='enemyHpText'>${formatBig(enemy.hp)}/${formatBig(enemy.hp)}</span></div>
           </div>
           <div class='bar hp'><span id='enemyHpBar' style='width:100%;background:linear-gradient(90deg,#e63946,#9d0208)'></span></div>
           <div style='height:140px;position:relative;border:2px solid #e63946;border-radius:8px;background:#1a0f1c;overflow:hidden;'>
@@ -970,7 +971,7 @@
               <div style='display:flex;flex-direction:column;align-items:center;gap:4px;'>
                 <div id='bossAura' style='position:absolute;right:50%;transform:translateX(50%);width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#e6394644,#0000);filter:blur(8px);animation:pulse 2s infinite;'></div>
                 <img id='enemySprite' style='image-rendering:pixelated;width:96px;height:96px;filter:drop-shadow(0 0 8px #e63946);' src='/assets/rpg/big_demon_idle_anim_f0.png' />
-                <div style='font-size:10px;color:#f94144;'>ラスボス</div>
+        <div style='font-size:10px;color:#f94144;'>${enemy.name||'ラスボス'}</div>
               </div>
             </div>
           </div>
@@ -1321,9 +1322,10 @@
           )}`;
         } else if (currentModal === "bossConfirm") {
           modalTitle.textContent = "ボス";
-          modalBody.innerHTML = `<p style='margin:0 0 6px;font-size:12px;'>Lv10000 / HP1200 のラスボスに挑みますか？</p>${menuListHtml(
-            ["戦う", "やめる"]
-          )}`;
+          const lv = bossConfig?.level || 0;
+          const hp = bossConfig?.hp || 0;
+          const name = bossConfig?.name || 'ラスボス';
+          modalBody.innerHTML = `<p style='margin:0 0 6px;font-size:12px;'>Lv${formatBig(lv)} / HP${formatBig(hp)} の ${name} に挑みますか？</p>${menuListHtml(["戦う","やめる"])} }`;
         } else if (currentModal === "shop") {
           modalTitle.textContent = "武器屋";
           modalBody.innerHTML = shopListHtml();
@@ -1354,6 +1356,7 @@
         // 初期値 (バックエンドから受領後に上書き)
         { type: "dagger", label: "短剣", atk: 0, cost: 0 },
       ];
+  let bossConfig = null;
       // バックエンド SHOP_ITEMS から反映
       function applyShopConfig(cfg) {
         const map = {
