@@ -1,7 +1,7 @@
 // CommonJS へ統一 & RPG 進行管理
 const prisma = require("../_prisma");
 const { addLog } = require("../_log");
-const CFG = require('./rpgConfig');
+const CFG = require("./rpgConfig");
 
 // 簡易RPG進行 API
 // POST { staffId, action, payload }
@@ -24,8 +24,20 @@ function newState(name) {
     bossDefeated: false,
     nextExp: levelNeeded(1),
     items: [
-      { type: 'chest', x: 7, y: 3, opened: false, reward: { gold: 30, exp: 10 } },
-      { type: 'chest', x: 10, y: 7, opened: false, reward: { gold: 50, exp: 0 } }
+      {
+        type: "chest",
+        x: 7,
+        y: 3,
+        opened: false,
+        reward: { gold: 30, exp: 10 },
+      },
+      {
+        type: "chest",
+        x: 10,
+        y: 7,
+        opened: false,
+        reward: { gold: 50, exp: 0 },
+      },
     ],
   };
 }
@@ -43,12 +55,17 @@ function recomputeDerived(state) {
   // レベル由来の成長計算 + 装備ボーナス
   const levelBonusHp = (state.level - 1) * 6;
   const levelBonusAtk = (state.level - 1) * 2;
-  const armorBonus = equips.includes("plate_armor") ? 30 : (equips.includes("armor") ? 15 : 0);
+  const armorBonus = equips.includes("plate_armor")
+    ? 30
+    : equips.includes("armor")
+    ? 15
+    : 0;
   // 武器は複数所持しても最大値のみ反映 (CFG.WEAPON_BONUS)
   const weaponBonusTable = CFG.WEAPON_BONUS;
   let weaponBonus = 0;
   for (const w of Object.keys(weaponBonusTable)) {
-    if (equips.includes(w)) weaponBonus = Math.max(weaponBonus, weaponBonusTable[w]);
+    if (equips.includes(w))
+      weaponBonus = Math.max(weaponBonus, weaponBonusTable[w]);
   }
   state.maxHp = BASE_HP + levelBonusHp + armorBonus;
   state.atk = BASE_ATK + levelBonusAtk + weaponBonus;
@@ -65,12 +82,22 @@ function applyBattle(state, enemy) {
     // プレイヤー攻撃
     enemy.hp -= state.atk;
     log.push(`あなたの攻撃! ${state.atk} ダメージ`);
-    events.push({ type: 'player', dmg: state.atk, enemyHp: Math.max(0, enemy.hp), playerHp: state.hp });
+    events.push({
+      type: "player",
+      dmg: state.atk,
+      enemyHp: Math.max(0, enemy.hp),
+      playerHp: state.hp,
+    });
     if (enemy.hp <= 0) break;
     // 敵攻撃
     state.hp -= enemy.atk;
     log.push(`敵の攻撃! ${enemy.atk} ダメージ`);
-    events.push({ type: 'enemy', dmg: enemy.atk, enemyHp: Math.max(0, enemy.hp), playerHp: Math.max(0, state.hp) });
+    events.push({
+      type: "enemy",
+      dmg: enemy.atk,
+      enemyHp: Math.max(0, enemy.hp),
+      playerHp: Math.max(0, state.hp),
+    });
   }
   if (state.hp <= 0) {
     log.push("敗北... HPを全快して再挑戦しよう");
@@ -94,7 +121,13 @@ function applyBattle(state, enemy) {
     log.push(`レベルアップ! Lv${state.level}`);
   }
   recomputeDerived(state);
-  return { state, victory: true, log, events, reward: { goldGain, expGain, levelUps } };
+  return {
+    state,
+    victory: true,
+    log,
+    events,
+    reward: { goldGain, expGain, levelUps },
+  };
 }
 module.exports = async function handler(req, res) {
   try {
@@ -146,30 +179,47 @@ module.exports = async function handler(req, res) {
     } else if (action === "battle") {
       // プレイヤー±10 で敵レベル決定し、敵種はコンフィグ ENEMIES からランダム
       const enemyDefs = CFG.ENEMIES || [];
-      const chosen = enemyDefs.length ? enemyDefs[Math.floor(Math.random()*enemyDefs.length)] : { key:'chort', name:'インプ' };
+      const chosen = enemyDefs.length
+        ? enemyDefs[Math.floor(Math.random() * enemyDefs.length)]
+        : { key: "chort", name: "インプ" };
       const enemyLevel = Math.max(1, state.level + randInt(-10, 10));
-      const variance = () => (Math.random() * 0.2 + 0.9); // 0.9 - 1.1
+      const variance = () => Math.random() * 0.2 + 0.9; // 0.9 - 1.1
       const baseHp = Math.round((18 + enemyLevel * 5) * variance());
       const baseAtk = Math.round((3 + enemyLevel * 1.2) * variance());
       const baseExp = Math.round((5 + enemyLevel * 4) * variance());
       const baseGold = Math.round((4 + enemyLevel * 3) * variance());
-      const enemy = { key: chosen.key, name: chosen.name, level: enemyLevel, maxHp: baseHp, hp: baseHp, atk: baseAtk, exp: baseExp, gold: baseGold };
+      const enemy = {
+        key: chosen.key,
+        name: chosen.name,
+        level: enemyLevel,
+        maxHp: baseHp,
+        hp: baseHp,
+        atk: baseAtk,
+        exp: baseExp,
+        gold: baseGold,
+      };
       const battle = applyBattle(state, { ...enemy });
       result = { ...battle, enemy };
     } else if (action === "boss") {
       if (state.bossDefeated) {
         result = { msg: "既に討伐済み" };
       } else {
-  const boss = { hp: CFG.BOSS.hp, atk: CFG.BOSS.atk, exp: CFG.BOSS.exp, gold: CFG.BOSS.gold, level: CFG.BOSS.level };
-  const r = applyBattle(state, { ...boss });
+        const boss = {
+          hp: CFG.BOSS.hp,
+          atk: CFG.BOSS.atk,
+          exp: CFG.BOSS.exp,
+          gold: CFG.BOSS.gold,
+          level: CFG.BOSS.level,
+        };
+        const r = applyBattle(state, { ...boss });
         if (r.victory) {
           state.bossDefeated = true;
         }
-  result = { ...r, enemy: boss };
+        result = { ...r, enemy: boss };
       }
-  } else if (action === "equip") {
-  const { type } = payload || {};
-  const shopItems = CFG.SHOP_ITEMS;
+    } else if (action === "equip") {
+      const { type } = payload || {};
+      const shopItems = CFG.SHOP_ITEMS;
       if (!shopItems[type]) {
         result = { msg: "不明な装備" };
       } else if (state.equips.includes(type)) {
@@ -180,19 +230,21 @@ module.exports = async function handler(req, res) {
         state.gold -= shopItems[type].cost;
         state.equips.push(type);
         recomputeDerived(state);
-        if (type === 'armor' || type === 'plate_armor') state.hp = state.maxHp; // 防具系購入時全快
+        if (type === "armor" || type === "plate_armor") state.hp = state.maxHp; // 防具系購入時全快
         result = { msg: shopItems[type].msg };
       }
-  } else if (action === 'pickup') {
+    } else if (action === "pickup") {
       const { x, y } = payload || {};
-      if (typeof x === 'number' && typeof y === 'number') {
-        const item = (state.items||[]).find(it=>it.type==='chest' && it.x===x && it.y===y);
+      if (typeof x === "number" && typeof y === "number") {
+        const item = (state.items || []).find(
+          (it) => it.type === "chest" && it.x === x && it.y === y
+        );
         if (item) {
           if (item.opened) {
-      result = { msg: '空の宝箱だ', goldGain:0, expGain:0 };
+            result = { msg: "空の宝箱だ", goldGain: 0, expGain: 0 };
           } else {
             item.opened = true;
-            const rw = item.reward||{};
+            const rw = item.reward || {};
             if (rw.gold) state.gold += rw.gold;
             if (rw.exp) {
               state.exp += rw.exp;
@@ -204,13 +256,19 @@ module.exports = async function handler(req, res) {
                 state.hp = state.maxHp;
               }
             }
-            result = { msg: `宝箱を開けた! +${rw.gold||0}G ${rw.exp?'+EXP'+rw.exp:''}`, goldGain: rw.gold||0, expGain: rw.exp||0 };
+            result = {
+              msg: `宝箱を開けた! +${rw.gold || 0}G ${
+                rw.exp ? "+EXP" + rw.exp : ""
+              }`,
+              goldGain: rw.gold || 0,
+              expGain: rw.exp || 0,
+            };
           }
         } else {
-          result = { msg: '何もない', goldGain:0, expGain:0 };
+          result = { msg: "何もない", goldGain: 0, expGain: 0 };
         }
       } else {
-        result = { msg: '座標不正', goldGain:0, expGain:0 };
+        result = { msg: "座標不正", goldGain: 0, expGain: 0 };
       }
     } else if (action === "save") {
       /* explicit save only */
@@ -231,7 +289,9 @@ module.exports = async function handler(req, res) {
         meta: state,
       },
     });
-    try { await addLog("rpg", `rpg action ${action} by staff#${staffId}`); } catch {}
+    try {
+      await addLog("rpg", `rpg action ${action} by staff#${staffId}`);
+    } catch {}
     return res.json({ state, result, record });
   } catch (e) {
     console.error(e);

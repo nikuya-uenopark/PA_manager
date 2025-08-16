@@ -3,13 +3,13 @@
 
 module.exports = {
   ENEMIES: [
-    { key: 'chort', name: 'インプ', min:1, max:5 },
-    { key: 'big_zombie', name: 'ゾンビ', min:6, max:15 },
-    { key: 'doc', name: '災厄のタバコ男 ムコサン', min:16, max:30 },
-    { key: 'big_demon', name: '悪の根源 ケイ', min:31, max:60 },
-    { key: 'angel', name: '堕天使 アキヤマーン', min:61, max:999999999 },
+    { key: "chort", name: "インプ", min: 1, max: 5 },
+    { key: "big_zombie", name: "ゾンビ", min: 6, max: 15 },
+    { key: "doc", name: "災厄のタバコ男 ムコサン", min: 16, max: 30 },
+    { key: "big_demon", name: "悪の根源 ケイ", min: 31, max: 60 },
+    { key: "angel", name: "堕天使 アキヤマーン", min: 61, max: 999999999 },
   ],
-  BOSS_NAME: 'ベトナムより来訪せし暴虐の魔王 コン',
+  BOSS_NAME: "ベトナムより来訪せし暴虐の魔王 コン",
   WEAPON_BONUS: {
     dagger: 40,
     sword: 500,
@@ -28,11 +28,27 @@ module.exports = {
     axe: { cost: 400000, msg: "戦斧を購入 (+ATK9万)", atk: 90000 },
     spear: { cost: 3000000, msg: "槍を購入 (+ATK120万)", atk: 1200000 },
     wand: { cost: 20000000, msg: "ワンドを購入 (+ATK1500万)", atk: 15000000 },
-    longsword: { cost: 100000000, msg: "ロングソードを購入 (+ATK1,8億)", atk: 180000000 },
-    mystic_staff: { cost: 1000000000, msg: "魔導杖を購入 (+ATK24億)", atk: 2400000000 },
-    greatsword: { cost: 10000000000, msg: "グレートソードを購入 (+ATK500億)", atk: 50000000000 },
+    longsword: {
+      cost: 100000000,
+      msg: "ロングソードを購入 (+ATK1,8億)",
+      atk: 180000000,
+    },
+    mystic_staff: {
+      cost: 1000000000,
+      msg: "魔導杖を購入 (+ATK24億)",
+      atk: 2400000000,
+    },
+    greatsword: {
+      cost: 10000000000,
+      msg: "グレートソードを購入 (+ATK500億)",
+      atk: 50000000000,
+    },
     armor: { cost: 114514, msg: "防具を購入 (+HP114514)", hp: 114514 },
-    plate_armor: { cost: 37564000, msg: "プレートアーマーを購入 (+HP37564000)", hp: 37564000 },
+    plate_armor: {
+      cost: 37564000,
+      msg: "プレートアーマーを購入 (+HP37564000)",
+      hp: 37564000,
+    },
   },
   BOSS: {
     level: 100000000,
