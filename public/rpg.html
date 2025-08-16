@@ -317,7 +317,7 @@
       <div
         class="vc-left"
         id="vcLeft"
-  style="position: fixed; left: 16px; bottom: 32px; z-index: 80"
+        style="position: fixed; left: 16px; bottom: 32px; z-index: 80"
       >
         <div
           class="dpad"
@@ -1156,7 +1156,7 @@
         fadeMessage("何もない");
       }
       let lastKeyMove = 0;
-      const KEY_INTERVAL = 180; // キーボード移動間隔
+      const KEY_INTERVAL = 180; // キーボード移動間隔 (通常)
       window.addEventListener("keydown", (e) => {
         const dirMap = {
           ArrowUp: "up",
@@ -1167,7 +1167,7 @@
         if (dirMap[e.key]) {
           e.preventDefault();
           const now = performance.now();
-          const need = dashOn ? KEY_INTERVAL / 2 : KEY_INTERVAL;
+          const need = dashOn ? 80 : KEY_INTERVAL; // ダッシュ時高速
           if (now - lastKeyMove < need) return;
           lastKeyMove = now;
           if (currentModal) modalNavigate(dirMap[e.key]);
@@ -1260,7 +1260,7 @@
       });
       const heldDirs = new Set();
       const MOVE_INTERVAL = 180; // ms 基本移動間隔
-      const MOVE_INTERVAL_DASH = 95; // ダッシュ時
+      const MOVE_INTERVAL_DASH = 60; // ダッシュ時 高速化
       let lastStepTime = 0;
       function loopMove(ts) {
         if (heldDirs.size && !currentModal) {
