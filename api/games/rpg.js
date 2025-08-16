@@ -57,11 +57,13 @@ function recomputeDerived(state) {
   // レベル由来の成長計算 + 装備ボーナス
   const levelBonusHp = (state.level - 1) * 6;
   const levelBonusAtk = (state.level - 1) * 2;
-  const armorBonus = equips.includes("plate_armor")
-    ? 30
-    : equips.includes("armor")
-    ? 15
-    : 0;
+  // 防具HPボーナス: SHOP_ITEMS の hp プロパティ合算 (巨大数値も反映) ※以前の固定+15/+30を廃止
+  let armorBonus = 0;
+  const shopItems = CFG.SHOP_ITEMS || {};
+  for (const eq of equips) {
+    const it = shopItems[eq];
+    if (it && typeof it.hp === 'number') armorBonus += it.hp;
+  }
   // 武器は複数所持しても最大値のみ反映 (CFG.WEAPON_BONUS)
   const weaponBonusTable = CFG.WEAPON_BONUS;
   let weaponBonus = 0;
@@ -247,8 +249,8 @@ module.exports = async function handler(req, res) {
       } else {
         state.gold -= shopItems[type].cost;
         state.equips.push(type);
-        recomputeDerived(state);
-        if (type === "armor" || type === "plate_armor") state.hp = state.maxHp; // 防具系購入時全快
+  recomputeDerived(state); // 装備の HP/ATK ボーナス反映
+  if (shopItems[type].hp) state.hp = state.maxHp; // HP増加装備購入時は全回復
         result = { msg: shopItems[type].msg };
       }
     } else if (action === "pickup") {
