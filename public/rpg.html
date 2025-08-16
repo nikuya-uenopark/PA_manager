@@ -591,6 +591,8 @@
         animTime: 0,
         running: false,
       };
+      // ボス設定(サーバー init 取得前は null) ※ 先に宣言して loadBossSprite から参照可能に
+      let bossConfig = null;
       // ===== ユーティリティ =====
       function log(msg) {
         /* ログUI削除済み -> no-op (必要なら console) */
@@ -865,20 +867,23 @@
         const img = frames[idx];
         ctx.drawImage(img, player.x * TILE, player.y * TILE, TILE, TILE);
       }
-      // 近接インジケータ
-      let proxEl = document.getElementById("proxUI");
-      if (!proxEl) {
-        proxEl = document.createElement("div");
-        proxEl.id = "proxUI";
-        proxEl.style.position = "absolute";
-        proxEl.style.left = "8px";
-        proxEl.style.top = "8px";
-        proxEl.style.zIndex = "5";
-        proxEl.style.display = "flex";
-        proxEl.style.gap = "4px";
-        canvas.parentElement.appendChild(proxEl);
-      }
+      // 近接インジケータ (遅延生成: 初期 draw() 以前の参照で落ちないように)
+      let proxEl = null;
       function updateProximityUI() {
+        if (!proxEl) {
+          proxEl = document.getElementById("proxUI");
+          if (!proxEl) {
+            proxEl = document.createElement("div");
+            proxEl.id = "proxUI";
+            proxEl.style.position = "absolute";
+            proxEl.style.left = "8px";
+            proxEl.style.top = "8px";
+            proxEl.style.zIndex = "5";
+            proxEl.style.display = "flex";
+            proxEl.style.gap = "4px";
+            canvas.parentElement.appendChild(proxEl);
+          }
+        }
         if (!state) {
           proxEl.innerHTML = "";
           return;
@@ -1480,7 +1485,7 @@
         // 初期値 (バックエンドから受領後に上書き)
         { type: "dagger", label: "短剣", atk: 0, cost: 0 },
       ];
-      let bossConfig = null;
+      // (上部で宣言済み)
       // バックエンド SHOP_ITEMS から反映
       function applyShopConfig(cfg) {
         const map = {
