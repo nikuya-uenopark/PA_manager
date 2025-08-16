@@ -10,6 +10,8 @@ module.exports = {
     { key: "angel", name: "堕天使 アキヤマーン", min: 61, max: 999999999 },
   ],
   BOSS_NAME: "ベトナムより来訪せし暴虐の魔王 コン",
+  // フィールド/戦闘で使うボススプライトキー (assets/rpg/<key>_idle_anim_f0.png 形式)
+  BOSS_SPRITE_KEY: "angel", // 強そうな見た目に変更（例: angel, big_demon など）
   WEAPON_BONUS: {
     dagger: 40,
     sword: 500,

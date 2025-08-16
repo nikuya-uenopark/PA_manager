@@ -144,7 +144,7 @@ module.exports = async function handler(req, res) {
         state: st,
         record,
         shop: CFG.SHOP_ITEMS,
-        boss: { level: CFG.BOSS.level, hp: CFG.BOSS.hp, name: CFG.BOSS_NAME },
+        boss: { level: CFG.BOSS.level, hp: CFG.BOSS.hp, name: CFG.BOSS_NAME, spriteKey: CFG.BOSS_SPRITE_KEY },
       });
     }
     if (req.method !== "POST")
@@ -169,7 +169,7 @@ module.exports = async function handler(req, res) {
       // 初期化時にショップ & ボス設定を返してフロント同期
       result = {
         shop: CFG.SHOP_ITEMS,
-        boss: { level: CFG.BOSS.level, hp: CFG.BOSS.hp, name: CFG.BOSS_NAME },
+        boss: { level: CFG.BOSS.level, hp: CFG.BOSS.hp, name: CFG.BOSS_NAME, spriteKey: CFG.BOSS_SPRITE_KEY },
       };
     } else if (action === "heal") {
       // 宿屋: 所持金の10% (端数切り捨て) を支払い HP全回復。最低1G必要。
@@ -225,6 +225,7 @@ module.exports = async function handler(req, res) {
           gold: CFG.BOSS.gold,
           level: CFG.BOSS.level,
           name: CFG.BOSS_NAME,
+          key: CFG.BOSS_SPRITE_KEY,
         };
         const r = applyBattle(state, { ...boss });
         if (r.victory) {

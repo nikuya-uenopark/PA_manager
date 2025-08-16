@@ -729,15 +729,17 @@
         }
       }
       // ===== 描画 =====
-      const bossIdleFrames = [0, 1, 2, 3].map(
-        (i) => `/assets/rpg/big_demon_idle_anim_f${i}.png`
-      );
-      const bossImgsIdle = [];
-      bossIdleFrames.forEach((src) => {
-        const im = new Image();
-        im.src = src;
-        bossImgsIdle.push(im);
-      });
+      let bossImgsIdle = [];
+      function loadBossSprite() {
+        bossImgsIdle = [];
+        const key = (bossConfig && bossConfig.spriteKey) || "big_demon";
+        [0, 1, 2, 3].forEach((i) => {
+          const im = new Image();
+          im.src = `/assets/rpg/${key}_idle_anim_f${i}.png`;
+          bossImgsIdle.push(im);
+        });
+      }
+      loadBossSprite();
       let bossAnimTime = 0;
       // 明示フレームインデックス (ループ安定性向上)
       let bossFrame = 0;
@@ -1407,6 +1409,8 @@
             "戦う",
             "やめる",
           ])} }`;
+          // スプライトキー変わる可能性あるので再読込
+          loadBossSprite();
         } else if (currentModal === "shop") {
           modalTitle.textContent = "武器屋";
           modalBody.innerHTML = shopListHtml();
