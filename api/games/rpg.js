@@ -159,11 +159,11 @@ module.exports = async function handler(req, res) {
         result = { msg: "既に討伐済み" };
       } else {
   const boss = { hp: CFG.BOSS.hp, atk: CFG.BOSS.atk, exp: CFG.BOSS.exp, gold: CFG.BOSS.gold, level: CFG.BOSS.level };
-        const r = applyBattle(state, boss);
+  const r = applyBattle(state, { ...boss });
         if (r.victory) {
           state.bossDefeated = true;
         }
-        result = r;
+  result = { ...r, enemy: boss };
       }
   } else if (action === "equip") {
   const { type } = payload || {};
