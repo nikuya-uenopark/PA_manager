@@ -344,34 +344,13 @@
           bottom: 40px;
           z-index: 30;
           display: flex;
-          gap: 26px;
+          gap: 0;
         "
       >
-        <div
-          class="buttons"
-          style="position: relative; width: 220px; height: 200px"
-        >
-          <button
-            data-btn="settings"
-            class="btn-round btn-settings"
-            style="right: 0; bottom: 16px"
-          >
-            設定
-          </button>
-          <button
-            data-btn="dash"
-            class="btn-round btn-dash"
-            style="left: 12px; top: 0"
-          >
-            走
-          </button>
-          <button
-            data-btn="inspect"
-            class="btn-round btn-inspect"
-            style="right: 70px; bottom: 92px"
-          >
-            調
-          </button>
+        <div class="buttons" style="display:flex;flex-direction:column;align-items:center;gap:22px;">
+          <button data-btn="settings" class="btn-round btn-settings">設定</button>
+          <button data-btn="dash" class="btn-round btn-dash">走</button>
+          <button data-btn="inspect" class="btn-round btn-inspect">調</button>
         </div>
       </div>
       <!-- Modal Overlay -->
