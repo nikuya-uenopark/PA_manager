@@ -744,14 +744,14 @@
       // 明示フレームインデックス (ループ安定性向上)
       let bossFrame = 0;
       setInterval(() => {
-  // 再挑戦仕様: 常にアニメ継続 (撃破フラグ無視)
+        // 再挑戦仕様: 常にアニメ継続 (撃破フラグ無視)
         if (bossImgsIdle.length && bossImgsIdle[0].complete) {
           bossFrame = (bossFrame + 1) % bossImgsIdle.length;
         }
       }, 300);
       function drawBossField() {
         const frames = bossImgsIdle;
-  // 再挑戦仕様: 撃破後も表示
+        // 再挑戦仕様: 撃破後も表示
         if (!frames.length || !frames[0].complete) {
           ctx.fillStyle = "#e63946";
           ctx.fillRect(
@@ -762,8 +762,8 @@
           );
           return;
         }
-  // 明示カウンタで選択 (以前: performance.now() /300)
-  const img = frames[bossFrame % frames.length];
+        // 明示カウンタで選択 (以前: performance.now() /300)
+        const img = frames[bossFrame % frames.length];
         ctx.drawImage(
           img,
           bossPos.x * TILE - TILE * 0.25,
@@ -1253,7 +1253,7 @@
       btnSettings.addEventListener("click", () => {
         if (currentModal) {
           // どのモーダルでも閉じる (settings含む)
-            closeModal();
+          closeModal();
         } else {
           openModal("settings");
         }
