@@ -1941,17 +1941,23 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
         .map((r, i) => {
           let v = r.value;
           if (game === "twenty") {
-            v = `${v}ms (実 ${r.extra || ""}ms)`;
+            const actual = r.extra || 0;
+            const actualSec = (actual / 1000).toFixed(3);
+            const early = actual < 20000;
+            const diffMs = Math.abs(actual - 20000);
+            const diffSec = (diffMs / 1000).toFixed(3);
+            const phrase = early
+              ? `${diffSec}秒早い`
+              : `${diffSec}秒遅い`;
+            v = `${phrase} (${actualSec}秒)`;
           }
           if (game === "reaction") {
-            v = v + "ms";
+            v = (v / 1000).toFixed(3) + "秒";
           }
-          if (game === "rpg") {
+            if (game === "rpg") {
             v = "Lv" + v + (r.meta?.bossDefeated ? " ⭐" : "");
           }
-          return `<li><span>${i + 1}. ${
-            r.staff?.name || "?"
-          }</span><span>${v}</span></li>`;
+          return `<li><span>${i + 1}. ${r.staff?.name || "?"}</span><span>${v}</span></li>`;
         })
         .join("");
     } catch {
@@ -1994,15 +2000,16 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
     reactionStopBtn.addEventListener("click", async () => {
       if (!reactionState.started || reactionState.reacted) return;
       reactionState.reacted = true;
-      const elapsed = Math.round(performance.now() - reactionState.startTime);
-      reactionStatus.textContent = `結果: ${elapsed}ms`;
+  const elapsed = Math.round(performance.now() - reactionState.startTime);
+  const sec = (elapsed / 1000).toFixed(3);
+  reactionStatus.textContent = `結果: ${sec}秒`;
       reactionStartBtn.disabled = false;
       reactionStopBtn.disabled = true;
       submitScore("reaction", elapsed, null);
       const curBest = reactionBest.getAttribute("data-best");
       if (!curBest || elapsed < Number(curBest)) {
         reactionBest.setAttribute("data-best", elapsed);
-        reactionBest.textContent = "自己ベスト: " + elapsed + "ms";
+        reactionBest.textContent = "自己ベスト: " + sec + "秒";
       }
       loadRanking("reaction");
     });
@@ -2028,12 +2035,15 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
       twentyStartBtn.disabled = false;
       twentyStopBtn.disabled = true;
       const diff = Math.abs(actual - 20000);
-      twentyStatus.textContent = `差: ${diff}ms (実 ${actual}ms)`;
+      const actualSec = (actual / 1000).toFixed(3);
+      const diffSec = (diff / 1000).toFixed(3);
+      const early = actual < 20000;
+      twentyStatus.textContent = `${diffSec}秒${early ? "早い" : "遅い"}！(${actualSec}秒)`;
       submitScore("twenty", diff, actual);
       const curBest = twentyBest.getAttribute("data-best");
       if (!curBest || diff < Number(curBest)) {
         twentyBest.setAttribute("data-best", diff);
-        twentyBest.textContent = "自己ベスト: 差 " + diff + "ms";
+        twentyBest.textContent = "自己ベスト: 差 " + diffSec + "秒";
       }
       loadRanking("twenty");
     });
