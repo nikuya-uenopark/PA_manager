@@ -430,9 +430,22 @@
       let encounterStep = 0; // 自動エンカのみ
       const canvas = document.getElementById("rpgCanvas");
       const ctx = canvas.getContext("2d");
-      const TILE = 16;
-      const mapW = 40,
-        mapH = 22; // 640x352 使用
+      // ===== フィールドスケール設定 =====
+      const TILE_BASE = 16; // 元タイルサイズ
+      let TILE = TILE_BASE; // 拡大後サイズ
+      const mapW = 40, mapH = 22; // 論理グリッド
+      function resizeCanvasScale(){
+        const vw = window.innerWidth; const vh = window.innerHeight;
+        let scaleTile = Math.floor(vw / mapW); if(scaleTile < 4) scaleTile = 4;
+        if(scaleTile * mapH > vh){ scaleTile = Math.floor(vh / mapH); }
+        TILE = scaleTile;
+        canvas.width = mapW * TILE;
+        canvas.height = mapH * TILE;
+        canvas.style.width = canvas.width+'px';
+        canvas.style.height = canvas.height+'px';
+        draw();
+      }
+      window.addEventListener('resize', resizeCanvasScale);
       // 0 floor,1 wall,2 inn,3 shop,4 chestClosed,5 chestOpen
       const world = Array.from({ length: mapH }, (_, y) =>
         Array.from({ length: mapW }, (_, x) =>
@@ -603,12 +616,9 @@
         }
         if (r?.state) draw();
       }
-      function attemptEncounter() {
-        if (Math.random() < 0.18) {
-          walking = false;
-          flashEncounter();
-          fadeMessage("エンカウント!");
-          doAction("battle");
+      function attemptEncounter(){
+        if(Math.random()<0.18){
+          walking=false; flashEncounter(); fadeMessage('エンカウント!'); startBattle();
         }
       }
       // ===== 描画 =====
@@ -630,51 +640,14 @@
         if (state) drawPlayer();
         updateProximityUI();
       }
-      function drawTile(t, x, y) {
-        const uv = tileMap[t] || tileMap[0];
-        if (!tilesImg.complete) {
-          ctx.fillStyle = "#222";
-          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-          return;
-        }
-        ctx.drawImage(
-          tilesImg,
-          uv[0] * TILE,
-          uv[1] * TILE,
-          TILE,
-          TILE,
-          x * TILE,
-          y * TILE,
-          TILE,
-          TILE
-        );
+      function drawTile(t,x,y){
+        const uv=tileMap[t]||tileMap[0];
+        if(!tilesImg.complete){ ctx.fillStyle='#222'; ctx.fillRect(x*TILE,y*TILE,TILE,TILE); return; }
+        ctx.drawImage(tilesImg, uv[0]*TILE_BASE, uv[1]*TILE_BASE, TILE_BASE, TILE_BASE, x*TILE, y*TILE, TILE, TILE);
       }
-      function drawPlayer() {
-        if (!playerImg.complete) {
-          ctx.fillStyle = "#ffb703";
-          ctx.fillRect(
-            player.x * TILE + 2,
-            player.y * TILE + 2,
-            TILE - 4,
-            TILE - 4
-          );
-          return;
-        }
-        const fw = TILE,
-          fh = TILE;
-        const sy = player.dir;
-        const sx = player.frame % 4;
-        ctx.drawImage(
-          playerImg,
-          sx * fw,
-          sy * fh,
-          fw,
-          fh,
-          player.x * TILE,
-          player.y * TILE,
-          fw,
-          fh
-        );
+      function drawPlayer(){
+        const fw=TILE_BASE, fh=TILE_BASE; if(!playerImg.complete){ ctx.fillStyle='#ffb703'; ctx.fillRect(player.x*TILE+2,player.y*TILE+2,TILE-4,TILE-4); return; }
+        const sy=player.dir; const sx=player.frame%4; ctx.drawImage(playerImg,sx*fw,sy*fh,fw,fh,player.x*TILE,player.y*TILE,TILE,TILE);
       }
       // 近接インジケータ
       let proxEl = document.getElementById("proxUI");
@@ -746,6 +719,34 @@
         if (encounterStep === 0) attemptEncounter();
         draw();
       }
+      // ===== 戦闘モーダル =====
+      async function startBattle(){
+        const r = await api('battle');
+        if(!r?.state || !r.result) return;
+        state = r.state; const { enemy, events, victory, reward } = r.result;
+        openModal('battle'); renderBattleIntro(enemy); await playBattleSequence(enemy, events); renderBattleResult(victory, reward, enemy); updateStats(); draw(); }
+      function renderBattleIntro(enemy){ modalTitle.textContent='バトル'; modalBody.innerHTML=`<div id='battleArea' style='display:flex;flex-direction:column;gap:10px;'>
+        <div style='display:flex;justify-content:space-between;font-size:12px;'>
+          <div>敵 Lv${enemy.level}</div>
+          <div>HP <span id='enemyHpText'>${enemy.hp}/${enemy.maxHp}</span></div>
+        </div>
+        <div class='bar hp'><span id='enemyHpBar' style='width:100%'></span></div>
+        <div style='height:120px;position:relative;border:1px solid #2f4e6d;border-radius:8px;background:#1c2541;overflow:hidden;'>
+          <div id='battleLog' style='position:absolute;inset:6px;display:flex;flex-direction:column;gap:4px;font-size:11px;'></div>
+          <div id='battleSprites' style='position:absolute;inset:0;pointer-events:none;'>
+            <div id='playerSprite' style='position:absolute;left:15%;top:50%;transform:translate(-50%,-50%);width:48px;height:48px;background:rgba(255,183,3,0.85);border:2px solid #ffcf5d;border-radius:8px;'></div>
+            <div id='enemySprite' style='position:absolute;right:15%;top:50%;transform:translate(50%,-50%);width:48px;height:48px;background:#e63946;border:2px solid #ff7b89;border-radius:8px;'></div>
+          </div>
+        </div>
+        <div id='battleResult' style='font-size:12px;min-height:24px;'></div>
+        <div style='font-size:10px;color:#94a3b8;'>演出中は操作できません</div>
+      </div>`; }
+      function appendBattleLog(line){ const box=document.getElementById('battleLog'); if(!box) return; const d=document.createElement('div'); d.textContent=line; box.appendChild(d); box.scrollTop=box.scrollHeight; }
+      function setEnemyHpBar(hp,maxHp){ const t=document.getElementById('enemyHpText'); const b=document.getElementById('enemyHpBar'); if(t) t.textContent=`${hp}/${maxHp}`; if(b) b.style.width=(hp/maxHp*100).toFixed(1)+'%'; }
+      async function playBattleSequence(enemy, events){ setEnemyHpBar(enemy.hp, enemy.maxHp); for(const ev of events){ await waitMs(450); if(ev.type==='player'){ animateHit('playerSprite','enemySprite'); enemy.hp = ev.enemyHp; setEnemyHpBar(enemy.hp, enemy.maxHp); appendBattleLog(`あなたの攻撃 ${ev.dmg} ダメージ`); } else { animateHit('enemySprite','playerSprite'); appendBattleLog(`敵の攻撃 ${ev.dmg} ダメージ`); } } }
+      function animateHit(attId,tId){ const a=document.getElementById(attId); const t=document.getElementById(tId); if(!a||!t) return; a.animate([{transform:a.style.transform+' scale(1)'},{transform:a.style.transform+' scale(1.15)'},{transform:a.style.transform+' scale(1)'}],{duration:300,easing:'ease'}); t.animate([{filter:'brightness(1)'},{filter:'brightness(3)'},{filter:'brightness(1)'}],{duration:300,easing:'ease'}); }
+      function renderBattleResult(victory,reward){ const box=document.getElementById('battleResult'); if(!box) return; if(victory){ box.innerHTML=`<div style='color:#ffd166;font-weight:600;'>勝利! +${reward?.goldGain||0}G +${reward?.expGain||0}EXP</div>`; if(reward?.levelUps?.length) box.innerHTML += `<div style='color:#06d6a0;'>LvUP → ${reward.levelUps.join(',')}</div>`; box.innerHTML += `<button id='battleCloseBtn' style='margin-top:6px;background:#0d3b66;color:#fff;border:1px solid #1b4f7d;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>`; } else { box.innerHTML=`<div style='color:#e63946;font-weight:600;'>敗北...</div><button id='battleCloseBtn' style='margin-top:6px;background:#3a506b;color:#fff;border:1px solid #4f6480;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>`; } const btn=document.getElementById('battleCloseBtn'); if(btn) btn.onclick=()=> closeModal(); }
+      function waitMs(ms){ return new Promise(r=> setTimeout(r, ms)); }
       function actionInspect() {
         // 宝箱
         const chest = (state?.items || []).find(
@@ -896,9 +897,10 @@
         overlay.style.display = "none";
       }
       function modalItems() {
-        if (currentModal === "settings") {
+  if (currentModal === "settings") {
           return [];
         }
+  if(currentModal === 'battle') return [];
         if (currentModal === "inn") {
           return ["はい", "いいえ"];
         }
@@ -986,6 +988,8 @@
         } else if (currentModal === "shop") {
           modalTitle.textContent = "武器屋";
           modalBody.innerHTML = shopListHtml();
+        } else if (currentModal === 'battle') {
+          /* battle表示は startBattle 内 */
         }
         refreshModalFocus();
       }
@@ -1040,7 +1044,7 @@
       }
 
       // ===== 初期化 =====
-      initPlayer();
+  initPlayer(); resizeCanvasScale();
     </script>
   </body>
 </html>

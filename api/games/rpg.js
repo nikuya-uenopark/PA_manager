@@ -62,36 +62,43 @@ function recomputeDerived(state) {
 }
 
 function applyBattle(state, enemy) {
-  // ターン制: 先手プレイヤー
+  // ターン制: 先手プレイヤー。イベント列を生成してフロントでアニメ再生可能にする
   const log = [];
+  const events = []; // {type:'player'|'enemy', dmg, enemyHp, playerHp}
   while (state.hp > 0 && enemy.hp > 0) {
+    // プレイヤー攻撃
     enemy.hp -= state.atk;
     log.push(`あなたの攻撃! ${state.atk} ダメージ`);
+    events.push({ type: 'player', dmg: state.atk, enemyHp: Math.max(0, enemy.hp), playerHp: state.hp });
     if (enemy.hp <= 0) break;
+    // 敵攻撃
     state.hp -= enemy.atk;
     log.push(`敵の攻撃! ${enemy.atk} ダメージ`);
+    events.push({ type: 'enemy', dmg: enemy.atk, enemyHp: Math.max(0, enemy.hp), playerHp: Math.max(0, state.hp) });
   }
   if (state.hp <= 0) {
     log.push("敗北... HPを全快して再挑戦しよう");
+    const defeat = { stateHpAfter: state.hp, enemyHpAfter: enemy.hp };
     state.hp = state.maxHp; // ペナルティ無し簡易版
-    return { state, victory: false, log };
+    return { state, victory: false, log, events, defeat };
   }
-  // 勝利
+  // 勝利処理
   const goldGain = enemy.gold || 5;
   const expGain = enemy.exp || 10;
   state.gold += goldGain;
   state.exp += expGain;
   log.push(`勝利! GOLD+${goldGain} EXP+${expGain}`);
-  // レベルアップ判定
+  const levelUps = [];
   while (state.exp >= levelNeeded(state.level)) {
     state.exp -= levelNeeded(state.level);
     state.level += 1;
-    recomputeDerived(state); // レベルアップ毎に再計算
-    state.hp = state.maxHp; // 全回復
+    recomputeDerived(state);
+    state.hp = state.maxHp;
+    levelUps.push(state.level);
     log.push(`レベルアップ! Lv${state.level}`);
   }
   recomputeDerived(state);
-  return { state, victory: true, log };
+  return { state, victory: true, log, events, reward: { goldGain, expGain, levelUps } };
 }
 module.exports = async function handler(req, res) {
   try {
@@ -141,14 +148,16 @@ module.exports = async function handler(req, res) {
         result = { msg: "ゴールド不足" };
       }
     } else if (action === "battle") {
-      // ランダム敵
-      const enemy = {
-        hp: randInt(12, 25),
-        atk: randInt(3, 7),
-        exp: randInt(8, 14),
-        gold: randInt(6, 11),
-      };
-      result = applyBattle(state, enemy);
+      // レベルスケーリング敵生成 (プレイヤー±10, 最低1)
+      const enemyLevel = Math.max(1, state.level + randInt(-10, 10));
+      const variance = () => (Math.random() * 0.2 + 0.9); // 0.9 - 1.1
+      const baseHp = Math.round((18 + enemyLevel * 5) * variance());
+      const baseAtk = Math.round((3 + enemyLevel * 1.2) * variance());
+      const baseExp = Math.round((5 + enemyLevel * 4) * variance());
+      const baseGold = Math.round((4 + enemyLevel * 3) * variance());
+      const enemy = { level: enemyLevel, maxHp: baseHp, hp: baseHp, atk: baseAtk, exp: baseExp, gold: baseGold };
+      const battle = applyBattle(state, { ...enemy });
+      result = { ...battle, enemy };
     } else if (action === "boss") {
       if (state.bossDefeated) {
         result = { msg: "既に討伐済み" };
@@ -182,13 +191,13 @@ module.exports = async function handler(req, res) {
         if (type === 'armor') state.hp = state.maxHp; // 防具購入時全快オマケ
         result = { msg: shopItems[type].msg };
       }
-    } else if (action === 'pickup') {
+  } else if (action === 'pickup') {
       const { x, y } = payload || {};
       if (typeof x === 'number' && typeof y === 'number') {
         const item = (state.items||[]).find(it=>it.type==='chest' && it.x===x && it.y===y);
         if (item) {
           if (item.opened) {
-            result = { msg: '空の宝箱だ' };
+      result = { msg: '空の宝箱だ', goldGain:0, expGain:0 };
           } else {
             item.opened = true;
             const rw = item.reward||{};
@@ -203,13 +212,13 @@ module.exports = async function handler(req, res) {
                 state.hp = state.maxHp;
               }
             }
-            result = { msg: `宝箱を開けた! +${rw.gold||0}G ${rw.exp?'+EXP'+rw.exp:''}` };
+            result = { msg: `宝箱を開けた! +${rw.gold||0}G ${rw.exp?'+EXP'+rw.exp:''}`, goldGain: rw.gold||0, expGain: rw.exp||0 };
           }
         } else {
-          result = { msg: '何もない' };
+          result = { msg: '何もない', goldGain:0, expGain:0 };
         }
       } else {
-        result = { msg: '座標不正' };
+        result = { msg: '座標不正', goldGain:0, expGain:0 };
       }
     } else if (action === "save") {
       /* explicit save only */
