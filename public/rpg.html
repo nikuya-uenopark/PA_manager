@@ -193,14 +193,30 @@
         }
       }
       @keyframes bossFlash {
-        0% { opacity:1; }
-        70% { opacity:0; }
-        100% { opacity:0; display:none; }
+        0% {
+          opacity: 1;
+        }
+        70% {
+          opacity: 0;
+        }
+        100% {
+          opacity: 0;
+          display: none;
+        }
       }
       @keyframes pulse {
-        0% { transform:translateX(50%) scale(0.9); opacity:0.6; }
-        50% { transform:translateX(50%) scale(1.15); opacity:1; }
-        100% { transform:translateX(50%) scale(0.9); opacity:0.6; }
+        0% {
+          transform: translateX(50%) scale(0.9);
+          opacity: 0.6;
+        }
+        50% {
+          transform: translateX(50%) scale(1.15);
+          opacity: 1;
+        }
+        100% {
+          transform: translateX(50%) scale(0.9);
+          opacity: 0.6;
+        }
       }
     </style>
   </head>
@@ -443,19 +459,24 @@
       // ===== フィールドスケール設定 =====
       const TILE_BASE = 16; // 元タイルサイズ
       let TILE = TILE_BASE; // 拡大後サイズ
-      const mapW = 40, mapH = 22; // 論理グリッド
-      function resizeCanvasScale(){
-        const vw = window.innerWidth; const vh = window.innerHeight;
-        let scaleTile = Math.floor(vw / mapW); if(scaleTile < 4) scaleTile = 4;
-        if(scaleTile * mapH > vh){ scaleTile = Math.floor(vh / mapH); }
+      const mapW = 40,
+        mapH = 22; // 論理グリッド
+      function resizeCanvasScale() {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        let scaleTile = Math.floor(vw / mapW);
+        if (scaleTile < 4) scaleTile = 4;
+        if (scaleTile * mapH > vh) {
+          scaleTile = Math.floor(vh / mapH);
+        }
         TILE = scaleTile;
         canvas.width = mapW * TILE;
         canvas.height = mapH * TILE;
-        canvas.style.width = canvas.width+'px';
-        canvas.style.height = canvas.height+'px';
+        canvas.style.width = canvas.width + "px";
+        canvas.style.height = canvas.height + "px";
         draw();
       }
-      window.addEventListener('resize', resizeCanvasScale);
+      window.addEventListener("resize", resizeCanvasScale);
       // 0 floor,1 wall,2 inn,3 shop,4 chestClosed,5 chestOpen
       const world = Array.from({ length: mapH }, (_, y) =>
         Array.from({ length: mapW }, (_, x) =>
@@ -474,41 +495,72 @@
       chestSeeds.forEach((c) => {
         if (world[c.y][c.x] === 0) world[c.y][c.x] = 4;
       });
-  // ラスボス位置 (画面右下付近)
-  const bossPos = { x: mapW - 3, y: mapH - 3 }; // 端から2マス内側
+      // ラスボス位置 (画面右下付近)
+      const bossPos = { x: mapW - 3, y: mapH - 3 }; // 端から2マス内側
       world[bossPos.y][bossPos.x] = 6; // boss tile code
       // タイル & プレイヤースプライト (配置はユーザーが public/assets/rpg/ に配置)
       // ===== アセット読み込み =====
       const tilesImg = new Image();
       tilesImg.src = "/assets/rpg/0x72_DungeonTilesetII_v1.7.png"; // 16x16 tiles
       // プレイヤー: dwarf_m (idle/run 4枚)
-      const playerIdleFrames = [0,1,2,3].map(i=>`/assets/rpg/dwarf_m_idle_anim_f${i}.png`);
-      const playerRunFrames  = [0,1,2,3].map(i=>`/assets/rpg/dwarf_m_run_anim_f${i}.png`);
-      const playerImgsIdle = []; const playerImgsRun = [];
-      playerIdleFrames.forEach(src=>{ const im=new Image(); im.src=src; playerImgsIdle.push(im); });
-      playerRunFrames.forEach(src=>{ const im=new Image(); im.src=src; playerImgsRun.push(im); });
+      const playerIdleFrames = [0, 1, 2, 3].map(
+        (i) => `/assets/rpg/dwarf_m_idle_anim_f${i}.png`
+      );
+      const playerRunFrames = [0, 1, 2, 3].map(
+        (i) => `/assets/rpg/dwarf_m_run_anim_f${i}.png`
+      );
+      const playerImgsIdle = [];
+      const playerImgsRun = [];
+      playerIdleFrames.forEach((src) => {
+        const im = new Image();
+        im.src = src;
+        playerImgsIdle.push(im);
+      });
+      playerRunFrames.forEach((src) => {
+        const im = new Image();
+        im.src = src;
+        playerImgsRun.push(im);
+      });
       // 敵スプライト候補 (レベル帯で切替) 追加5種
       const enemySets = [
-        { min:1,  max:5,  key:'chort', label:'インプ' },
-        { min:6,  max:15, key:'big_zombie', label:'ゾンビ' },
-        { min:16, max:30, key:'doc', label:'狂賢者' },
-        { min:31, max:60, key:'big_demon', label:'デーモン' },
-        { min:61, max:999999, key:'angel', label:'堕天使' },
+        { min: 1, max: 5, key: "chort", label: "インプ" },
+        { min: 6, max: 15, key: "big_zombie", label: "ゾンビ" },
+        { min: 16, max: 30, key: "doc", label: "狂賢者" },
+        { min: 31, max: 60, key: "big_demon", label: "デーモン" },
+        { min: 61, max: 999999, key: "angel", label: "堕天使" },
       ];
-      function enemyIdleFrames(key){ return [0,1,2,3].map(i=>`/assets/rpg/${key}_idle_anim_f${i}.png`); }
-      function enemyRunFrames(key){ return [0,1,2,3].map(i=>`/assets/rpg/${key}_run_anim_f${i}.png`); }
-      function selectEnemySet(level){ return enemySets.find(s=> level>=s.min && level<=s.max) || enemySets[0]; }
+      function enemyIdleFrames(key) {
+        return [0, 1, 2, 3].map(
+          (i) => `/assets/rpg/${key}_idle_anim_f${i}.png`
+        );
+      }
+      function enemyRunFrames(key) {
+        return [0, 1, 2, 3].map((i) => `/assets/rpg/${key}_run_anim_f${i}.png`);
+      }
+      function selectEnemySet(level) {
+        return (
+          enemySets.find((s) => level >= s.min && level <= s.max) ||
+          enemySets[0]
+        );
+      }
       // タイルマップ: (x,y) は元シート16x16グリッド座標
       const tileMap = {
-        0: [0,0],      // floor
-        1: [1,0],      // wall basic
-        2: [4,5],      // inn (custom decorative tile)
-        3: [5,5],      // shop
-        4: [0,8],      // chest closed
-        5: [1,8],      // chest open
-        6: [7,6],      // boss tile (altar-ish)
+        0: [0, 0], // floor
+        1: [1, 0], // wall basic
+        2: [4, 5], // inn (custom decorative tile)
+        3: [5, 5], // shop
+        4: [0, 8], // chest closed
+        5: [1, 8], // chest open
+        6: [7, 6], // boss tile (altar-ish)
       };
-      let player = { x:2, y:2, dir:0, frame:0, animTime:0, running:false };
+      let player = {
+        x: 2,
+        y: 2,
+        dir: 0,
+        frame: 0,
+        animTime: 0,
+        running: false,
+      };
       // ===== ユーティリティ =====
       function log(msg) {
         /* ログUI削除済み -> no-op (必要なら console) */
@@ -644,21 +696,47 @@
         }
         if (r?.state) draw();
       }
-      function attemptEncounter(){
-        if(Math.random()<0.18){
-          walking=false; flashEncounter(); fadeMessage('エンカウント!'); startBattle();
+      function attemptEncounter() {
+        if (Math.random() < 0.18) {
+          walking = false;
+          flashEncounter();
+          fadeMessage("エンカウント!");
+          startBattle();
         }
       }
       // ===== 描画 =====
-      const bossIdleFrames = [0,1,2,3].map(i=>`/assets/rpg/big_demon_idle_anim_f${i}.png`);
-      const bossImgsIdle = []; bossIdleFrames.forEach(src=>{ const im=new Image(); im.src=src; bossImgsIdle.push(im); });
-      let bossAnimTime=0;
-      function drawBossField(){
+      const bossIdleFrames = [0, 1, 2, 3].map(
+        (i) => `/assets/rpg/big_demon_idle_anim_f${i}.png`
+      );
+      const bossImgsIdle = [];
+      bossIdleFrames.forEach((src) => {
+        const im = new Image();
+        im.src = src;
+        bossImgsIdle.push(im);
+      });
+      let bossAnimTime = 0;
+      function drawBossField() {
         const frames = bossImgsIdle;
-  if(state?.bossDefeated) return; // 撃破後は非表示
-        if(!frames.length || !frames[0].complete){ ctx.fillStyle='#e63946'; ctx.fillRect(bossPos.x*TILE+2,bossPos.y*TILE+2,TILE-4,TILE-4); return; }
-        const idx=Math.floor(bossAnimTime/300)%frames.length; const img=frames[idx];
-        ctx.drawImage(img, bossPos.x*TILE - (TILE*0.25), bossPos.y*TILE - (TILE*0.5), TILE*1.5, TILE*1.5);
+        if (state?.bossDefeated) return; // 撃破後は非表示
+        if (!frames.length || !frames[0].complete) {
+          ctx.fillStyle = "#e63946";
+          ctx.fillRect(
+            bossPos.x * TILE + 2,
+            bossPos.y * TILE + 2,
+            TILE - 4,
+            TILE - 4
+          );
+          return;
+        }
+        const idx = Math.floor(bossAnimTime / 300) % frames.length;
+        const img = frames[idx];
+        ctx.drawImage(
+          img,
+          bossPos.x * TILE - TILE * 0.25,
+          bossPos.y * TILE - TILE * 0.5,
+          TILE * 1.5,
+          TILE * 1.5
+        );
       }
       function draw() {
         ctx.imageSmoothingEnabled = false;
@@ -667,7 +745,9 @@
           for (let x = 0; x < mapW; x++) {
             let t = world[y][x];
             if (t === 4 || t === 5) {
-              const chest = (state?.items || []).find(it=> it.type==='chest' && it.x===x && it.y===y);
+              const chest = (state?.items || []).find(
+                (it) => it.type === "chest" && it.x === x && it.y === y
+              );
               if (chest) t = chest.opened ? 5 : 4;
             }
             drawTile(t, x, y);
@@ -677,19 +757,40 @@
         if (state) drawPlayer();
         updateProximityUI();
       }
-      function drawTile(t,x,y){
-        const uv=tileMap[t]||tileMap[0];
-        if(!tilesImg.complete){ ctx.fillStyle='#222'; ctx.fillRect(x*TILE,y*TILE,TILE,TILE); return; }
-        ctx.drawImage(tilesImg, uv[0]*TILE_BASE, uv[1]*TILE_BASE, TILE_BASE, TILE_BASE, x*TILE, y*TILE, TILE, TILE);
-      }
-      function drawPlayer(){
-        const frames = player.running ? playerImgsRun : playerImgsIdle;
-        if(!frames.length || !frames[0].complete){
-          ctx.fillStyle='#ffb703'; ctx.fillRect(player.x*TILE+2,player.y*TILE+2,TILE-4,TILE-4); return;
+      function drawTile(t, x, y) {
+        const uv = tileMap[t] || tileMap[0];
+        if (!tilesImg.complete) {
+          ctx.fillStyle = "#222";
+          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+          return;
         }
-        const idx = Math.floor(player.animTime/250)%frames.length; // 250ms per frame
+        ctx.drawImage(
+          tilesImg,
+          uv[0] * TILE_BASE,
+          uv[1] * TILE_BASE,
+          TILE_BASE,
+          TILE_BASE,
+          x * TILE,
+          y * TILE,
+          TILE,
+          TILE
+        );
+      }
+      function drawPlayer() {
+        const frames = player.running ? playerImgsRun : playerImgsIdle;
+        if (!frames.length || !frames[0].complete) {
+          ctx.fillStyle = "#ffb703";
+          ctx.fillRect(
+            player.x * TILE + 2,
+            player.y * TILE + 2,
+            TILE - 4,
+            TILE - 4
+          );
+          return;
+        }
+        const idx = Math.floor(player.animTime / 250) % frames.length; // 250ms per frame
         const img = frames[idx];
-        ctx.drawImage(img, player.x*TILE, player.y*TILE, TILE, TILE);
+        ctx.drawImage(img, player.x * TILE, player.y * TILE, TILE, TILE);
       }
       // 近接インジケータ
       let proxEl = document.getElementById("proxUI");
@@ -715,7 +816,8 @@
         const nearShop =
           Math.abs(player.x - shopPos.x) <= 1 &&
           Math.abs(player.y - shopPos.y) <= 1;
-        const nearBoss = !state.bossDefeated &&
+        const nearBoss =
+          !state.bossDefeated &&
           Math.abs(player.x - bossPos.x) <= 1 &&
           Math.abs(player.y - bossPos.y) <= 1;
         proxEl.innerHTML = [
@@ -725,7 +827,7 @@
           nearShop
             ? '<span class="badge" style="background:#a44f9d">店</span>'
             : "",
-          (nearBoss && !state.bossDefeated)
+          nearBoss && !state.bossDefeated
             ? '<span class="badge" style="background:#e63946">ボス</span>'
             : "",
         ]
@@ -753,44 +855,87 @@
           ny = player.y + dy;
         if (nx < 1 || ny < 1 || nx >= mapW - 1 || ny >= mapH - 1) return;
         if (world[ny][nx] === 1) return;
-        player.x = nx; player.y = ny; player.frame = (player.frame + 1) % 60; player.running=true; player.lastMoveTs=performance.now();
+        player.x = nx;
+        player.y = ny;
+        player.frame = (player.frame + 1) % 60;
+        player.running = true;
+        player.lastMoveTs = performance.now();
         walking = true;
         encounterStep = (encounterStep + 1) % 4;
         if (encounterStep === 0) attemptEncounter();
         draw();
       }
       // アニメーションタイマー
-      function animLoop(ts){ if(!player.lastMoveTs) player.lastMoveTs=ts; player.animTime = ts; if(ts - player.lastMoveTs > 400) player.running=false; draw(); requestAnimationFrame(animLoop);} requestAnimationFrame(animLoop);
-  // ボススプライト用アニメ時間も更新
-  (function bossLoop(t0){ bossAnimTime = performance.now(); requestAnimationFrame(bossLoop); })();
+      function animLoop(ts) {
+        if (!player.lastMoveTs) player.lastMoveTs = ts;
+        player.animTime = ts;
+        if (ts - player.lastMoveTs > 400) player.running = false;
+        draw();
+        requestAnimationFrame(animLoop);
+      }
+      requestAnimationFrame(animLoop);
+      // ボススプライト用アニメ時間も更新
+      (function bossLoop(t0) {
+        bossAnimTime = performance.now();
+        requestAnimationFrame(bossLoop);
+      })();
       // ===== 戦闘モーダル =====
-      async function startBattle(){
-        const r = await api('battle'); if(!r?.state || !r.result) return;
-        state = r.state; const { enemy, events, victory, reward } = r.result; openModal('battle');
-        renderBattleIntro(enemy); await playBattleSequence(enemy, events, enemy); renderBattleResult(victory, reward, enemy); updateStats(); draw(); }
-      async function startBossBattle(){
-        const r = await api('boss'); if(!r?.state || !r.result) return;
-        state = r.state; const { enemy, events, victory, reward } = r.result; openModal('battle');
-        renderBossIntro(enemy); await playBattleSequence(enemy, events, enemy); renderBossResult(victory, reward, enemy); updateStats(); draw(); }
-      function renderBattleIntro(enemy){
-    const enemySet = selectEnemySet(enemy.level); const eIdle = enemyIdleFrames(enemySet.key).map(src=>{ const im=new Image(); im.src=src; return im; });
-    modalTitle.textContent='バトル';
-        modalBody.innerHTML=`<div id='battleArea' style='display:flex;flex-direction:column;gap:10px;'>
+      async function startBattle() {
+        const r = await api("battle");
+        if (!r?.state || !r.result) return;
+        state = r.state;
+        const { enemy, events, victory, reward } = r.result;
+        openModal("battle");
+        renderBattleIntro(enemy);
+        await playBattleSequence(enemy, events, enemy);
+        renderBattleResult(victory, reward, enemy);
+        updateStats();
+        draw();
+      }
+      async function startBossBattle() {
+        const r = await api("boss");
+        if (!r?.state || !r.result) return;
+        state = r.state;
+        const { enemy, events, victory, reward } = r.result;
+        openModal("battle");
+        renderBossIntro(enemy);
+        await playBattleSequence(enemy, events, enemy);
+        renderBossResult(victory, reward, enemy);
+        updateStats();
+        draw();
+      }
+      function renderBattleIntro(enemy) {
+        const enemySet = selectEnemySet(enemy.level);
+        const eIdle = enemyIdleFrames(enemySet.key).map((src) => {
+          const im = new Image();
+          im.src = src;
+          return im;
+        });
+        modalTitle.textContent = "バトル";
+        modalBody.innerHTML = `<div id='battleArea' style='display:flex;flex-direction:column;gap:10px;'>
           <div style='display:flex;justify-content:space-between;font-size:12px;'>
-            <div>${enemy.name || enemySet.label || '敵'} Lv${enemy.level}</div>
-            <div>HP <span id='enemyHpText'>${enemy.hp}/${enemy.maxHp}</span></div>
+            <div>${enemy.name || enemySet.label || "敵"} Lv${enemy.level}</div>
+            <div>HP <span id='enemyHpText'>${enemy.hp}/${
+          enemy.maxHp
+        }</span></div>
           </div>
           <div class='bar hp'><span id='enemyHpBar' style='width:100%'></span></div>
           <div style='height:140px;position:relative;border:1px solid #2f4e6d;border-radius:8px;background:#0f1c2b;overflow:hidden;'>
             <div id='battleLog' style='position:absolute;left:6px;top:6px;bottom:6px;width:44%;display:flex;flex-direction:column;gap:4px;font-size:11px;overflow:auto;padding-right:4px;'></div>
             <div id='battleSprites' style='position:absolute;right:0;top:0;bottom:0;width:56%;display:flex;align-items:center;justify-content:space-around;'>
               <div style='display:flex;flex-direction:column;align-items:center;gap:4px;'>
-                <img id='playerSprite' style='image-rendering:pixelated;width:64px;height:64px;' src='${playerIdleFrames[0]}' />
+                <img id='playerSprite' style='image-rendering:pixelated;width:64px;height:64px;' src='${
+                  playerIdleFrames[0]
+                }' />
                 <div style='font-size:10px;'>あなた</div>
               </div>
               <div style='display:flex;flex-direction:column;align-items:center;gap:4px;'>
-                <img id='enemySprite' style='image-rendering:pixelated;width:64px;height:64px;' src='${eIdle[0].src}' />
-                <div style='font-size:10px;'>${enemy.name || enemySet.label || '敵'}</div>
+                <img id='enemySprite' style='image-rendering:pixelated;width:64px;height:64px;' src='${
+                  eIdle[0].src
+                }' />
+                <div style='font-size:10px;'>${
+                  enemy.name || enemySet.label || "敵"
+                }</div>
               </div>
             </div>
           </div>
@@ -798,11 +943,20 @@
           <div style='font-size:10px;color:#94a3b8;'>演出中は操作できません</div>
         </div>`;
         // 簡易アニメループ
-        let f=0; const ps=document.getElementById('playerSprite'); const es=document.getElementById('enemySprite');
-        const loop=()=>{ if(currentModal!=='battle') return; f=(f+1)%4; if(ps) ps.src = playerImgsIdle[f%playerImgsIdle.length].src; if(es && eIdle[f]) es.src=eIdle[f].src; setTimeout(loop, 260); }; loop();
+        let f = 0;
+        const ps = document.getElementById("playerSprite");
+        const es = document.getElementById("enemySprite");
+        const loop = () => {
+          if (currentModal !== "battle") return;
+          f = (f + 1) % 4;
+          if (ps) ps.src = playerImgsIdle[f % playerImgsIdle.length].src;
+          if (es && eIdle[f]) es.src = eIdle[f].src;
+          setTimeout(loop, 260);
+        };
+        loop();
       }
-      function renderBossIntro(enemy){
-        modalTitle.textContent='ラスボス';
+      function renderBossIntro(enemy) {
+        modalTitle.textContent = "ラスボス";
         // 特殊演出 (フラッシュ + 赤枠)
         modalBody.innerHTML = `<div id='battleArea' style='display:flex;flex-direction:column;gap:10px;'>
           <div style='display:flex;justify-content:space-between;font-size:12px;color:#f94144;font-weight:600;'>
@@ -827,24 +981,116 @@
           <div style='font-size:10px;color:#fca311;'>最終決戦!</div>
         </div>`;
         // アニメ
-        let f=0; const ps=document.getElementById('playerSprite'); const es=document.getElementById('enemySprite');
-        const demonIdle = enemyIdleFrames('big_demon').map(src=>{ const im=new Image(); im.src=src; return im; });
-        const loop=()=>{ if(currentModal!=='battle') return; f=(f+1)%4; if(ps) ps.src = playerImgsIdle[f%playerImgsIdle.length].src; if(es && demonIdle[f]) es.src=demonIdle[f].src; setTimeout(loop, 220); }; loop();
+        let f = 0;
+        const ps = document.getElementById("playerSprite");
+        const es = document.getElementById("enemySprite");
+        const demonIdle = enemyIdleFrames("big_demon").map((src) => {
+          const im = new Image();
+          im.src = src;
+          return im;
+        });
+        const loop = () => {
+          if (currentModal !== "battle") return;
+          f = (f + 1) % 4;
+          if (ps) ps.src = playerImgsIdle[f % playerImgsIdle.length].src;
+          if (es && demonIdle[f]) es.src = demonIdle[f].src;
+          setTimeout(loop, 220);
+        };
+        loop();
         // イントロ フラッシュ
-        const flash=document.createElement('div'); flash.style.position='absolute'; flash.style.inset='0'; flash.style.background='#fff'; flash.style.animation='bossFlash .8s ease forwards'; document.getElementById('battleArea').appendChild(flash);
+        const flash = document.createElement("div");
+        flash.style.position = "absolute";
+        flash.style.inset = "0";
+        flash.style.background = "#fff";
+        flash.style.animation = "bossFlash .8s ease forwards";
+        document.getElementById("battleArea").appendChild(flash);
       }
-      function renderBossResult(victory,reward,enemy){
-        const box=document.getElementById('battleResult'); if(!box) return;
-        if(victory){ box.innerHTML = `<div style='color:#ffd166;font-weight:600;'>討伐成功! +${reward?.goldGain||0}G +${reward?.expGain||0}EXP</div><button id='battleCloseBtn' style='margin-top:6px;background:#0d3b66;color:#fff;border:1px solid #1b4f7d;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>`; }
-        else { box.innerHTML = `<div style='color:#e63946;font-weight:600;'>敗北...</div><button id='battleCloseBtn' style='margin-top:6px;background:#3a506b;color:#fff;border:1px solid #4f6480;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>`; }
-        const btn=document.getElementById('battleCloseBtn'); if(btn) btn.onclick=()=> closeModal();
+      function renderBossResult(victory, reward, enemy) {
+        const box = document.getElementById("battleResult");
+        if (!box) return;
+        if (victory) {
+          box.innerHTML = `<div style='color:#ffd166;font-weight:600;'>討伐成功! +${
+            reward?.goldGain || 0
+          }G +${
+            reward?.expGain || 0
+          }EXP</div><button id='battleCloseBtn' style='margin-top:6px;background:#0d3b66;color:#fff;border:1px solid #1b4f7d;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>`;
+        } else {
+          box.innerHTML = `<div style='color:#e63946;font-weight:600;'>敗北...</div><button id='battleCloseBtn' style='margin-top:6px;background:#3a506b;color:#fff;border:1px solid #4f6480;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>`;
+        }
+        const btn = document.getElementById("battleCloseBtn");
+        if (btn) btn.onclick = () => closeModal();
       }
-      function appendBattleLog(line){ const box=document.getElementById('battleLog'); if(!box) return; const d=document.createElement('div'); d.textContent=line; box.appendChild(d); box.scrollTop=box.scrollHeight; }
-      function setEnemyHpBar(hp,maxHp){ const t=document.getElementById('enemyHpText'); const b=document.getElementById('enemyHpBar'); if(t) t.textContent=`${hp}/${maxHp}`; if(b) b.style.width=(hp/maxHp*100).toFixed(1)+'%'; }
-  async function playBattleSequence(enemy, events){ setEnemyHpBar(enemy.hp, enemy.maxHp); for(const ev of events){ await waitMs(480); if(ev.type==='player'){ animateHit('playerSprite','enemySprite'); enemy.hp = ev.enemyHp; setEnemyHpBar(enemy.hp, enemy.maxHp); appendBattleLog(`あなたの攻撃 ${ev.dmg} ダメージ`); } else { animateHit('enemySprite','playerSprite'); appendBattleLog(`敵の攻撃 ${ev.dmg} ダメージ`); } } }
-      function animateHit(attId,tId){ const a=document.getElementById(attId); const t=document.getElementById(tId); if(!a||!t) return; a.animate([{transform:a.style.transform+' scale(1)'},{transform:a.style.transform+' scale(1.15)'},{transform:a.style.transform+' scale(1)'}],{duration:300,easing:'ease'}); t.animate([{filter:'brightness(1)'},{filter:'brightness(3)'},{filter:'brightness(1)'}],{duration:300,easing:'ease'}); }
-      function renderBattleResult(victory,reward){ const box=document.getElementById('battleResult'); if(!box) return; if(victory){ box.innerHTML=`<div style='color:#ffd166;font-weight:600;'>勝利! +${reward?.goldGain||0}G +${reward?.expGain||0}EXP</div>`; if(reward?.levelUps?.length) box.innerHTML += `<div style='color:#06d6a0;'>LvUP → ${reward.levelUps.join(',')}</div>`; box.innerHTML += `<button id='battleCloseBtn' style='margin-top:6px;background:#0d3b66;color:#fff;border:1px solid #1b4f7d;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>`; } else { box.innerHTML=`<div style='color:#e63946;font-weight:600;'>敗北...</div><button id='battleCloseBtn' style='margin-top:6px;background:#3a506b;color:#fff;border:1px solid #4f6480;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>`; } const btn=document.getElementById('battleCloseBtn'); if(btn) btn.onclick=()=> closeModal(); }
-      function waitMs(ms){ return new Promise(r=> setTimeout(r, ms)); }
+      function appendBattleLog(line) {
+        const box = document.getElementById("battleLog");
+        if (!box) return;
+        const d = document.createElement("div");
+        d.textContent = line;
+        box.appendChild(d);
+        box.scrollTop = box.scrollHeight;
+      }
+      function setEnemyHpBar(hp, maxHp) {
+        const t = document.getElementById("enemyHpText");
+        const b = document.getElementById("enemyHpBar");
+        if (t) t.textContent = `${hp}/${maxHp}`;
+        if (b) b.style.width = ((hp / maxHp) * 100).toFixed(1) + "%";
+      }
+      async function playBattleSequence(enemy, events) {
+        setEnemyHpBar(enemy.hp, enemy.maxHp);
+        for (const ev of events) {
+          await waitMs(480);
+          if (ev.type === "player") {
+            animateHit("playerSprite", "enemySprite");
+            enemy.hp = ev.enemyHp;
+            setEnemyHpBar(enemy.hp, enemy.maxHp);
+            appendBattleLog(`あなたの攻撃 ${ev.dmg} ダメージ`);
+          } else {
+            animateHit("enemySprite", "playerSprite");
+            appendBattleLog(`敵の攻撃 ${ev.dmg} ダメージ`);
+          }
+        }
+      }
+      function animateHit(attId, tId) {
+        const a = document.getElementById(attId);
+        const t = document.getElementById(tId);
+        if (!a || !t) return;
+        a.animate(
+          [
+            { transform: a.style.transform + " scale(1)" },
+            { transform: a.style.transform + " scale(1.15)" },
+            { transform: a.style.transform + " scale(1)" },
+          ],
+          { duration: 300, easing: "ease" }
+        );
+        t.animate(
+          [
+            { filter: "brightness(1)" },
+            { filter: "brightness(3)" },
+            { filter: "brightness(1)" },
+          ],
+          { duration: 300, easing: "ease" }
+        );
+      }
+      function renderBattleResult(victory, reward) {
+        const box = document.getElementById("battleResult");
+        if (!box) return;
+        if (victory) {
+          box.innerHTML = `<div style='color:#ffd166;font-weight:600;'>勝利! +${
+            reward?.goldGain || 0
+          }G +${reward?.expGain || 0}EXP</div>`;
+          if (reward?.levelUps?.length)
+            box.innerHTML += `<div style='color:#06d6a0;'>LvUP → ${reward.levelUps.join(
+              ","
+            )}</div>`;
+          box.innerHTML += `<button id='battleCloseBtn' style='margin-top:6px;background:#0d3b66;color:#fff;border:1px solid #1b4f7d;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>`;
+        } else {
+          box.innerHTML = `<div style='color:#e63946;font-weight:600;'>敗北...</div><button id='battleCloseBtn' style='margin-top:6px;background:#3a506b;color:#fff;border:1px solid #4f6480;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>`;
+        }
+        const btn = document.getElementById("battleCloseBtn");
+        if (btn) btn.onclick = () => closeModal();
+      }
+      function waitMs(ms) {
+        return new Promise((r) => setTimeout(r, ms));
+      }
       function actionInspect() {
         // 宝箱
         const chest = (state?.items || []).find(
@@ -895,8 +1141,10 @@
         } else if (e.key === "a") {
           if (currentModal) modalConfirm();
           else actionInspect();
-        } else if (e.key === "b") { // B でトグル
-          dashOn = !dashOn; updateDashBtn();
+        } else if (e.key === "b") {
+          // B でトグル
+          dashOn = !dashOn;
+          updateDashBtn();
         } else if (e.key === "Escape") {
           if (currentModal) closeModal();
           else openModal("settings");
@@ -937,8 +1185,8 @@
         ].forEach((ev) => el.addEventListener(ev, end));
       }
       document.querySelectorAll(".dpad-btn").forEach(bindHold);
-  // ダッシュ トグル (dashOn=true=高速, false=低速)
-  let dashOn = true;
+      // ダッシュ トグル (dashOn=true=高速, false=低速)
+      let dashOn = true;
       const btnSettings = document.querySelector('[data-btn="settings"]');
       const btnDash = document.querySelector('[data-btn="dash"]');
       const btnInspect = document.querySelector('[data-btn="inspect"]');
@@ -946,12 +1194,16 @@
         if (currentModal === "settings") closeModal();
         else openModal("settings");
       });
-      function updateDashBtn(){
-        btnDash.classList.toggle('dash-on', dashOn);
-        btnDash.classList.toggle('dash-off', !dashOn);
-        btnDash.textContent = dashOn ? '走' : '遅';
+      function updateDashBtn() {
+        btnDash.classList.toggle("dash-on", dashOn);
+        btnDash.classList.toggle("dash-off", !dashOn);
+        btnDash.textContent = dashOn ? "走" : "遅";
       }
-      btnDash.addEventListener('click', (e)=>{ e.preventDefault(); dashOn = !dashOn; updateDashBtn(); });
+      btnDash.addEventListener("click", (e) => {
+        e.preventDefault();
+        dashOn = !dashOn;
+        updateDashBtn();
+      });
       updateDashBtn();
       btnInspect.addEventListener("click", () => {
         if (currentModal) modalConfirm();
@@ -987,10 +1239,10 @@
         overlay.style.display = "none";
       }
       function modalItems() {
-  if (currentModal === "settings") {
+        if (currentModal === "settings") {
           return [];
         }
-  if(currentModal === 'battle') return [];
+        if (currentModal === "battle") return [];
         if (currentModal === "inn") {
           return ["はい", "いいえ"];
         }
@@ -1078,7 +1330,7 @@
         } else if (currentModal === "shop") {
           modalTitle.textContent = "武器屋";
           modalBody.innerHTML = shopListHtml();
-        } else if (currentModal === 'battle') {
+        } else if (currentModal === "battle") {
           /* battle表示は startBattle 内 */
         }
         refreshModalFocus();
@@ -1102,40 +1354,49 @@
           .join("")}</ul>`;
       }
       const shopCatalog = [
-        { type: 'dagger', label: '短剣', atk: 4, cost: 40 },
-        { type: 'sword', label: '剣', atk: 5, cost: 60 },
-        { type: 'staff', label: '杖', atk: 7, cost: 70 },
-        { type: 'axe', label: '戦斧', atk: 8, cost: 110 },
-        { type: 'spear', label: '槍', atk: 9, cost: 120 },
-        { type: 'wand', label: 'ワンド', atk: 9, cost: 125 },
-        { type: 'longsword', label: 'ロングソード', atk: 10, cost: 150 },
-        { type: 'mystic_staff', label: '魔導杖', atk: 12, cost: 200 },
-        { type: 'greatsword', label: 'グレートソード', atk: 14, cost: 240 },
-        { type: 'armor', label: '防具', hp: 15, cost: 70 },
-        { type: 'plate_armor', label: 'プレート', hp: 30, cost: 140 },
+        { type: "dagger", label: "短剣", atk: 4, cost: 40 },
+        { type: "sword", label: "剣", atk: 5, cost: 60 },
+        { type: "staff", label: "杖", atk: 7, cost: 70 },
+        { type: "axe", label: "戦斧", atk: 8, cost: 110 },
+        { type: "spear", label: "槍", atk: 9, cost: 120 },
+        { type: "wand", label: "ワンド", atk: 9, cost: 125 },
+        { type: "longsword", label: "ロングソード", atk: 10, cost: 150 },
+        { type: "mystic_staff", label: "魔導杖", atk: 12, cost: 200 },
+        { type: "greatsword", label: "グレートソード", atk: 14, cost: 240 },
+        { type: "armor", label: "防具", hp: 15, cost: 70 },
+        { type: "plate_armor", label: "プレート", hp: 30, cost: 140 },
       ];
       function shopListHtml() {
-        return `<div style='display:flex;flex-direction:column;gap:6px;'>${shopCatalog.map((it,i)=>{
-          const owned = (state?.equips||[]).includes(it.type);
-          const canBuy = (state?.gold||0) >= it.cost;
-          const statText = it.atk?`ATK+${it.atk}`:`HP+${it.hp}`;
-          const badge = owned ? '済' : (canBuy ? '購入' : '不足');
-          const badgeStyle = owned ? 'color:#06d6a0;font-weight:600;' : (canBuy ? 'color:#ffd166;' : 'color:#777;');
-          return `<div data-menu-index='${i}' style="display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #2f4e6d;border-radius:6px;background:#1c2541;font-size:12px;">
+        return `<div style='display:flex;flex-direction:column;gap:6px;'>${shopCatalog
+          .map((it, i) => {
+            const owned = (state?.equips || []).includes(it.type);
+            const canBuy = (state?.gold || 0) >= it.cost;
+            const statText = it.atk ? `ATK+${it.atk}` : `HP+${it.hp}`;
+            const badge = owned ? "済" : canBuy ? "購入" : "不足";
+            const badgeStyle = owned
+              ? "color:#06d6a0;font-weight:600;"
+              : canBuy
+              ? "color:#ffd166;"
+              : "color:#777;";
+            return `<div data-menu-index='${i}' style="display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #2f4e6d;border-radius:6px;background:#1c2541;font-size:12px;">
             <div style='display:flex;justify-content:space-between;align-items:center;'>
-              <span>${it.label} <span style='font-size:10px;opacity:.7;'>(${statText})</span></span>
+              <span>${
+                it.label
+              } <span style='font-size:10px;opacity:.7;'>(${statText})</span></span>
               <span style='font-size:11px;${badgeStyle}'>${badge}</span>
             </div>
             <div style='font-size:10px;display:flex;justify-content:space-between;opacity:.8;'>
               <span>${it.cost}G</span>
-              <span>${owned? '所持済':''}</span>
+              <span>${owned ? "所持済" : ""}</span>
             </div>
           </div>`;
-        }).join('')}</div>`;
+          })
+          .join("")}</div>`;
       }
 
       // ===== 初期化 =====
-  initPlayer(); resizeCanvasScale();
+      initPlayer();
+      resizeCanvasScale();
     </script>
   </body>
 </html>
