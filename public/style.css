@@ -2682,6 +2682,16 @@ body.rpg-body {
   background: #264653;
   border-color: #3a6f60;
 }
+.btn-dash.dash-on {
+  background: #2b9348; /* green */
+  border-color: #2f7d3f;
+  box-shadow: 0 4px 0 #1b4f2a;
+}
+.btn-dash.dash-off {
+  background: #9b2226; /* red */
+  border-color: #b43731;
+  box-shadow: 0 4px 0 #611715;
+}
 .btn-inspect {
   background: #6a1b9a;
   border-color: #8e24aa;

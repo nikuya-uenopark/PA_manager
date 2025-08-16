@@ -42,13 +42,18 @@ function recomputeDerived(state) {
   // レベル由来の成長計算 + 装備ボーナス
   const levelBonusHp = (state.level - 1) * 6;
   const levelBonusAtk = (state.level - 1) * 2;
-  const armorBonus = equips.includes("armor") ? 15 : 0;
+  const armorBonus = equips.includes("plate_armor") ? 30 : (equips.includes("armor") ? 15 : 0);
   // 武器は複数所持しても最大値のみ反映 (剣 / 杖 など)
   const weaponBonusTable = {
     sword: 5,
-    staff: 7,
     dagger: 4,
+    staff: 7,
     axe: 8,
+    spear: 9,
+    wand: 9,
+    longsword: 10,
+    mystic_staff: 12,
+    greatsword: 14,
   };
   let weaponBonus = 0;
   for (const w of Object.keys(weaponBonusTable)) {
@@ -172,11 +177,17 @@ module.exports = async function handler(req, res) {
   } else if (action === "equip") {
       const { type } = payload || {};
       const shopItems = {
-        sword: { cost: 50, msg: "剣を購入 (+ATK5)" },
-        staff: { cost: 60, msg: "杖を購入 (+ATK7)" },
-        dagger: { cost: 35, msg: "短剣を購入 (+ATK4)" },
-        axe: { cost: 80, msg: "戦斧を購入 (+ATK8)" },
-        armor: { cost: 50, msg: "防具を購入 (+HP15)" },
+        dagger: { cost: 40, msg: "短剣を購入 (+ATK4)" },
+        sword: { cost: 60, msg: "剣を購入 (+ATK5)" },
+        staff: { cost: 70, msg: "杖を購入 (+ATK7)" },
+        axe: { cost: 110, msg: "戦斧を購入 (+ATK8)" },
+        spear: { cost: 120, msg: "槍を購入 (+ATK9)" },
+        wand: { cost: 125, msg: "ワンドを購入 (+ATK9)" },
+        longsword: { cost: 150, msg: "ロングソードを購入 (+ATK10)" },
+        mystic_staff: { cost: 200, msg: "魔導杖を購入 (+ATK12)" },
+        greatsword: { cost: 240, msg: "グレートソードを購入 (+ATK14)" },
+        armor: { cost: 70, msg: "防具を購入 (+HP15)" },
+        plate_armor: { cost: 140, msg: "プレートアーマーを購入 (+HP30)" },
       };
       if (!shopItems[type]) {
         result = { msg: "不明な装備" };
@@ -188,7 +199,7 @@ module.exports = async function handler(req, res) {
         state.gold -= shopItems[type].cost;
         state.equips.push(type);
         recomputeDerived(state);
-        if (type === 'armor') state.hp = state.maxHp; // 防具購入時全快オマケ
+        if (type === 'armor' || type === 'plate_armor') state.hp = state.maxHp; // 防具系購入時全快
         result = { msg: shopItems[type].msg };
       }
   } else if (action === 'pickup') {

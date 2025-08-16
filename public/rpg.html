@@ -826,16 +826,14 @@
         } else if (e.key === "a") {
           if (currentModal) modalConfirm();
           else actionInspect();
-        } else if (e.key === "b") {
-          dashHeld = true;
+        } else if (e.key === "b") { // B でトグル
+          dashOn = !dashOn; updateDashBtn();
         } else if (e.key === "Escape") {
           if (currentModal) closeModal();
           else openModal("settings");
         }
       });
-      window.addEventListener("keyup", (e) => {
-        if (e.key === "b") dashHeld = false;
-      });
+      // keyup 不要 (トグル)
       // アクションボタン
       // 旧アクション群削除済み
       // ===== バーチャルコントローラー =====
@@ -864,7 +862,8 @@
         ].forEach((ev) => el.addEventListener(ev, end));
       }
       document.querySelectorAll(".dpad-btn").forEach(bindHold);
-      let dashHeld = false;
+  // ダッシュ トグル (dashOn=true=高速, false=低速)
+  let dashOn = true;
       const btnSettings = document.querySelector('[data-btn="settings"]');
       const btnDash = document.querySelector('[data-btn="dash"]');
       const btnInspect = document.querySelector('[data-btn="inspect"]');
@@ -872,29 +871,13 @@
         if (currentModal === "settings") closeModal();
         else openModal("settings");
       });
-      const dashStart = () => {
-        dashHeld = true;
-      };
-      const dashEnd = () => {
-        dashHeld = false;
-      };
-      ["touchstart", "mousedown"].forEach((ev) =>
-        btnDash.addEventListener(
-          ev,
-          (e) => {
-            e.preventDefault();
-            dashStart();
-          },
-          { passive: false }
-        )
-      );
-      [
-        "touchend",
-        "touchcancel",
-        "mouseup",
-        "mouseleave",
-        "contextmenu",
-      ].forEach((ev) => btnDash.addEventListener(ev, dashEnd));
+      function updateDashBtn(){
+        btnDash.classList.toggle('dash-on', dashOn);
+        btnDash.classList.toggle('dash-off', !dashOn);
+        btnDash.textContent = dashOn ? '走' : '遅';
+      }
+      btnDash.addEventListener('click', (e)=>{ e.preventDefault(); dashOn = !dashOn; updateDashBtn(); });
+      updateDashBtn();
       btnInspect.addEventListener("click", () => {
         if (currentModal) modalConfirm();
         else actionInspect();
@@ -904,7 +887,7 @@
         if (heldDirs.size && !currentModal) {
           const dir = [...heldDirs].slice(-1)[0];
           movePlayerDir(dir);
-          if (dashHeld) movePlayerDir(dir);
+          if (dashOn) movePlayerDir(dir);
         }
         requestAnimationFrame(loopMove);
       }
@@ -1044,35 +1027,36 @@
           .join("")}</ul>`;
       }
       const shopCatalog = [
-        { id: "剣 (+5 ATK) 50G", type: "sword", cost: 50, bonus: "+5", atk: 5 },
-        {
-          id: "短剣 (+4 ATK) 35G",
-          type: "dagger",
-          cost: 35,
-          bonus: "+4",
-          atk: 4,
-        },
-        { id: "杖 (+7 ATK) 60G", type: "staff", cost: 60, bonus: "+7", atk: 7 },
-        { id: "戦斧 (+8 ATK) 80G", type: "axe", cost: 80, bonus: "+8", atk: 8 },
-        {
-          id: "防具 (+15 HP) 50G",
-          type: "armor",
-          cost: 50,
-          bonus: "+15HP",
-          hp: 15,
-        },
+        { type: 'dagger', label: '短剣', atk: 4, cost: 40 },
+        { type: 'sword', label: '剣', atk: 5, cost: 60 },
+        { type: 'staff', label: '杖', atk: 7, cost: 70 },
+        { type: 'axe', label: '戦斧', atk: 8, cost: 110 },
+        { type: 'spear', label: '槍', atk: 9, cost: 120 },
+        { type: 'wand', label: 'ワンド', atk: 9, cost: 125 },
+        { type: 'longsword', label: 'ロングソード', atk: 10, cost: 150 },
+        { type: 'mystic_staff', label: '魔導杖', atk: 12, cost: 200 },
+        { type: 'greatsword', label: 'グレートソード', atk: 14, cost: 240 },
+        { type: 'armor', label: '防具', hp: 15, cost: 70 },
+        { type: 'plate_armor', label: 'プレート', hp: 30, cost: 140 },
       ];
       function shopListHtml() {
-        return `<div style='display:flex;flex-direction:column;gap:6px;'>${shopCatalog
-          .map((it, i) => {
-            const owned = (state?.equips || []).includes(it.type);
-            return `<div data-menu-index='${i}' style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border:1px solid #2f4e6d;border-radius:6px;background:#1c2541;font-size:12px;"> <span>${
-              it.id
-            }</span><span style='font-size:11px;${
-              owned ? "color:#06d6a0;font-weight:600;" : ""
-            }'>${owned ? "済" : "購入"}</span></div>`;
-          })
-          .join("")}</div>`;
+        return `<div style='display:flex;flex-direction:column;gap:6px;'>${shopCatalog.map((it,i)=>{
+          const owned = (state?.equips||[]).includes(it.type);
+          const canBuy = (state?.gold||0) >= it.cost;
+          const statText = it.atk?`ATK+${it.atk}`:`HP+${it.hp}`;
+          const badge = owned ? '済' : (canBuy ? '購入' : '不足');
+          const badgeStyle = owned ? 'color:#06d6a0;font-weight:600;' : (canBuy ? 'color:#ffd166;' : 'color:#777;');
+          return `<div data-menu-index='${i}' style="display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #2f4e6d;border-radius:6px;background:#1c2541;font-size:12px;">
+            <div style='display:flex;justify-content:space-between;align-items:center;'>
+              <span>${it.label} <span style='font-size:10px;opacity:.7;'>(${statText})</span></span>
+              <span style='font-size:11px;${badgeStyle}'>${badge}</span>
+            </div>
+            <div style='font-size:10px;display:flex;justify-content:space-between;opacity:.8;'>
+              <span>${it.cost}G</span>
+              <span>${owned? '所持済':''}</span>
+            </div>
+          </div>`;
+        }).join('')}</div>`;
       }
 
       // ===== 初期化 =====
