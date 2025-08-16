@@ -165,16 +165,23 @@
         font-family: ui-monospace, monospace;
       }
       .fade-msg {
-        position: absolute;
-        bottom: 6px;
-        left: 0;
-        right: 0;
-        text-align: center;
-        font-size: 11px;
-        color: #fff;
-        animation: fadeMsg 2.2s ease forwards;
-        pointer-events: none;
-        text-shadow: 0 0 4px #000;
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 11px;
+  color: #fff;
+  animation: fadeMsg 2.2s ease forwards;
+  pointer-events: none;
+  text-shadow: 0 0 4px #000;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 4px 12px;
+  border: 1px solid #223246;
+  border-radius: 20px;
+  width: auto;
+  max-width: 70%;
+  white-space: nowrap;
       }
       @keyframes fadeMsg {
         0% {
