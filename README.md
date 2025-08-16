@@ -19,6 +19,12 @@
 - フォント: Inter / Font Awesome
 - 外部ライブラリ: なし
 
+## アセット / 著作権表示
+
+RPG (ミニゲーム) で使用している 16x16 タイルセット: "Dungeon Tileset II" by 0x72  (CC0 / Public Domain)  
+出典: <https://0x72.itch.io/dungeontileset-ii>
+プレイヤースプライト等の派生画像を配置する場合は同ライセンス準拠。クレジットは不要ですが本リポジトリでは参考として記載しています。
+
 ## データモデル
 
 | Model | 主なフィールド | 備考 |

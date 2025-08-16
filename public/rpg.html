@@ -213,12 +213,11 @@
         </div>
         <div class="rpg-panel compact" id="panelActions">
           <div class="rpg-actions" style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
-            <button data-act="battle">戦闘</button>
-            <button data-act="heal">宿屋</button>
-            <button data-act="equip-sword">剣</button>
-            <button data-act="equip-armor">防具</button>
-            <button data-act="boss" class="wide" style="grid-column:span 2">ボス</button>
-            <button data-act="pickup" class="wide" style="grid-column:span 3">宝箱/調べる</button>
+              <button data-act="battle">戦闘</button>
+              <button data-act="heal">宿屋</button>
+              <button data-act="equip-sword">剣</button>
+              <button data-act="equip-armor">防具</button>
+              <button data-act="pickup" class="wide" style="grid-column:span 3">調べる(A)</button>
           </div>
         </div>
         <div class="rpg-panel" id="panelLog">
@@ -236,10 +235,8 @@
       </div>
       <div class="vc-right" id="vcRight" style="position:fixed;right:32px;bottom:48px;z-index:20;display:flex;gap:18px;">
         <div class="buttons" style="position:relative;width:180px;height:160px;">
-          <button data-btn="a" class="btn-round btn-a" style="right:0;bottom:14px;">A</button>
-          <button data-btn="b" class="btn-round btn-b" style="right:56px;top:0;">B</button>
-          <button data-btn="x" class="btn-round btn-x" style="left:0;bottom:14px;">X</button>
-          <button data-btn="y" class="btn-round btn-y" style="right:56px;bottom:80px;">Y</button>
+            <button data-btn="a" class="btn-round btn-a" style="right:0;bottom:14px;">A</button>
+            <button data-btn="b" class="btn-round btn-b" style="left:0;top:0;">B</button>
         </div>
       </div>
     </div>
@@ -256,10 +253,12 @@
       const world = Array.from({length: mapH},(_,y)=>Array.from({length:mapW},(_,x)=> (x===0||y===0||x===mapW-1||y===mapH-1)?1:0));
       const innPos={x:6,y:6}; const shopPos={x:10,y:6}; world[innPos.y][innPos.x]=2; world[shopPos.y][shopPos.x]=3;
       const chestSeeds=[{x:14,y:5},{x:20,y:10},{x:30,y:8}]; chestSeeds.forEach(c=>{ if(world[c.y][c.x]===0) world[c.y][c.x]=4; });
+  const bossPos = {x:34,y:14};
+  world[bossPos.y][bossPos.x] = 6; // boss tile code
       // タイル & プレイヤースプライト (配置はユーザーが public/assets/rpg/ に配置)
       const tilesImg = new Image(); tilesImg.src='/assets/rpg/tileset.png';
       const playerImg = new Image(); playerImg.src='/assets/rpg/player.png';
-      const tileMap = { 0:[0,0], 1:[1,0], 2:[10,4], 3:[11,4], 4:[4,6], 5:[5,6] };
+  const tileMap = { 0:[0,0], 1:[1,0], 2:[10,4], 3:[11,4], 4:[4,6], 5:[5,6], 6:[15,4] }; // 6: boss(仮)
       let player = {x:2,y:2,dir:0,frame:0}; // dir 0down1left2right3up
       // ===== ユーティリティ =====
       function log(msg){ const box=document.getElementById('rpgLog'); const d=document.createElement('div'); d.textContent=new Date().toLocaleTimeString()+" "+msg; box.prepend(d); while(box.children.length>120) box.removeChild(box.lastChild); }
@@ -277,20 +276,39 @@
       function drawPlayer(){ if(!playerImg.complete){ ctx.fillStyle='#ffb703'; ctx.fillRect(player.x*TILE+2, player.y*TILE+2, TILE-4, TILE-4); return;} const fw=TILE, fh=TILE; const sy=player.dir; const sx=player.frame%4; ctx.drawImage(playerImg, sx*fw, sy*fh, fw, fh, player.x*TILE, player.y*TILE, fw, fh); }
       // 近接インジケータ
       let proxEl=document.getElementById('proxUI'); if(!proxEl){ proxEl=document.createElement('div'); proxEl.id='proxUI'; proxEl.style.position='absolute'; proxEl.style.left='8px'; proxEl.style.top='8px'; proxEl.style.zIndex='5'; proxEl.style.display='flex'; proxEl.style.gap='6px'; canvas.parentElement.appendChild(proxEl);} 
-      function updateProximityUI(){ if(!state){ proxEl.innerHTML=''; return;} const nearInn=Math.abs(player.x-innPos.x)<=1&&Math.abs(player.y-innPos.y)<=1; const nearShop=Math.abs(player.x-shopPos.x)<=1&&Math.abs(player.y-shopPos.y)<=1; proxEl.innerHTML=[ nearInn?'<span class="badge" style="background:#2a9d8f">宿屋</span>':'', nearShop?'<span class="badge" style="background:#a44f9d">店</span>':'' ].filter(Boolean).join(''); }
+  function updateProximityUI(){ if(!state){ proxEl.innerHTML=''; return;} const nearInn=Math.abs(player.x-innPos.x)<=1&&Math.abs(player.y-innPos.y)<=1; const nearShop=Math.abs(player.x-shopPos.x)<=1&&Math.abs(player.y-shopPos.y)<=1; const nearBoss=Math.abs(player.x-bossPos.x)<=1&&Math.abs(player.y-bossPos.y)<=1; proxEl.innerHTML=[ nearInn?'<span class="badge" style="background:#2a9d8f">宿屋</span>':'', nearShop?'<span class="badge" style="background:#a44f9d">店</span>':'', nearBoss?'<span class="badge" style="background:#e63946">ボス</span>':'' ].filter(Boolean).join(''); }
       // ===== 移動/操作 =====
       function movePlayerDir(dir){ let dx=0,dy=0; if(dir==='up'){dy=-1;player.dir=3;} else if(dir==='down'){dy=1;player.dir=0;} else if(dir==='left'){dx=-1;player.dir=1;} else if(dir==='right'){dx=1;player.dir=2;} const nx=player.x+dx, ny=player.y+dy; if(nx<1||ny<1||nx>=mapW-1||ny>=mapH-1) return; if(world[ny][nx]===1) return; player.x=nx; player.y=ny; player.frame=(player.frame+1)%60; walking=true; encounterStep=(encounterStep+1)%4; if(encounterStep===0) attemptEncounter(); draw(); }
-      function actionPickup(){ const chest=(state?.items||[]).find(it=>it.type==='chest'&&it.x===player.x&&it.y===player.y); if(chest && !chest.opened){ doAction('pickup',{x:player.x,y:player.y}); return;} const nearInn=Math.abs(player.x-innPos.x)<=1&&Math.abs(player.y-innPos.y)<=1; if(nearInn){ doAction('heal'); return;} const nearShop=Math.abs(player.x-shopPos.x)<=1&&Math.abs(player.y-shopPos.y)<=1; if(nearShop){ if(!(state.equips||[]).includes('sword')) doAction('equip-sword'); else if(!(state.equips||[]).includes('armor')) doAction('equip-armor'); return;} fadeMessage('何もない'); }
-      window.addEventListener('keydown',e=>{ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){ e.preventDefault(); movePlayerDir(e.key.replace('Arrow','').toLowerCase()); } else if(e.key==='a'){ doAction('battle'); } else if(e.key==='x'){ actionPickup(); } else if(e.key==='b'){ autoEncounter=!autoEncounter; document.getElementById('toggleAutoEncounter').textContent= autoEncounter?'自動エンカON':'自動エンカOFF'; } else if(e.key==='y'){ doAction('boss'); } });
+      function actionPickup(){
+        // 宝箱
+        const chest=(state?.items||[]).find(it=>it.type==='chest'&&it.x===player.x&&it.y===player.y);
+        if(chest && !chest.opened){ doAction('pickup',{x:player.x,y:player.y}); return; }
+        // ボス (接触 or 隣接 調べるで開始)
+        if(Math.abs(player.x-bossPos.x)<=1 && Math.abs(player.y-bossPos.y)<=1){ doAction('boss'); return; }
+        // 宿屋
+        const nearInn=Math.abs(player.x-innPos.x)<=1&&Math.abs(player.y-innPos.y)<=1; if(nearInn){ doAction('heal'); return; }
+        // 店: 自動購入優先
+        const nearShop=Math.abs(player.x-shopPos.x)<=1&&Math.abs(player.y-shopPos.y)<=1; if(nearShop){ if(!(state.equips||[]).includes('sword')) doAction('equip-sword'); else if(!(state.equips||[]).includes('armor')) doAction('equip-armor'); else fadeMessage('特になし'); return; }
+        fadeMessage('何もない');
+      }
+  window.addEventListener('keydown',e=>{ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){ e.preventDefault(); movePlayerDir(e.key.replace('Arrow','').toLowerCase()); } else if(e.key==='a'){ actionPickup(); } else if(e.key==='b'){ dashHeld=true; } });
+  window.addEventListener('keyup',e=>{ if(e.key==='b') dashHeld=false; });
       // アクションボタン
       document.querySelectorAll('.rpg-actions button').forEach(b=> b.addEventListener('click',()=>{ const act=b.getAttribute('data-act'); if(act==='pickup') actionPickup(); else doAction(act); }));
       document.getElementById('toggleAutoEncounter').addEventListener('click',()=>{ autoEncounter=!autoEncounter; document.getElementById('toggleAutoEncounter').textContent= autoEncounter?'自動エンカON':'自動エンカOFF'; fadeMessage(autoEncounter?'自動エンカ ON':'自動エンカ OFF'); });
       document.getElementById('manualSaveBtn').onclick= async ()=>{ if(!currentPlayerId){ alert('プレイヤー未選択'); return;} const r=await api('save'); if(r?.state){ state=r.state; updateStats(); log('手動セーブ完了'); }};
       // ===== バーチャルコントローラー =====
-      const heldDirs=new Set(); function loopMove(){ if(heldDirs.size){ const dir=[...heldDirs].slice(-1)[0]; movePlayerDir(dir); } requestAnimationFrame(loopMove);} loopMove();
-      function bindHold(el){ const dir=el.dataset.dir; const start=()=>heldDirs.add(dir); const end=()=>heldDirs.delete(dir); el.addEventListener('touchstart',e=>{e.preventDefault();start();},{passive:false}); el.addEventListener('mousedown',e=>{e.preventDefault();start();}); ['touchend','touchcancel','mouseup','mouseleave','contextmenu'].forEach(ev=> el.addEventListener(ev,end)); }
-      document.querySelectorAll('.dpad-btn').forEach(bindHold);
-      document.querySelectorAll('.buttons button[data-btn]').forEach(b=>{ b.addEventListener('click',()=>{ const t=b.dataset.btn; if(t==='a') doAction('battle'); else if(t==='b'){ autoEncounter=!autoEncounter; document.getElementById('toggleAutoEncounter').textContent= autoEncounter?'自動エンカON':'自動エンカOFF'; fadeMessage(autoEncounter?'自動エンカ ON':'自動エンカ OFF'); } else if(t==='x') actionPickup(); else if(t==='y') doAction('boss'); }); });
+  function bindHold(el){ const dir=el.dataset.dir; const start=()=>heldDirs.add(dir); const end=()=>heldDirs.delete(dir); el.addEventListener('touchstart',e=>{e.preventDefault();start();},{passive:false}); el.addEventListener('mousedown',e=>{e.preventDefault();start();}); ['touchend','touchcancel','mouseup','mouseleave','contextmenu'].forEach(ev=> el.addEventListener(ev,end)); }
+  document.querySelectorAll('.dpad-btn').forEach(bindHold);
+  // 2ボタン: A=調べる, B=ダッシュ(押下中高速移動)
+  let dashHeld=false;
+  const btnA=document.querySelector('.buttons button[data-btn="a"]');
+  const btnB=document.querySelector('.buttons button[data-btn="b"]');
+  const dashStart=()=>{dashHeld=true;}; const dashEnd=()=>{dashHeld=false;};
+  btnA.addEventListener('click',()=> actionPickup());
+  ['touchstart','mousedown'].forEach(ev=> btnB.addEventListener(ev,e=>{e.preventDefault();dashStart();},{passive:false}));
+  ['touchend','touchcancel','mouseup','mouseleave','contextmenu'].forEach(ev=> btnB.addEventListener(ev,dashEnd));
+  const heldDirs=new Set(); function loopMove(){ if(heldDirs.size){ const dir=[...heldDirs].slice(-1)[0]; movePlayerDir(dir); if(dashHeld) movePlayerDir(dir); } requestAnimationFrame(loopMove);} loopMove();
       // ===== 初期化 =====
       initPlayer();
     </script>
