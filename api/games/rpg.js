@@ -137,7 +137,7 @@ module.exports = async function handler(req, res) {
       const key = { game_staffId: { game: "rpg", staffId: Number(staffId) } };
       const record = await prisma.gameScore.findUnique({ where: key });
       const st = record?.meta ? recomputeDerived(record.meta) : null;
-      return res.json({ state: st, record });
+  return res.json({ state: st, record, shop: CFG.SHOP_ITEMS });
     }
     if (req.method !== "POST")
       return res.status(405).json({ error: "Method not allowed" });
@@ -156,7 +156,8 @@ module.exports = async function handler(req, res) {
 
     let result = null;
     if (action === "init") {
-      /* no change */
+  // 初期化時にショップ設定を返してフロント同期
+  result = { shop: CFG.SHOP_ITEMS };
     } else if (action === "heal") {
       // 宿屋: 所持金の10% (端数切り捨て) を支払い HP全回復。最低1G必要。
       const cost = Math.floor(state.gold * 0.1);

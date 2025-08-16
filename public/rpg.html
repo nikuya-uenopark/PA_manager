@@ -165,23 +165,23 @@
         font-family: ui-monospace, monospace;
       }
       .fade-msg {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  font-size: 11px;
-  color: #fff;
-  animation: fadeMsg 2.2s ease forwards;
-  pointer-events: none;
-  text-shadow: 0 0 4px #000;
-  background: rgba(0, 0, 0, 0.55);
-  padding: 4px 12px;
-  border: 1px solid #223246;
-  border-radius: 20px;
-  width: auto;
-  max-width: 70%;
-  white-space: nowrap;
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        font-size: 11px;
+        color: #fff;
+        animation: fadeMsg 2.2s ease forwards;
+        pointer-events: none;
+        text-shadow: 0 0 4px #000;
+        background: rgba(0, 0, 0, 0.55);
+        padding: 4px 12px;
+        border: 1px solid #223246;
+        border-radius: 20px;
+        width: auto;
+        max-width: 70%;
+        white-space: nowrap;
       }
       @keyframes fadeMsg {
         0% {
@@ -354,8 +354,18 @@
           gap: 0;
         "
       >
-        <div class="buttons" style="display:flex;flex-direction:column;align-items:center;gap:22px;">
-          <button data-btn="settings" class="btn-round btn-settings">設定</button>
+        <div
+          class="buttons"
+          style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 22px;
+          "
+        >
+          <button data-btn="settings" class="btn-round btn-settings">
+            設定
+          </button>
           <button data-btn="dash" class="btn-round btn-dash">走</button>
           <button data-btn="inspect" class="btn-round btn-inspect">調</button>
         </div>
@@ -603,6 +613,7 @@
         const r = await api("init");
         if (r && r.state) {
           state = r.state;
+          if (r.result?.shop) applyShopConfig(r.result.shop);
           updateStats();
           draw();
           fadeMessage("ロード完了");
@@ -1340,24 +1351,49 @@
           .join("")}</ul>`;
       }
       const shopCatalog = [
-        { type: "dagger", label: "短剣", atk: 4, cost: 40 },
-        { type: "sword", label: "剣", atk: 5, cost: 60 },
-        { type: "staff", label: "杖", atk: 7, cost: 70 },
-        { type: "axe", label: "戦斧", atk: 8, cost: 110 },
-        { type: "spear", label: "槍", atk: 9, cost: 120 },
-        { type: "wand", label: "ワンド", atk: 9, cost: 125 },
-        { type: "longsword", label: "ロングソード", atk: 10, cost: 150 },
-        { type: "mystic_staff", label: "魔導杖", atk: 12, cost: 200 },
-        { type: "greatsword", label: "グレートソード", atk: 14, cost: 240 },
-        { type: "armor", label: "防具", hp: 15, cost: 70 },
-        { type: "plate_armor", label: "プレート", hp: 30, cost: 140 },
+        // 初期値 (バックエンドから受領後に上書き)
+        { type: "dagger", label: "短剣", atk: 0, cost: 0 },
       ];
+      // バックエンド SHOP_ITEMS から反映
+      function applyShopConfig(cfg) {
+        const map = {
+          dagger: "短剣",
+          sword: "剣",
+          staff: "杖",
+          axe: "戦斧",
+          spear: "槍",
+          wand: "ワンド",
+          longsword: "ロングソード",
+          mystic_staff: "魔導杖",
+          greatsword: "グレートソード",
+          armor: "防具",
+          plate_armor: "プレートアーマー",
+        };
+        const tmp = [];
+        for (const k of Object.keys(cfg)) {
+          const it = cfg[k];
+          tmp.push({
+            type: k,
+            label: map[k] || k,
+            atk: it.atk,
+            hp: it.hp,
+            cost: it.cost,
+          });
+        }
+        // ソート: atk/hp 高い順 or cost昇順? とりあえず cost 昇順
+        tmp.sort((a, b) => a.cost - b.cost);
+        shopCatalog.splice(0, shopCatalog.length, ...tmp);
+      }
       function shopListHtml() {
         return `<div style='display:flex;flex-direction:column;gap:6px;'>${shopCatalog
           .map((it, i) => {
             const owned = (state?.equips || []).includes(it.type);
             const canBuy = (state?.gold || 0) >= it.cost;
-            const statText = it.atk ? `ATK+${it.atk}` : `HP+${it.hp}`;
+            const statText = it.atk
+              ? `ATK+${formatBig(it.atk)}`
+              : it.hp
+              ? `HP+${formatBig(it.hp)}`
+              : "";
             const badge = owned ? "済" : canBuy ? "購入" : "不足";
             const badgeStyle = owned
               ? "color:#06d6a0;font-weight:600;"
@@ -1372,12 +1408,16 @@
               <span style='font-size:11px;${badgeStyle}'>${badge}</span>
             </div>
             <div style='font-size:10px;display:flex;justify-content:space-between;opacity:.8;'>
-              <span>${it.cost}G</span>
+              <span>${formatBig(it.cost)}G</span>
               <span>${owned ? "所持済" : ""}</span>
             </div>
           </div>`;
           })
           .join("")}</div>`;
+      }
+      function formatBig(n) {
+        if (n == null) return "";
+        return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       }
 
       // ===== 初期化 =====
