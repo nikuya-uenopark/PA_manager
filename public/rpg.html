@@ -1240,9 +1240,14 @@
       const btnSettings = document.querySelector('[data-btn="settings"]');
       const btnDash = document.querySelector('[data-btn="dash"]');
       const btnInspect = document.querySelector('[data-btn="inspect"]');
+      // 設定ボタン: フィールドでは設定モーダルを開く / モーダル表示中は閉じる専用 (キャンセル役)
       btnSettings.addEventListener("click", () => {
-        if (currentModal === "settings") closeModal();
-        else openModal("settings");
+        if (currentModal) {
+          // どのモーダルでも閉じる (settings含む)
+            closeModal();
+        } else {
+          openModal("settings");
+        }
       });
       function updateDashBtn() {
         btnDash.classList.toggle("dash-on", dashOn);
@@ -1255,9 +1260,13 @@
         updateDashBtn();
       });
       updateDashBtn();
+      // 調べるボタン: フィールドでは調べる(Action) / モーダル中は決定のみ
       btnInspect.addEventListener("click", () => {
-        if (currentModal) modalConfirm();
-        else actionInspect();
+        if (currentModal) {
+          modalConfirm();
+        } else {
+          actionInspect();
+        }
       });
       const heldDirs = new Set();
       const MOVE_INTERVAL = 180; // ms 基本移動間隔
