@@ -744,14 +744,14 @@
       // 明示フレームインデックス (ループ安定性向上)
       let bossFrame = 0;
       setInterval(() => {
-        if (state?.bossDefeated) return; // 撃破後は進めない
+  // 再挑戦仕様: 常にアニメ継続 (撃破フラグ無視)
         if (bossImgsIdle.length && bossImgsIdle[0].complete) {
           bossFrame = (bossFrame + 1) % bossImgsIdle.length;
         }
       }, 300);
       function drawBossField() {
         const frames = bossImgsIdle;
-        if (state?.bossDefeated) return; // 撃破後は非表示
+  // 再挑戦仕様: 撃破後も表示
         if (!frames.length || !frames[0].complete) {
           ctx.fillStyle = "#e63946";
           ctx.fillRect(
@@ -851,7 +851,6 @@
           Math.abs(player.x - shopPos.x) <= 1 &&
           Math.abs(player.y - shopPos.y) <= 1;
         const nearBoss =
-          !state.bossDefeated &&
           Math.abs(player.x - bossPos.x) <= 1 &&
           Math.abs(player.y - bossPos.y) <= 1;
         proxEl.innerHTML = [
@@ -861,7 +860,7 @@
           nearShop
             ? '<span class="badge" style="background:#a44f9d">店</span>'
             : "",
-          nearBoss && !state.bossDefeated
+          nearBoss
             ? '<span class="badge" style="background:#e63946">ボス</span>'
             : "",
         ]

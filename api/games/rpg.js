@@ -21,7 +21,8 @@ function newState(name) {
     maxHp: BASE_HP,
     atk: BASE_ATK,
     equips: [],
-    bossDefeated: false,
+  // boss再挑戦仕様に変更: defeatフラグは使用しないが互換のため残す
+  bossDefeated: false,
     nextExp: levelNeeded(1),
     items: [
       {
@@ -215,24 +216,19 @@ module.exports = async function handler(req, res) {
       const battle = applyBattle(state, { ...enemy });
       result = { ...battle, enemy };
     } else if (action === "boss") {
-      if (state.bossDefeated) {
-        result = { msg: "既に討伐済み" };
-      } else {
-        const boss = {
-          hp: CFG.BOSS.hp,
-          atk: CFG.BOSS.atk,
-          exp: CFG.BOSS.exp,
-          gold: CFG.BOSS.gold,
-          level: CFG.BOSS.level,
-          name: CFG.BOSS_NAME,
-          key: CFG.BOSS_SPRITE_KEY,
-        };
-        const r = applyBattle(state, { ...boss });
-        if (r.victory) {
-          state.bossDefeated = true;
-        }
-        result = { ...r, enemy: boss };
-      }
+      // 常に挑戦可能 (勝ってもフラグ固定せず繰り返し OK)
+      const boss = {
+        hp: CFG.BOSS.hp,
+        atk: CFG.BOSS.atk,
+        exp: CFG.BOSS.exp,
+        gold: CFG.BOSS.gold,
+        level: CFG.BOSS.level,
+        name: CFG.BOSS_NAME,
+        key: CFG.BOSS_SPRITE_KEY,
+      };
+      const r = applyBattle(state, { ...boss });
+      // 旧クライアント互換: 勝利しても bossDefeated は触らない (再挑戦可)
+      result = { ...r, enemy: boss };
     } else if (action === "equip") {
       const { type } = payload || {};
       const shopItems = CFG.SHOP_ITEMS;
