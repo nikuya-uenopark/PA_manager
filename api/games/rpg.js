@@ -43,9 +43,19 @@ function recomputeDerived(state) {
   const levelBonusHp = (state.level - 1) * 6;
   const levelBonusAtk = (state.level - 1) * 2;
   const armorBonus = equips.includes("armor") ? 15 : 0;
-  const swordBonus = equips.includes("sword") ? 5 : 0;
+  // 武器は複数所持しても最大値のみ反映 (剣 / 杖 など)
+  const weaponBonusTable = {
+    sword: 5,
+    staff: 7,
+    dagger: 4,
+    axe: 8,
+  };
+  let weaponBonus = 0;
+  for (const w of Object.keys(weaponBonusTable)) {
+    if (equips.includes(w)) weaponBonus = Math.max(weaponBonus, weaponBonusTable[w]);
+  }
   state.maxHp = BASE_HP + levelBonusHp + armorBonus;
-  state.atk = BASE_ATK + levelBonusAtk + swordBonus;
+  state.atk = BASE_ATK + levelBonusAtk + weaponBonus;
   if (state.hp > state.maxHp) state.hp = state.maxHp;
   state.nextExp = levelNeeded(state.level);
   return state;
@@ -152,25 +162,25 @@ module.exports = async function handler(req, res) {
       }
   } else if (action === "equip") {
       const { type } = payload || {};
-      if (type === "sword") {
-        if (state.equips.includes("sword")) result = { msg: "既に剣所持" };
-        else if (state.gold >= 50) {
-          state.gold -= 50;
-          state.equips.push("sword");
-    recomputeDerived(state);
-    result = { msg: "剣を購入 (+ATK5)" };
-        } else result = { msg: "G不足(50G必要)" };
-      } else if (type === "armor") {
-        if (state.equips.includes("armor")) result = { msg: "既に防具所持" };
-        else if (state.gold >= 50) {
-          state.gold -= 50;
-          state.equips.push("armor");
-    recomputeDerived(state);
-    state.hp = state.maxHp;
-    result = { msg: "防具を購入 (+HP15)" };
-        } else result = { msg: "G不足(50G必要)" };
-      } else {
+      const shopItems = {
+        sword: { cost: 50, msg: "剣を購入 (+ATK5)" },
+        staff: { cost: 60, msg: "杖を購入 (+ATK7)" },
+        dagger: { cost: 35, msg: "短剣を購入 (+ATK4)" },
+        axe: { cost: 80, msg: "戦斧を購入 (+ATK8)" },
+        armor: { cost: 50, msg: "防具を購入 (+HP15)" },
+      };
+      if (!shopItems[type]) {
         result = { msg: "不明な装備" };
+      } else if (state.equips.includes(type)) {
+        result = { msg: "既に所持" };
+      } else if (state.gold < shopItems[type].cost) {
+        result = { msg: `G不足(${shopItems[type].cost}G必要)` };
+      } else {
+        state.gold -= shopItems[type].cost;
+        state.equips.push(type);
+        recomputeDerived(state);
+        if (type === 'armor') state.hp = state.maxHp; // 防具購入時全快オマケ
+        result = { msg: shopItems[type].msg };
       }
     } else if (action === 'pickup') {
       const { x, y } = payload || {};
