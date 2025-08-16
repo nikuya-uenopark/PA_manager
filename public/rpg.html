@@ -481,16 +481,16 @@
       const mapW = 40,
         mapH = 22; // 論理グリッド
       function resizeCanvasScale() {
-  const vw = window.innerWidth;
-  // 横幅をちょうど埋めるスケール (高さ制約は無視して拡大)
-  TILE = vw / mapW; // 小数許容 (ピクセル比率維持) ※ピクセルアートの滲みが気になる場合は Math.floor に変更
-  // 内部キャンバスは整数ピクセルに丸め (描画計算は TILE そのまま)
-  const pixelW = Math.round(mapW * TILE);
-  const pixelH = Math.round(mapH * TILE);
-  canvas.width = pixelW;
-  canvas.height = pixelH;
-  canvas.style.width = vw + "px"; // 画面幅にフィット
-  canvas.style.height = pixelH + "px";
+        const vw = window.innerWidth;
+        // 横幅をちょうど埋めるスケール (高さ制約は無視して拡大)
+        TILE = vw / mapW; // 小数許容 (ピクセル比率維持) ※ピクセルアートの滲みが気になる場合は Math.floor に変更
+        // 内部キャンバスは整数ピクセルに丸め (描画計算は TILE そのまま)
+        const pixelW = Math.round(mapW * TILE);
+        const pixelH = Math.round(mapH * TILE);
+        canvas.width = pixelW;
+        canvas.height = pixelH;
+        canvas.style.width = vw + "px"; // 画面幅にフィット
+        canvas.style.height = pixelH + "px";
         draw();
       }
       window.addEventListener("resize", resizeCanvasScale);
