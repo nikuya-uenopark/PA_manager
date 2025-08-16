@@ -5,11 +5,11 @@ module.exports = {
   ENEMIES: [
     { key: 'chort', name: 'インプ', min:1, max:5 },
     { key: 'big_zombie', name: 'ゾンビ', min:6, max:15 },
-    { key: 'doc', name: '狂賢者', min:16, max:30 },
-    { key: 'big_demon', name: 'デーモン', min:31, max:60 },
-    { key: 'angel', name: '堕天使', min:61, max:999999999 },
+    { key: 'doc', name: '災厄のタバコ男 ムコサン', min:16, max:30 },
+    { key: 'big_demon', name: '悪の根源 ケイ', min:31, max:60 },
+    { key: 'angel', name: '堕天使 アキヤマーン', min:61, max:999999999 },
   ],
-  BOSS_NAME: '魔王',
+  BOSS_NAME: 'ベトナムより来訪せし暴虐の魔王 コン',
   WEAPON_BONUS: {
     dagger: 40,
     sword: 500,
