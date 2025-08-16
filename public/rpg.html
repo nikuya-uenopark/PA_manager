@@ -176,9 +176,10 @@
         pointer-events: none;
         text-shadow: 0 0 4px #000;
         background: rgba(0, 0, 0, 0.55);
-        padding: 4px 12px;
+        padding: 2px 8px 3px;
+        line-height: 1.1;
         border: 1px solid #223246;
-        border-radius: 20px;
+        border-radius: 14px;
         width: auto;
         max-width: 70%;
         white-space: nowrap;
@@ -350,12 +351,45 @@
           right: 0;
           bottom: 0;
           z-index: 30;
-          pointer-events:none;
+          pointer-events: none;
         "
       >
-        <button data-btn="settings" class="btn-round btn-settings" style="position:absolute;right:176px;bottom:24px;pointer-events:auto;">設定</button>
-        <button data-btn="dash" class="btn-round btn-dash" style="position:absolute;right:96px;bottom:24px;pointer-events:auto;">走</button>
-        <button data-btn="inspect" class="btn-round btn-inspect" style="position:absolute;right:16px;bottom:24px;pointer-events:auto;">調</button>
+        <button
+          data-btn="settings"
+          class="btn-round btn-settings"
+          style="
+            position: absolute;
+            right: 176px;
+            bottom: 24px;
+            pointer-events: auto;
+          "
+        >
+          設定
+        </button>
+        <button
+          data-btn="dash"
+          class="btn-round btn-dash"
+          style="
+            position: absolute;
+            right: 96px;
+            bottom: 24px;
+            pointer-events: auto;
+          "
+        >
+          走
+        </button>
+        <button
+          data-btn="inspect"
+          class="btn-round btn-inspect"
+          style="
+            position: absolute;
+            right: 16px;
+            bottom: 24px;
+            pointer-events: auto;
+          "
+        >
+          調
+        </button>
       </div>
       <!-- Modal Overlay -->
       <div
@@ -945,20 +979,28 @@
         // 特殊演出 (フラッシュ + 赤枠)
         modalBody.innerHTML = `<div id='battleArea' style='display:flex;flex-direction:column;gap:10px;'>
           <div style='display:flex;justify-content:space-between;font-size:12px;color:#f94144;font-weight:600;'>
-      <div>Lv${formatBig(enemy.level)} ${(enemy.name||'魔王')}</div><div>HP <span id='enemyHpText'>${formatBig(enemy.hp)}/${formatBig(enemy.hp)}</span></div>
+      <div>Lv${formatBig(enemy.level)} ${
+          enemy.name || "魔王"
+        }</div><div>HP <span id='enemyHpText'>${formatBig(
+          enemy.hp
+        )}/${formatBig(enemy.hp)}</span></div>
           </div>
           <div class='bar hp'><span id='enemyHpBar' style='width:100%;background:linear-gradient(90deg,#e63946,#9d0208)'></span></div>
           <div style='height:140px;position:relative;border:2px solid #e63946;border-radius:8px;background:#1a0f1c;overflow:hidden;'>
             <div id='battleLog' style='position:absolute;left:6px;top:6px;bottom:6px;width:46%;display:flex;flex-direction:column;gap:4px;font-size:11px;overflow:auto;padding-right:4px;'></div>
             <div id='battleSprites' style='position:absolute;right:0;top:0;bottom:0;width:54%;display:flex;align-items:center;justify-content:space-around;'>
               <div style='display:flex;flex-direction:column;align-items:center;gap:4px;'>
-                <img id='playerSprite' style='image-rendering:pixelated;width:72px;height:72px;filter:drop-shadow(0 0 6px #00b4d8);' src='${playerIdleFrames[0]}' />
+                <img id='playerSprite' style='image-rendering:pixelated;width:72px;height:72px;filter:drop-shadow(0 0 6px #00b4d8);' src='${
+                  playerIdleFrames[0]
+                }' />
                 <div style='font-size:10px;'>あなた</div>
               </div>
               <div style='display:flex;flex-direction:column;align-items:center;gap:4px;'>
                 <div id='bossAura' style='position:absolute;right:50%;transform:translateX(50%);width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#e6394644,#0000);filter:blur(8px);animation:pulse 2s infinite;'></div>
                 <img id='enemySprite' style='image-rendering:pixelated;width:96px;height:96px;filter:drop-shadow(0 0 8px #e63946);' src='/assets/rpg/big_demon_idle_anim_f0.png' />
-        <div style='font-size:10px;color:#f94144;'>${enemy.name||'ラスボス'}</div>
+        <div style='font-size:10px;color:#f94144;'>${
+          enemy.name || "ラスボス"
+        }</div>
               </div>
             </div>
           </div>
@@ -1109,9 +1151,9 @@
         }
         fadeMessage("何もない");
       }
-    let lastKeyMove = 0;
-    const KEY_INTERVAL = 180; // キーボード移動間隔
-    window.addEventListener("keydown", (e) => {
+      let lastKeyMove = 0;
+      const KEY_INTERVAL = 180; // キーボード移動間隔
+      window.addEventListener("keydown", (e) => {
         const dirMap = {
           ArrowUp: "up",
           ArrowDown: "down",
@@ -1120,12 +1162,12 @@
         };
         if (dirMap[e.key]) {
           e.preventDefault();
-      const now = performance.now();
-      const need = dashOn ? KEY_INTERVAL/2 : KEY_INTERVAL;
-      if(now - lastKeyMove < need) return;
-      lastKeyMove = now;
-      if (currentModal) modalNavigate(dirMap[e.key]);
-      else movePlayerDir(dirMap[e.key]);
+          const now = performance.now();
+          const need = dashOn ? KEY_INTERVAL / 2 : KEY_INTERVAL;
+          if (now - lastKeyMove < need) return;
+          lastKeyMove = now;
+          if (currentModal) modalNavigate(dirMap[e.key]);
+          else movePlayerDir(dirMap[e.key]);
         } else if (e.key === "a") {
           if (currentModal) modalConfirm();
           else actionInspect();
@@ -1201,11 +1243,11 @@
       const MOVE_INTERVAL = 180; // ms 基本移動間隔
       const MOVE_INTERVAL_DASH = 95; // ダッシュ時
       let lastStepTime = 0;
-      function loopMove(ts){
-        if(heldDirs.size && !currentModal){
+      function loopMove(ts) {
+        if (heldDirs.size && !currentModal) {
           const now = performance.now();
           const interval = dashOn ? MOVE_INTERVAL_DASH : MOVE_INTERVAL;
-          if(now - lastStepTime >= interval){
+          if (now - lastStepTime >= interval) {
             const dir = [...heldDirs].slice(-1)[0];
             movePlayerDir(dir);
             lastStepTime = now;
@@ -1321,8 +1363,13 @@
           modalTitle.textContent = "ボス";
           const lv = bossConfig?.level || 0;
           const hp = bossConfig?.hp || 0;
-          const name = bossConfig?.name || 'ラスボス';
-          modalBody.innerHTML = `<p style='margin:0 0 6px;font-size:12px;'>Lv${formatBig(lv)} / HP${formatBig(hp)} の ${name} に挑みますか？</p>${menuListHtml(["戦う","やめる"])} }`;
+          const name = bossConfig?.name || "ラスボス";
+          modalBody.innerHTML = `<p style='margin:0 0 6px;font-size:12px;'>Lv${formatBig(
+            lv
+          )} / HP${formatBig(hp)} の ${name} に挑みますか？</p>${menuListHtml([
+            "戦う",
+            "やめる",
+          ])} }`;
         } else if (currentModal === "shop") {
           modalTitle.textContent = "武器屋";
           modalBody.innerHTML = shopListHtml();
@@ -1353,7 +1400,7 @@
         // 初期値 (バックエンドから受領後に上書き)
         { type: "dagger", label: "短剣", atk: 0, cost: 0 },
       ];
-  let bossConfig = null;
+      let bossConfig = null;
       // バックエンド SHOP_ITEMS から反映
       function applyShopConfig(cfg) {
         const map = {
