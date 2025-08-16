@@ -514,8 +514,9 @@
       chestSeeds.forEach((c) => {
         if (world[c.y][c.x] === 0) world[c.y][c.x] = 4;
       });
-      // ラスボス位置 (画面右下付近)
-      const bossPos = { x: mapW - 3, y: mapH - 3 }; // 端から2マス内側
+      // ラスボス位置 (画面右下付近) ※右下UI(バーチャルボタン)と重ならないよう更に内側へ調整
+      // 以前: {x: mapW-3, y: mapH-3} -> コントローラに隠れるケースがあったため -6/-5 付近に再配置
+      const bossPos = { x: mapW - 7, y: mapH - 6 }; // 端から複数マス内側
       world[bossPos.y][bossPos.x] = 6; // boss tile code
       // タイル & プレイヤースプライト (配置はユーザーが public/assets/rpg/ に配置)
       // ===== アセット読み込み =====
