@@ -464,7 +464,8 @@
       chestSeeds.forEach((c) => {
         if (world[c.y][c.x] === 0) world[c.y][c.x] = 4;
       });
-      const bossPos = { x: 34, y: 14 };
+  // ラスボス位置 (画面右下付近)
+  const bossPos = { x: mapW - 3, y: mapH - 3 }; // 端から2マス内側
       world[bossPos.y][bossPos.x] = 6; // boss tile code
       // タイル & プレイヤースプライト (配置はユーザーが public/assets/rpg/ に配置)
       // ===== アセット読み込み =====
@@ -821,8 +822,16 @@
         };
         if (dirMap[e.key]) {
           e.preventDefault();
-          if (currentModal) modalNavigate(dirMap[e.key]);
-          else movePlayerDir(dirMap[e.key]);
+          if (currentModal && currentModal !== 'shop') {
+            // 通常モーダル内はフォーカス移動のみ
+            modalNavigate(dirMap[e.key]);
+          } else if (currentModal === 'shop') {
+            // ショップ表示中も移動可能 + 上下でリスト操作 (Shift押下でリスト優先)
+            if (e.shiftKey) modalNavigate(dirMap[e.key]);
+            else movePlayerDir(dirMap[e.key]);
+          } else {
+            movePlayerDir(dirMap[e.key]);
+          }
         } else if (e.key === "a") {
           if (currentModal) modalConfirm();
           else actionInspect();
@@ -884,7 +893,7 @@
       });
       const heldDirs = new Set();
       function loopMove() {
-        if (heldDirs.size && !currentModal) {
+        if (heldDirs.size && (!currentModal || currentModal==='shop')) {
           const dir = [...heldDirs].slice(-1)[0];
           movePlayerDir(dir);
           if (dashOn) movePlayerDir(dir);

@@ -1,6 +1,7 @@
 // CommonJS へ統一 & RPG 進行管理
 const prisma = require("../_prisma");
 const { addLog } = require("../_log");
+const CFG = require('./rpgConfig');
 
 // 簡易RPG進行 API
 // POST { staffId, action, payload }
@@ -43,18 +44,8 @@ function recomputeDerived(state) {
   const levelBonusHp = (state.level - 1) * 6;
   const levelBonusAtk = (state.level - 1) * 2;
   const armorBonus = equips.includes("plate_armor") ? 30 : (equips.includes("armor") ? 15 : 0);
-  // 武器は複数所持しても最大値のみ反映 (剣 / 杖 など)
-  const weaponBonusTable = {
-    sword: 5,
-    dagger: 4,
-    staff: 7,
-    axe: 8,
-    spear: 9,
-    wand: 9,
-    longsword: 10,
-    mystic_staff: 12,
-    greatsword: 14,
-  };
+  // 武器は複数所持しても最大値のみ反映 (CFG.WEAPON_BONUS)
+  const weaponBonusTable = CFG.WEAPON_BONUS;
   let weaponBonus = 0;
   for (const w of Object.keys(weaponBonusTable)) {
     if (equips.includes(w)) weaponBonus = Math.max(weaponBonus, weaponBonusTable[w]);
@@ -167,7 +158,7 @@ module.exports = async function handler(req, res) {
       if (state.bossDefeated) {
         result = { msg: "既に討伐済み" };
       } else {
-        const boss = { hp: 120, atk: 14, exp: 60, gold: 120 };
+  const boss = { hp: CFG.BOSS.hp, atk: CFG.BOSS.atk, exp: CFG.BOSS.exp, gold: CFG.BOSS.gold, level: CFG.BOSS.level };
         const r = applyBattle(state, boss);
         if (r.victory) {
           state.bossDefeated = true;
@@ -175,20 +166,8 @@ module.exports = async function handler(req, res) {
         result = r;
       }
   } else if (action === "equip") {
-      const { type } = payload || {};
-      const shopItems = {
-        dagger: { cost: 40, msg: "短剣を購入 (+ATK4)" },
-        sword: { cost: 60, msg: "剣を購入 (+ATK5)" },
-        staff: { cost: 70, msg: "杖を購入 (+ATK7)" },
-        axe: { cost: 110, msg: "戦斧を購入 (+ATK8)" },
-        spear: { cost: 120, msg: "槍を購入 (+ATK9)" },
-        wand: { cost: 125, msg: "ワンドを購入 (+ATK9)" },
-        longsword: { cost: 150, msg: "ロングソードを購入 (+ATK10)" },
-        mystic_staff: { cost: 200, msg: "魔導杖を購入 (+ATK12)" },
-        greatsword: { cost: 240, msg: "グレートソードを購入 (+ATK14)" },
-        armor: { cost: 70, msg: "防具を購入 (+HP15)" },
-        plate_armor: { cost: 140, msg: "プレートアーマーを購入 (+HP30)" },
-      };
+  const { type } = payload || {};
+  const shopItems = CFG.SHOP_ITEMS;
       if (!shopItems[type]) {
         result = { msg: "不明な装備" };
       } else if (state.equips.includes(type)) {
