@@ -1098,12 +1098,22 @@
             reward?.goldGain || 0
           }G +${
             reward?.expGain || 0
-          }EXP</div><button id='battleCloseBtn' style='margin-top:6px;background:#0d3b66;color:#fff;border:1px solid #1b4f7d;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>`;
+          }EXP</div>
+          <div style='display:flex;gap:6px;margin-top:6px;'>
+            <button id='battleCloseBtn' style='flex:1;background:#0d3b66;color:#fff;border:1px solid #1b4f7d;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>
+            <button id='battleRetryBossBtn' style='flex:1;background:#b5179e;color:#fff;border:1px solid #d062c5;border-radius:6px;padding:4px 8px;font-size:11px;'>もう一度戦う</button>
+          </div>`;
         } else {
-          box.innerHTML = `<div style='color:#e63946;font-weight:600;'>敗北...</div><button id='battleCloseBtn' style='margin-top:6px;background:#3a506b;color:#fff;border:1px solid #4f6480;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>`;
+          box.innerHTML = `<div style='color:#e63946;font-weight:600;'>敗北...</div>
+          <div style='display:flex;gap:6px;margin-top:6px;'>
+            <button id='battleCloseBtn' style='flex:1;background:#3a506b;color:#fff;border:1px solid #4f6480;border-radius:6px;padding:4px 8px;font-size:11px;'>閉じる</button>
+            <button id='battleRetryBossBtn' style='flex:1;background:#b5179e;color:#fff;border:1px solid #d062c5;border-radius:6px;padding:4px 8px;font-size:11px;'>再挑戦</button>
+          </div>`;
         }
         const btn = document.getElementById("battleCloseBtn");
         if (btn) btn.onclick = () => closeModal();
+        const retry = document.getElementById('battleRetryBossBtn');
+        if (retry) retry.onclick = () => { startBossBattle(); };
       }
       function appendBattleLog(line) {
         const box = document.getElementById("battleLog");
