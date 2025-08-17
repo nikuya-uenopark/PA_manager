@@ -3,11 +3,11 @@
 
 module.exports = {
   LEVEL_SCALING: {
-    HP_PER: 6,          // 1レベル毎 HP増加量 (基礎)
-    ATK_PER: 2,         // 1レベル毎 ATK増加量
-    EXP_BASE: 30,       // Lv1->2 必要基礎
-    EXP_PER_LV: 20,     // 線形成分
-    EXP_QUAD: 0.04,     // 二次係数 (緩やかな二次: lv^2 * 0.04)
+    HP_PER: 6, // 1レベル毎 HP増加量 (基礎)
+    ATK_PER: 2, // 1レベル毎 ATK増加量
+    EXP_BASE: 30, // Lv1->2 必要基礎
+    EXP_PER_LV: 20, // 線形成分
+    EXP_QUAD: 0.04, // 二次係数 (緩やかな二次: lv^2 * 0.04)
   },
   ENEMIES: [
     { key: "chort", name: "インプ", min: 1, max: 5 },
@@ -37,16 +37,32 @@ module.exports = {
     axe: { cost: 10000, msg: "戦斧を購入 (+ATK100)", atk: 100 },
     spear: { cost: 50000, msg: "槍を購入 (+ATK500)", atk: 500 },
     wand: { cost: 100000, msg: "ワンドを購入 (+ATK1000)", atk: 1000 },
-    longsword: { cost: 1000000, msg: "ロングソードを購入 (+ATK10000)", atk: 10000 },
-    mystic_staff: { cost: 10000000, msg: "魔導杖を購入 (+ATK100000)", atk: 100000 },
-    greatsword: { cost: 150000000, msg: "グレートソードを購入 (+ATK1500000)", atk: 1500000 },
+    longsword: {
+      cost: 1000000,
+      msg: "ロングソードを購入 (+ATK10000)",
+      atk: 10000,
+    },
+    mystic_staff: {
+      cost: 10000000,
+      msg: "魔導杖を購入 (+ATK100000)",
+      atk: 100000,
+    },
+    greatsword: {
+      cost: 150000000,
+      msg: "グレートソードを購入 (+ATK1500000)",
+      atk: 1500000,
+    },
     armor: { cost: 114514, msg: "防具を購入 (+HP114514)", hp: 114514 },
-    plate_armor: { cost: 37564000, msg: "プレートアーマーを購入 (+HP37564000)", hp: 37564000 },
+    plate_armor: {
+      cost: 37564000,
+      msg: "プレートアーマーを購入 (+HP37564000)",
+      hp: 37564000,
+    },
   },
   BOSS: {
-    level: 1,//100000000,
-    hp: 50,//12000000000,
-    atk: 10,//140000,
+    level: 100000000,
+    hp: 12000000000,
+    atk: 140000,
     exp: 60000000,
     gold: 1200000000,
   },
