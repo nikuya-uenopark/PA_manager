@@ -10,6 +10,7 @@ const CFG = require("./rpgConfig");
 
 const BASE_HP = 30;
 const BASE_ATK = 5;
+const INT32_MAX = 2147483647; // Postgres Int 上限 (2^31-1)
 
 function newState(name) {
   return {
@@ -321,12 +322,13 @@ module.exports = async function handler(req, res) {
     recomputeDerived(state);
     record = await prisma.gameScore.upsert({
       where: key,
-      update: { value: state.level, extra: state.gold, meta: state },
+      // extra フィールドは Prisma Int (32bit) のため GOLD が上限超過するとエラー -> クリップ
+      update: { value: state.level, extra: Math.min(state.gold, INT32_MAX), meta: state },
       create: {
         game: "rpg",
         staffId: Number(staffId),
         value: state.level,
-        extra: state.gold,
+        extra: Math.min(state.gold, INT32_MAX),
         meta: state,
       },
     });
