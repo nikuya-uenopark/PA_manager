@@ -1,41 +1,58 @@
 # PA評価管理システム v3.x
 
-新人教育 / スキル評価 / 進捗共有を 1 画面で扱える軽量 Web アプリ。iPad 横向き最適化・サーバレス・最小依存で高速表示。
+新人教育 / スキル評価 / 進捗共有と簡易ミニゲーム (RPG) を統合したシングルページ Web アプリ。iPad 横向きでの現場利用を想定し、依存を最小限に抑え高速表示を重視しています。
 
-## 特徴
+## 全体概要
 
-- タブ: 共有メモ / スタッフ / 評価項目 / ログ
-- 評価モーダル: ローカル反映 → 閉じる時に一括保存
-- 評価項目説明: 行頭 "- " 自動付与し `<br>` 化
-- 共有メモ: 1 秒デバウンス自動保存 (空文字も履歴)
-- ログ: 最新 200 件ローテーション / 複数行表示
-- セキュリティ: 共通サニタイズ
+コア機能:
+- スタッフ管理 (基本情報 + かな + 入社日等)
+- 評価項目管理 (カテゴリ/説明/並び順編集、複数行説明 `<br>` 保存対応)
+- 評価状態管理 (未着手 / 学習中 / 習得済み 3 ステート循環 + テスト実施者記録)
+- 共有メモ (1 秒デバウンス自動保存 / 空文字も履歴)
+- 操作/システムログ (最新 200 件ローテーション)
+- 共通 XSS 対策サニタイズ
+- ミニRPG (フィールド移動 + ランダムエンカウント + ボス挑戦 + 装備購入 + ランキング)
+
+ゲーム関連追加点:
+- 通常敵 5 種 (レベル帯/サーバ返却 key に応じスプライト切替)
+- ボスは何度でも再挑戦可能 (撃破フラグ固定なし)
+- 敗北ペナルティ: レベル半減 (下限1) + EXP リセット + 所持金半減 + 全装備ロスト (HP 全快で復帰)
+- 装備購入: 武器 ATK 最大値反映 / 防具 HP 加算 (複数可) / 高位装備多数
+- ゴールド DB 保存時は 32bit 整数上限でクリップ (メタJSONには実値)
+- レベル必要 EXP は線形 + 二次係数 (緩やかな成長) 方式
+- ボス討伐数ランキング, レベルランキングを共通ランキングセクションに表示
 
 ## 技術スタック
 
-- フロント: Vanilla JS / HTML / CSS
-- サーバ: Vercel Functions (Node.js)
-- ORM / DB: Prisma + PostgreSQL
-- フォント: Inter / Font Awesome
-- 外部ライブラリ: なし
+| Layer | 使用技術 |
+|-------|----------|
+| フロント | 素の HTML / CSS / Vanilla JS |
+| サーバ | Vercel Serverless Functions (Node.js) |
+| DB | PostgreSQL + Prisma ORM |
+| UI 資産 | Inter / Font Awesome |
+| 外部依存ライブラリ | なし |
 
-## アセット / 著作権表示
+## セットアップ (開発)
 
-RPG (ミニゲーム) で使用している 16x16 タイルセット: "Dungeon Tileset II" by 0x72  (CC0 / Public Domain)  
-出典: <https://0x72.itch.io/dungeontileset-ii>
-プレイヤースプライト等の派生画像を配置する場合は同ライセンス準拠。クレジットは不要ですが本リポジトリでは参考として記載しています。
+1. リポジトリ取得
+2. `.env` に DB 接続文字列 (DATABASE_URL) を設定
+3. Prisma マイグレーション適用: `npx prisma migrate deploy` (あるいは `prisma migrate dev`)
+4. シード (任意): `node prisma/seed.js`
+5. ローカル起動 (Vercel CLI 例): `vercel dev` または `npm run dev` (設定している場合)
 
-## データモデル
+Prisma スキーマは `prisma/schema.prisma` 参照。新しいテーブルやフィールド追加時はマイグレーションを作成してください。
+
+## データモデル概要
 
 | Model | 主なフィールド | 備考 |
 |-------|----------------|------|
 | Staff | id, name, kana, position, joined, birthDate, createdAt | joined/birthDate は Date |
-| Criteria | id, name, description, category, sortOrder, createdAt | category 既定 '共通'; description は `<br>` 保存可 |
-| Evaluation | id, staffId, criteriaId, status, score?, comments?, createdAt | status: not-started / learning / done; comments JSON({testedBy, testedAt}) |
-| Log | id, event, message, createdAt | 最新 200 件保持 |
+| Criteria | id, name, description, category, sortOrder, createdAt | description は `<br>` 埋め込み保存許可 |
+| Evaluation | id, staffId, criteriaId, status, comments(JSON), createdAt | status 3 値循環 / comments にテスト実施者情報 |
+| Log | id, event, message, createdAt | 最新 200 保持 (古い順削除) |
+| GameScore | game, staffId, value, extra, meta(JSON) | RPG: value=レベル, extra=クリップ済ゴールド, meta=完全状態 |
 
 `comments` JSON 例:
-
 ```json
 {
     "testedBy": 12,
@@ -43,133 +60,111 @@ RPG (ミニゲーム) で使用している 16x16 タイルセット: "Dungeon T
 }
 ```
 
-## 🔐 サニタイズ方針
+## サニタイズ方針
 
-`api/_sanitize.js` の `sanitizeContent(raw, { allowBr })` を利用。
-
+`api/_sanitize.js` の `sanitizeContent(raw, { allowBr })` を利用し以下を除去/制限:
 - script / iframe / object / embed / svg / link / meta タグ除去
-- `javascript:` スキーム除去
+- `javascript:` スキーム禁止
 - on* イベント属性除去
-- `allowBr=true` の場合のみ `<br>` を素通し (他はエスケープ)
-- 適用対象: staff.name/kana/position, criteria.name/description(allowBr), evaluation.status, shared-note 本文
+- `allowBr=true` のときのみ `<br>` 素通し
 
-| HTTP | 意味 |
+適用対象フィールド: staff.name/kana/position, criteria.name/description(allowBr), evaluation.status, shared-note 本文
+
+## HTTP ステータス利用方針
+
+| Code | 意味 |
 |------|------|
-| 200  | 成功 |
-| 400  | バリデーションエラー / パラメータ不足 |
-| 405  | メソッド不許可 |
-| 500  | サーバ内部エラー |
+| 200 | 正常 |
+| 400 | バリデーション / パラメータ不足 |
+| 405 | メソッド不許可 |
+| 500 | サーバ内部エラー |
 
----
+## API 一覧 (抜粋)
 
-### 1. スタッフ API `/api/staff`
+### スタッフ `/api/staff`
+POST (新規) / PUT (更新 `?id`) / DELETE (削除 `?id`)
 
-| Method | 用途           | パラメータ       | Body 例                                                                 | 戻り値 |
-|--------|----------------|------------------|-------------------------------------------------------------------------|--------|
-| POST   | 新規追加       | なし             | `{ "name":"山田", "kana":"ヤマダ", "position":"社員", "birth_date":"2001-04-24" }` | `{ id, message }` |
-| PUT    | 更新           | `?id=number`     | 上記と同形式 (未指定は変更なし)                                         | `{ message }` |
-| DELETE | 削除           | `?id=number`     | -                                                                       | `{ message, deletedEvaluations }` |
+### 評価項目 `/api/criteria`
+POST / PUT (並び替え or 単一更新) / DELETE
 
-ログイベント: `staff:create`, `staff:update`, `staff:delete`
+### 評価 `/api/evaluations`
+GET 全件 / POST 新規 / PUT upsert / DELETE 単一
 
----
+### 一括評価更新 `/api/evaluations-batch`
+POST: status 正規化, comments テスト情報付与, clear 指定で削除
 
-### 2. 評価項目 API `/api/criteria`
+### 進捗集計 `/api/staff-progress`
+GET `?staffId` 任意
 
-| Method | 用途                    | パラメータ        | Body                                                                                                                 | 備考 |
-|--------|-------------------------|-------------------|----------------------------------------------------------------------------------------------------------------------|------|
-| POST   | 追加                    | なし              | `{ "name":"レジ操作", "category":"ホール", "description":"- ログイン<br>- 会計" }`                             | name 必須。category は {共通/ホール/キッチン/その他} 以外は共通 |
-| PUT    | 並び替え or 単一更新    | `?id` (単一時)    | 並び替え: `{ "items": [{"id":3,"sortOrder":0}, ...] }` または `{ "order": [{"id":3,"sort_order":1}, ...] }` / 単一更新: `{ "name":..., "category":..., "description":... }` | 並び替えは配列順を採用 |
-| DELETE | 削除                    | `?id=number`      | -                                                                                                                    | - |
+### ログ `/api/logs`
+POST 任意イベント追加 (200 件制限)
 
-ログイベント: `criteria:create`, `criteria:update`, `criteria:delete`, `criteria:reorder`
+### 共有メモ `/api/shared-note`
+POST 保存 (空文字も保存 / 15000 文字超 truncation)
 
----
+### エクスポート `/api/export`
+必要に応じ実装拡張前提 (現状プレースホルダ)
 
-### 3. 評価 API `/api/evaluations`
+### ヘルスチェック `/api/health`
+POST: `?action=debug-insert` で staff 1 行仮挿入
 
-| Method | 用途                   | パラメータ            | Body                                                                                       | 備考 |
-|--------|------------------------|-----------------------|--------------------------------------------------------------------------------------------|------|
-| GET    | 全評価 (降順)          | なし                  | -                                                                                          | 一覧用途 |
-| POST   | 新規作成               | なし                  | `{ "staff_id":1, "criteria_id":5, "status":"learning", "changed_by":2 }`             | status 省略時 `learning` |
-| PUT    | 更新 (無ければ作成)    | なし                  | `{ "staffId":1, "criteriaId":5, "status":"done", "changedBy":2 }`                  | upsert 動作 |
-| DELETE | 単一削除               | `?id=number`          | -                                                                                          | - |
+### RPG ゲーム API `/api/games/rpg`
 
-ステータス値: `not-started` / `learning` / `done` (UI 表示: 未着手 / 学習中 / 習得済み)
+メソッド:
+- GET `?staffId=` : 現在状態 + ショップ + ボス設定取得
+- POST 本体 `{ staffId, action, payload? }`
 
-ログイベント: `evaluation:create`, `evaluation:update`, `evaluation:delete`
+`action` 一覧:
+| action | 内容 |
+|--------|------|
+| init | ショップ/ボス設定同期 (state は既存 meta から) |
+| battle | 通常戦闘 (ランダム敵) |
+| boss | ボス戦 (何度でも) |
+| heal | 宿屋 (所持金 10% か最低 1G 消費, HP 全快) |
+| equip | 装備購入 `{ type }` |
+| pickup | フィールド宝箱開封 `{ x,y }` |
+| save | 手動セーブ (メタの再保存) |
 
----
+敗北時: レベル半減 (floor(level/2), 最低1), EXP 0, 所持金半減 (floor), 装備全消失, HP 全快。
 
-### 4. 評価一括更新 API `/api/evaluations-batch`
+### RPG ランキング API
+| エンドポイント | 内容 |
+|----------------|------|
+| `/api/games/scores?game=rpg` | レベルランキング (GameScore.value DESC) |
+| `/api/games/bossKills` | ボス討伐数ランキング (meta.bossKills DESC) |
 
-| Method | 用途                                   | Body 例 |
-|--------|----------------------------------------|---------|
+フロント `index.html` 下部 game-rankings セクションに「RPG レベル」「RPG ボス討伐数」を表示。ゲームカード側からは重複排除済み。
 
-動作: `status` 不正値→ `not-started` に正規化。`test.testedBy` (数値) で comments JSON `{ testedBy, testedAt }` 保存。`test.clear=true` で削除。
+## RPG 内部仕様メモ
 
-レスポンス例: `{ "message":"batch updated", "count":12 }`
+- レベル必要 EXP: `EXP_BASE + (lv-1)*EXP_PER_LV + floor(lv^2 * EXP_QUAD)`
+- 武器 ATK: 複数入手しても最大値のみ適用 (WEAPON_BONUS)
+- 防具 HP: 複数加算
+- ゴールド: DB 保存時 `extra` は 32bit 上限クリップ, メタ JSON にフル値
+- ボス討伐数: boss アクション勝利毎に +1 (敗北でリセットなし)
 
-ログイベント: `evaluation:batch-update` (メッセージ書式: `評価更新\n変更者：<名前>\nスタッフ：<複数>\n件数：N\n項目：<criteria一覧>`)
+## ステータス遷移 (評価)
+`not-started` → クリック → `learning` → クリック → `done` → クリック → `not-started`
+テスト完了は `comments` のみ更新し status は変えない。
 
----
+## 開発時チェックリスト
 
-### 5. スタッフ進捗集計 API `/api/staff-progress`
+- Prisma スキーマ変更後: `prisma migrate dev` 実行
+- API 追加時: 400/405/500 ハンドリング徹底
+- フロント入力は必ずサニタイズ経路を通す
+- GameScore 更新時: `recomputeDerived` 呼び出しで整合
 
-| モード   | パラメータ       | 戻り値例 |
-|----------|------------------|----------|
-| 個別一覧 | `?staffId` 任意  | `[ { staffId, totalCriteria, progressPercent, counts:{done,learning,notStarted}, tested } ]` |
+## アセットとライセンス表示
 
-`progressPercent = (tested / totalCriteria) * 100` (丸め)
+タイルセット: "Dungeon Tileset II" by 0x72 (CC0 / Public Domain)
+URL: https://0x72.itch.io/dungeontileset-ii
+派生スプライト (idle/run フレーム) も CC0 に準拠。
 
----
+## 今後の改善候補
 
-### 6. ログ API `/api/logs`
+- RPG: 戦闘演出簡易ログページング / クリティカルヒット / DOT ステータス
+- ランキング: 自動リフレッシュ間隔設定 / スタッフ名検索
+- 評価: 履歴差分表示 / 一括 CSV エクスポート
 
-| Method | 用途         | パラメータ                | Body 例                            | 備考 |
-|--------|--------------|---------------------------|------------------------------------|------|
-| POST   | 任意ログ追加 | なし                      | `{ "event":"custom", "message":"内容" }` | 追加後 200 件に prune |
-
-`addLog()` 仕様: 空 message は shared-note のみ許容。トランザクションで古い順削除。
-
----
-
-### 7. 共有メモ API `/api/shared-note`
-
-| Method | 用途       | Body 例                 | 備考 |
-|--------|------------|-------------------------|------|
-| POST   | 保存       | `{ "content":"文字列" }` | 15000 文字超は末尾 `...[省略]` 付与。空文字も保存 |
-
-ログイベント: `shared-note` (本文先頭行に "メモ更新")
-
----
-
-### 8. エクスポート API `/api/export`
-
-| Method | 用途            | 備考 |
-|--------|-----------------|------|
-
----
-
-### 9. ヘルスチェック `/api/health`
-
-| Method | 用途            | 備考 |
-|--------|-----------------|------|
-| POST   | デバッグ挿入     | `?action=debug-insert` で staff 1 行追加 |
-
----
-
-### 10. 内部ユーティリティ
-
-- `_log.js`: `addLog(event, message)` 追加 & 200件制限
-- `_sanitize.js`: サニタイズ共通関数
-
-## 🧪 ステータス遷移
-
-`not-started` → (クリック) → `learning` → (クリック) → `done` → (クリック) → `not-started`
-
-テスト完了は status を変えず `comments` のみ付帯管理。
-
-## 📞 サポート
-
-Issuesへ
+## サポート
+不具合 / 機能要望は Issue または Pull Request で報告してください。
