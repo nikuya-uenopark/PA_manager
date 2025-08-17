@@ -21,9 +21,9 @@ function newState(name) {
     maxHp: BASE_HP,
     atk: BASE_ATK,
     equips: [],
-  // boss再挑戦仕様に変更: defeatフラグは使用しないが互換のため残す
-  bossDefeated: false,
-  bossKills: 0, // 連続/累計討伐数
+    // boss再挑戦仕様に変更: defeatフラグは使用しないが互換のため残す
+    bossDefeated: false,
+    bossKills: 0, // 連続/累計討伐数
     nextExp: levelNeeded(1),
     items: [
       {
@@ -62,7 +62,7 @@ function recomputeDerived(state) {
   const shopItems = CFG.SHOP_ITEMS || {};
   for (const eq of equips) {
     const it = shopItems[eq];
-    if (it && typeof it.hp === 'number') armorBonus += it.hp;
+    if (it && typeof it.hp === "number") armorBonus += it.hp;
   }
   // 武器は複数所持しても最大値のみ反映 (CFG.WEAPON_BONUS)
   const weaponBonusTable = CFG.WEAPON_BONUS;
@@ -82,13 +82,13 @@ function recomputeDerived(state) {
 function getBossConfig() {
   const raw = CFG.BOSS || {};
   return {
-    level: typeof raw.level === 'number' ? raw.level : 1,
-    hp: typeof raw.hp === 'number' ? raw.hp : 50,
-    atk: typeof raw.atk === 'number' ? raw.atk : 5,
-    exp: typeof raw.exp === 'number' ? raw.exp : 20,
-    gold: typeof raw.gold === 'number' ? raw.gold : 30,
-    name: CFG.BOSS_NAME || '??ボス??',
-    spriteKey: CFG.BOSS_SPRITE_KEY || 'big_demon',
+    level: typeof raw.level === "number" ? raw.level : 1,
+    hp: typeof raw.hp === "number" ? raw.hp : 50,
+    atk: typeof raw.atk === "number" ? raw.atk : 5,
+    exp: typeof raw.exp === "number" ? raw.exp : 20,
+    gold: typeof raw.gold === "number" ? raw.gold : 30,
+    name: CFG.BOSS_NAME || "??ボス??",
+    spriteKey: CFG.BOSS_SPRITE_KEY || "big_demon",
   };
 }
 
@@ -156,14 +156,14 @@ module.exports = async function handler(req, res) {
       const record = await prisma.gameScore.findUnique({ where: key });
       let st = record?.meta || null;
       // 互換: 旧データで bossDefeated 未設定なら false 付与
-  if (st && typeof st.bossDefeated !== 'boolean') st.bossDefeated = false;
-  if (st && typeof st.bossKills !== 'number') st.bossKills = 0;
+      if (st && typeof st.bossDefeated !== "boolean") st.bossDefeated = false;
+      if (st && typeof st.bossKills !== "number") st.bossKills = 0;
       st = st ? recomputeDerived(st) : null;
       return res.json({
         state: st,
         record,
         shop: CFG.SHOP_ITEMS,
-  boss: getBossConfig(),
+        boss: getBossConfig(),
       });
     }
     if (req.method !== "POST")
@@ -177,11 +177,12 @@ module.exports = async function handler(req, res) {
     if (!staff) return res.status(404).json({ error: "staff not found" });
     const key = { game_staffId: { game: "rpg", staffId: Number(staffId) } };
     let record = await prisma.gameScore.findUnique({ where: key });
-  let state = record?.meta || null;
-  if (!state) state = newState(staff.name);
-  // 互換: bossDefeated が未定義なら false に固定
-  if (state && typeof state.bossDefeated !== 'boolean') state.bossDefeated = false;
-  if (state && typeof state.bossKills !== 'number') state.bossKills = 0;
+    let state = record?.meta || null;
+    if (!state) state = newState(staff.name);
+    // 互換: bossDefeated が未定義なら false に固定
+    if (state && typeof state.bossDefeated !== "boolean")
+      state.bossDefeated = false;
+    if (state && typeof state.bossKills !== "number") state.bossKills = 0;
     recomputeDerived(state); // 破損/旧データ対策
 
     let result = null;
@@ -189,7 +190,7 @@ module.exports = async function handler(req, res) {
       // 初期化時にショップ & ボス設定を返してフロント同期
       result = {
         shop: CFG.SHOP_ITEMS,
-  boss: getBossConfig(),
+        boss: getBossConfig(),
       };
     } else if (action === "heal") {
       // 宿屋: 所持金の10% (端数切り捨て) を支払い HP全回復。最低1G必要。
@@ -246,12 +247,17 @@ module.exports = async function handler(req, res) {
         name: bc.name,
         key: bc.spriteKey,
       };
-      const r = applyBattle(state, { ...boss });
-      if (r.victory) {
-        if (typeof state.bossKills !== 'number') state.bossKills = 0;
-        state.bossKills += 1;
+      try {
+        const r = applyBattle(state, { ...boss });
+        if (r.victory) {
+          if (typeof state.bossKills !== "number") state.bossKills = 0;
+          state.bossKills += 1;
+        }
+        result = { ...r, enemy: boss };
+      } catch (e) {
+        console.error("boss battle error", e);
+        return res.status(500).json({ error: "boss battle failed" });
       }
-      result = { ...r, enemy: boss };
     } else if (action === "equip") {
       const { type } = payload || {};
       const shopItems = CFG.SHOP_ITEMS;
@@ -264,8 +270,8 @@ module.exports = async function handler(req, res) {
       } else {
         state.gold -= shopItems[type].cost;
         state.equips.push(type);
-  recomputeDerived(state); // 装備の HP/ATK ボーナス反映
-  if (shopItems[type].hp) state.hp = state.maxHp; // HP増加装備購入時は全回復
+        recomputeDerived(state); // 装備の HP/ATK ボーナス反映
+        if (shopItems[type].hp) state.hp = state.maxHp; // HP増加装備購入時は全回復
         result = { msg: shopItems[type].msg };
       }
     } else if (action === "pickup") {
