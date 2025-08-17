@@ -26,21 +26,11 @@
 
 | Layer | 使用技術 |
 |-------|----------|
-| フロント | 素の HTML / CSS / Vanilla JS |
-| サーバ | Vercel Serverless Functions (Node.js) |
+| フロント | HTML / CSS / JS |
+| サーバ | Vercel Serverless Functions |
 | DB | PostgreSQL + Prisma ORM |
 | UI 資産 | Inter / Font Awesome |
 | 外部依存ライブラリ | なし |
-
-## セットアップ (開発)
-
-1. リポジトリ取得
-2. `.env` に DB 接続文字列 (DATABASE_URL) を設定
-3. Prisma マイグレーション適用: `npx prisma migrate deploy` (あるいは `prisma migrate dev`)
-4. シード (任意): `node prisma/seed.js`
-5. ローカル起動 (Vercel CLI 例): `vercel dev` または `npm run dev` (設定している場合)
-
-Prisma スキーマは `prisma/schema.prisma` 参照。新しいテーブルやフィールド追加時はマイグレーションを作成してください。
 
 ## データモデル概要
 
@@ -52,15 +42,8 @@ Prisma スキーマは `prisma/schema.prisma` 参照。新しいテーブルや�
 | Log | id, event, message, createdAt | 最新 200 保持 (古い順削除) |
 | GameScore | game, staffId, value, extra, meta(JSON) | RPG: value=レベル, extra=クリップ済ゴールド, meta=完全状態 |
 
-`comments` JSON 例:
-```json
-{
-    "testedBy": 12,
-    "testedAt": "2025-08-12T05:18:40.000Z"
-}
-```
 
-## サニタイズ方針
+## サニタイズ
 
 `api/_sanitize.js` の `sanitizeContent(raw, { allowBr })` を利用し以下を除去/制限:
 - script / iframe / object / embed / svg / link / meta タグ除去
@@ -70,7 +53,7 @@ Prisma スキーマは `prisma/schema.prisma` 参照。新しいテーブルや�
 
 適用対象フィールド: staff.name/kana/position, criteria.name/description(allowBr), evaluation.status, shared-note 本文
 
-## HTTP ステータス利用方針
+## HTTP ステータス
 
 | Code | 意味 |
 |------|------|
@@ -133,38 +116,11 @@ POST: `?action=debug-insert` で staff 1 行仮挿入
 | `/api/games/scores?game=rpg` | レベルランキング (GameScore.value DESC) |
 | `/api/games/bossKills` | ボス討伐数ランキング (meta.bossKills DESC) |
 
-フロント `index.html` 下部 game-rankings セクションに「RPG レベル」「RPG ボス討伐数」を表示。ゲームカード側からは重複排除済み。
-
-## RPG 内部仕様メモ
-
-- レベル必要 EXP: `EXP_BASE + (lv-1)*EXP_PER_LV + floor(lv^2 * EXP_QUAD)`
-- 武器 ATK: 複数入手しても最大値のみ適用 (WEAPON_BONUS)
-- 防具 HP: 複数加算
-- ゴールド: DB 保存時 `extra` は 32bit 上限クリップ, メタ JSON にフル値
-- ボス討伐数: boss アクション勝利毎に +1 (敗北でリセットなし)
-
-## ステータス遷移 (評価)
-`not-started` → クリック → `learning` → クリック → `done` → クリック → `not-started`
-テスト完了は `comments` のみ更新し status は変えない。
-
-## 開発時チェックリスト
-
-- Prisma スキーマ変更後: `prisma migrate dev` 実行
-- API 追加時: 400/405/500 ハンドリング徹底
-- フロント入力は必ずサニタイズ経路を通す
-- GameScore 更新時: `recomputeDerived` 呼び出しで整合
+フロント `index.html` 下部 game-rankings セクションに「RPG レベル」「RPG ボス討伐数」を表示。
 
 ## アセットとライセンス表示
 
 タイルセット: "Dungeon Tileset II" by 0x72 (CC0 / Public Domain)
 URL: https://0x72.itch.io/dungeontileset-ii
-派生スプライト (idle/run フレーム) も CC0 に準拠。
 
 ## 今後の改善候補
-
-- RPG: 戦闘演出簡易ログページング / クリティカルヒット / DOT ステータス
-- ランキング: 自動リフレッシュ間隔設定 / スタッフ名検索
-- 評価: 履歴差分表示 / 一括 CSV エクスポート
-
-## サポート
-不具合 / 機能要望は Issue または Pull Request で報告してください。
