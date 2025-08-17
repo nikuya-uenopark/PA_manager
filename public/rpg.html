@@ -1030,8 +1030,12 @@
         draw();
       }
       function renderBattleIntro(enemy) {
-        const enemySet = selectEnemySet(enemy.level);
-        const eIdle = enemyIdleFrames(enemySet.key).map((src) => {
+    // サーバーが enemy.key を返すようになったのでそれを優先してスプライト決定
+    // 互換: key が無い古いデータ/通信ならレベル帯から選択
+    const fallbackSet = selectEnemySet(enemy.level);
+    const spriteKey = enemy.key || fallbackSet.key;
+    const displayName = enemy.name || fallbackSet.label || "敵";
+    const eIdle = enemyIdleFrames(spriteKey).map((src) => {
           const im = new Image();
           im.src = src;
           return im;
@@ -1039,7 +1043,7 @@
         modalTitle.textContent = "バトル";
         modalBody.innerHTML = `<div id='battleArea' style='display:flex;flex-direction:column;gap:10px;'>
           <div style='display:flex;justify-content:space-between;font-size:12px;'>
-            <div>${enemy.name || enemySet.label || "敵"} Lv${enemy.level}</div>
+      <div>${displayName} Lv${enemy.level}</div>
             <div>HP <span id='enemyHpText'>${enemy.hp}/${
           enemy.maxHp
         }</span></div>
@@ -1058,9 +1062,7 @@
                 <img id='enemySprite' style='image-rendering:pixelated;width:64px;height:64px;' src='${
                   eIdle[0].src
                 }' />
-                <div style='font-size:10px;'>${
-                  enemy.name || enemySet.label || "敵"
-                }</div>
+        <div style='font-size:10px;'>${displayName}</div>
               </div>
             </div>
           </div>
