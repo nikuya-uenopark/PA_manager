@@ -118,7 +118,7 @@ POST: `?action=debug-insert` で staff 1 行仮挿入
 
 フロント `index.html` 下部 game-rankings セクションに「RPG レベル」「RPG ボス討伐数」を表示。
 
-## アセットとライセンス表示
+## アセット
 
 - タイルセット: "Dungeon Tileset II" by 0x72 (CC0 / Public Domain)
 - URL: https://0x72.itch.io/dungeontileset-ii
