@@ -120,5 +120,5 @@ POST: `?action=debug-insert` で staff 1 行仮挿入
 
 ## アセットとライセンス表示
 
-タイルセット: "Dungeon Tileset II" by 0x72 (CC0 / Public Domain)
-URL: https://0x72.itch.io/dungeontileset-ii
+- タイルセット: "Dungeon Tileset II" by 0x72 (CC0 / Public Domain)
+- URL: https://0x72.itch.io/dungeontileset-ii
