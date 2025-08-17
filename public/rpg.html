@@ -651,8 +651,14 @@
         const r = await api("init");
         if (r && r.state) {
           state = r.state;
-          if (r.result?.shop) applyShopConfig(r.result.shop);
-          if (r.result?.boss) bossConfig = r.result.boss;
+          // サーバー仕様変更: init 応答の shop / boss をトップレベルから取得 (後方互換で result.* も見る)
+          const shopCfg = r.shop || r.result?.shop;
+          const bossCfg = r.boss || r.result?.boss;
+          if (shopCfg) applyShopConfig(shopCfg);
+            if (bossCfg) {
+              bossConfig = bossCfg;
+              loadBossSprite();
+            }
           updateStats();
           draw();
           fadeMessage("ロード完了！！");

@@ -78,6 +78,20 @@ function recomputeDerived(state) {
   return state;
 }
 
+// ボス設定フォールバック: rpgConfig が編集中で一時的に BOSS / BOSS_SPRITE_KEY が欠落しても 500 を出さない
+function getBossConfig() {
+  const raw = CFG.BOSS || {};
+  return {
+    level: typeof raw.level === 'number' ? raw.level : 1,
+    hp: typeof raw.hp === 'number' ? raw.hp : 50,
+    atk: typeof raw.atk === 'number' ? raw.atk : 5,
+    exp: typeof raw.exp === 'number' ? raw.exp : 20,
+    gold: typeof raw.gold === 'number' ? raw.gold : 30,
+    name: CFG.BOSS_NAME || '??ボス??',
+    spriteKey: CFG.BOSS_SPRITE_KEY || 'big_demon',
+  };
+}
+
 function applyBattle(state, enemy) {
   // ターン制: 先手プレイヤー。イベント列を生成してフロントでアニメ再生可能にする
   const log = [];
@@ -149,7 +163,7 @@ module.exports = async function handler(req, res) {
         state: st,
         record,
         shop: CFG.SHOP_ITEMS,
-        boss: { level: CFG.BOSS.level, hp: CFG.BOSS.hp, name: CFG.BOSS_NAME, spriteKey: CFG.BOSS_SPRITE_KEY },
+  boss: getBossConfig(),
       });
     }
     if (req.method !== "POST")
@@ -175,7 +189,7 @@ module.exports = async function handler(req, res) {
       // 初期化時にショップ & ボス設定を返してフロント同期
       result = {
         shop: CFG.SHOP_ITEMS,
-        boss: { level: CFG.BOSS.level, hp: CFG.BOSS.hp, name: CFG.BOSS_NAME, spriteKey: CFG.BOSS_SPRITE_KEY },
+  boss: getBossConfig(),
       };
     } else if (action === "heal") {
       // 宿屋: 所持金の10% (端数切り捨て) を支払い HP全回復。最低1G必要。
@@ -222,14 +236,15 @@ module.exports = async function handler(req, res) {
       result = { ...battle, enemy };
     } else if (action === "boss") {
       // 常に挑戦可能 (勝ってもフラグ固定せず繰り返し OK)
+      const bc = getBossConfig();
       const boss = {
-        hp: CFG.BOSS.hp,
-        atk: CFG.BOSS.atk,
-        exp: CFG.BOSS.exp,
-        gold: CFG.BOSS.gold,
-        level: CFG.BOSS.level,
-        name: CFG.BOSS_NAME,
-        key: CFG.BOSS_SPRITE_KEY,
+        hp: bc.hp,
+        atk: bc.atk,
+        exp: bc.exp,
+        gold: bc.gold,
+        level: bc.level,
+        name: bc.name,
+        key: bc.spriteKey,
       };
       const r = applyBattle(state, { ...boss });
       if (r.victory) {
