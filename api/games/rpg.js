@@ -131,9 +131,24 @@ function applyBattle(state, enemy) {
     });
   }
   if (state.hp <= 0) {
-    log.push("敗北... HPを全快して再挑戦しよう");
-    const defeat = { stateHpAfter: state.hp, enemyHpAfter: enemy.hp };
-    state.hp = state.maxHp; // ペナルティ無し簡易版
+    const prevLevel = state.level;
+    const newLevel = Math.max(1, Math.floor(state.level / 2));
+    if (newLevel < prevLevel) {
+      state.level = newLevel;
+      state.exp = 0; // シンプル: レベルダウン時に経験値はリセット (必要なら残存割合方式に変更可)
+      recomputeDerived(state);
+    }
+    state.hp = state.maxHp; // 蘇生 (HPのみ全快)
+    log.push(
+      `敗北... レベルペナルティ -${prevLevel - state.level} (Lv${prevLevel}→Lv${state.level}) HPは全快`
+    );
+    const defeat = {
+      stateHpAfter: state.hp,
+      enemyHpAfter: enemy.hp,
+      levelBefore: prevLevel,
+      levelAfter: state.level,
+      levelLost: prevLevel - state.level,
+    };
     return { state, victory: false, log, events, defeat };
   }
   // 勝利処理
