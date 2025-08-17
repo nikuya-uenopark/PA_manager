@@ -46,7 +46,13 @@ function newState(name) {
 }
 
 function levelNeeded(lv) {
-  const S = CFG.LEVEL_SCALING || { HP_PER:6, ATK_PER:2, EXP_BASE:20, EXP_PER_LV:15, EXP_QUAD:0 };
+  const S = CFG.LEVEL_SCALING || {
+    HP_PER: 6,
+    ATK_PER: 2,
+    EXP_BASE: 20,
+    EXP_PER_LV: 15,
+    EXP_QUAD: 0,
+  };
   return (
     S.EXP_BASE +
     (lv - 1) * S.EXP_PER_LV +
@@ -61,7 +67,7 @@ function recomputeDerived(state) {
   if (!state) return state;
   const equips = state.equips || [];
   // レベル由来の成長計算 + 装備ボーナス
-  const S = CFG.LEVEL_SCALING || { HP_PER:6, ATK_PER:2 };
+  const S = CFG.LEVEL_SCALING || { HP_PER: 6, ATK_PER: 2 };
   const levelBonusHp = (state.level - 1) * (S.HP_PER || 6);
   const levelBonusAtk = (state.level - 1) * (S.ATK_PER || 2);
   // 防具HPボーナス: SHOP_ITEMS の hp プロパティ合算 (巨大数値も反映) ※以前の固定+15/+30を廃止
@@ -329,7 +335,11 @@ module.exports = async function handler(req, res) {
     record = await prisma.gameScore.upsert({
       where: key,
       // extra フィールドは Prisma Int (32bit) のため GOLD が上限超過するとエラー -> クリップ
-      update: { value: state.level, extra: Math.min(state.gold, INT32_MAX), meta: state },
+      update: {
+        value: state.level,
+        extra: Math.min(state.gold, INT32_MAX),
+        meta: state,
+      },
       create: {
         game: "rpg",
         staffId: Number(staffId),
