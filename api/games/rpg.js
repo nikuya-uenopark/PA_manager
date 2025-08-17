@@ -138,9 +138,18 @@ function applyBattle(state, enemy) {
       state.exp = 0; // シンプル: レベルダウン時に経験値はリセット (必要なら残存割合方式に変更可)
       recomputeDerived(state);
     }
+    // 敗北ペナルティ: ゴールド半減 (切り捨て) & 装備全ロスト
+  const prevGold = state.gold;
+  // 残すのは floor(prevGold/2) (半減後残額) / 失うのは prevGold - newGold
+  const newGold = Math.floor(prevGold / 2);
+  const lostGold = prevGold - newGold;
+  state.gold = newGold;
+    const lostEquips = [...state.equips];
+    state.equips = [];
+    recomputeDerived(state); // 装備リセット後再計算
     state.hp = state.maxHp; // 蘇生 (HPのみ全快)
     log.push(
-      `敗北... レベルペナルティ -${prevLevel - state.level} (Lv${prevLevel}→Lv${state.level}) HPは全快`
+      `敗北... Lv${prevLevel}→Lv${state.level} 所持金-${lostGold}G 装備${lostEquips.length}個ロスト (HP全快)`
     );
     const defeat = {
       stateHpAfter: state.hp,
@@ -148,6 +157,9 @@ function applyBattle(state, enemy) {
       levelBefore: prevLevel,
       levelAfter: state.level,
       levelLost: prevLevel - state.level,
+      goldBefore: prevGold,
+      goldLost: lostGold,
+      equipsLost: lostEquips,
     };
     return { state, victory: false, log, events, defeat };
   }
