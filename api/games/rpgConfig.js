@@ -2,6 +2,13 @@
 // ここを変更すればフロント/バック両方に反映しやすくする（※フロント用は別ファイル rpg-config.js を参照）
 
 module.exports = {
+  LEVEL_SCALING: {
+    HP_PER: 6,          // 1レベル毎 HP増加量 (基礎)
+    ATK_PER: 2,         // 1レベル毎 ATK増加量
+    EXP_BASE: 30,       // Lv1->2 必要基礎
+    EXP_PER_LV: 20,     // 線形成分
+    EXP_QUAD: 0.04,     // 二次係数 (緩やかな二次: lv^2 * 0.04)
+  },
   ENEMIES: [
     { key: "chort", name: "インプ", min: 1, max: 5 },
     { key: "big_zombie", name: "ゾンビ", min: 6, max: 15 },

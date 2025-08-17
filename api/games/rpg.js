@@ -46,7 +46,12 @@ function newState(name) {
 }
 
 function levelNeeded(lv) {
-  return 20 + (lv - 1) * 15;
+  const S = CFG.LEVEL_SCALING || { HP_PER:6, ATK_PER:2, EXP_BASE:20, EXP_PER_LV:15, EXP_QUAD:0 };
+  return (
+    S.EXP_BASE +
+    (lv - 1) * S.EXP_PER_LV +
+    Math.floor(lv * lv * (S.EXP_QUAD || 0))
+  );
 }
 function randInt(a, b) {
   return Math.floor(Math.random() * (b - a + 1)) + a;
@@ -56,8 +61,9 @@ function recomputeDerived(state) {
   if (!state) return state;
   const equips = state.equips || [];
   // レベル由来の成長計算 + 装備ボーナス
-  const levelBonusHp = (state.level - 1) * 6;
-  const levelBonusAtk = (state.level - 1) * 2;
+  const S = CFG.LEVEL_SCALING || { HP_PER:6, ATK_PER:2 };
+  const levelBonusHp = (state.level - 1) * (S.HP_PER || 6);
+  const levelBonusAtk = (state.level - 1) * (S.ATK_PER || 2);
   // 防具HPボーナス: SHOP_ITEMS の hp プロパティ合算 (巨大数値も反映) ※以前の固定+15/+30を廃止
   let armorBonus = 0;
   const shopItems = CFG.SHOP_ITEMS || {};
