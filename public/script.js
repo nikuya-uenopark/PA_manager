@@ -1957,7 +1957,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
             v = (v / 1000).toFixed(3) + "秒";
           }
             if (game === "rpg") {
-            v = "Lv" + v + (r.meta?.bossDefeated ? " ⭐" : "");
+            v = "Lv" + v; // ボス撃破星マーク削除
           }
           return `<li><span>${i + 1}. ${r.staff?.name || "?"}</span><span>${v}</span></li>`;
         })
