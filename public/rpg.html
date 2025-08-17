@@ -1475,6 +1475,22 @@
         } else if (currentModal === "shop") {
           modalTitle.textContent = "武器屋";
           modalBody.innerHTML = shopListHtml();
+          // クリックで即購入できるようにイベント付与
+          modalBody.querySelectorAll('[data-menu-index]').forEach(el => {
+            el.addEventListener('click', () => {
+              const idx = Number(el.getAttribute('data-menu-index'));
+              if (!Number.isNaN(idx)) modalFocus = idx;
+              const item = shopCatalog[modalFocus];
+              if (!item) return;
+              if (!(state.equips || []).includes(item.type)) {
+                doAction('equip-' + item.type);
+              } else {
+                fadeMessage('既に所持');
+              }
+              // 再描画して表示更新
+              setTimeout(() => { if (currentModal === 'shop') { modalBody.innerHTML = shopListHtml(); refreshModalFocus(); } }, 50);
+            }, { once: false });
+          });
         } else if (currentModal === "battle") {
           /* battle表示は startBattle 内 */
         }
