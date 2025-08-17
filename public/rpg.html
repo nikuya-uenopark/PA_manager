@@ -716,6 +716,48 @@
             updateStats();
             log(r.result?.msg);
           }
+        } else if (k === "equip-spear") {
+          r = await api("equip", { type: "spear" });
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg);
+          }
+        } else if (k === "equip-wand") {
+          r = await api("equip", { type: "wand" });
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg);
+          }
+        } else if (k === "equip-longsword") {
+          r = await api("equip", { type: "longsword" });
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg);
+          }
+        } else if (k === "equip-mystic_staff") {
+          r = await api("equip", { type: "mystic_staff" });
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg);
+          }
+        } else if (k === "equip-greatsword") {
+          r = await api("equip", { type: "greatsword" });
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg);
+          }
+        } else if (k === "equip-plate_armor") {
+          r = await api("equip", { type: "plate_armor" });
+          if (r?.state) {
+            state = r.state;
+            updateStats();
+            log(r.result?.msg);
+          }
         } else if (k === "boss") {
           r = await api("boss");
           if (r?.state) {
