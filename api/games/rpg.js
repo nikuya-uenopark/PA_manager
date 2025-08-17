@@ -12,36 +12,36 @@ const BASE_HP = 30;
 const BASE_ATK = 5;
 const INT32_MAX = 2147483647; // Postgres Int 上限 (2^31-1)
 
-function newState(name) {
+// 初期配置アイテム (不変) - 新規 state 作成ごとにディープコピー
+const INITIAL_ITEMS = Object.freeze([
+  { type: "chest", x: 7, y: 3, opened: false, reward: { gold: 30, exp: 10 } },
+  { type: "chest", x: 10, y: 7, opened: false, reward: { gold: 50, exp: 0 } },
+]);
+
+/**
+ * 新規プレイヤー state 生成
+ * @param {string} name スタッフ名
+ * @param {object} [opts]
+ * @param {number} [opts.level=1] 初期レベル (将来チュートリアルスキップ等で利用)
+ * @param {number} [opts.gold=0] 初期所持金
+ */
+function newState(name, opts = {}) {
+  const level = opts.level ?? 1;
+  const gold = opts.gold ?? 0;
   return {
     name,
-    level: 1,
+    level,
     exp: 0,
-    gold: 0,
+    gold,
     hp: BASE_HP,
     maxHp: BASE_HP,
     atk: BASE_ATK,
     equips: [],
-    // boss再挑戦仕様に変更: defeatフラグは使用しないが互換のため残す
-    bossDefeated: false,
+    // bossDefeated はレガシーデータ互換のため後段の互換処理で付与する (ここでは持たない)
     bossKills: 0, // 連続/累計討伐数
-    nextExp: levelNeeded(1),
-    items: [
-      {
-        type: "chest",
-        x: 7,
-        y: 3,
-        opened: false,
-        reward: { gold: 30, exp: 10 },
-      },
-      {
-        type: "chest",
-        x: 10,
-        y: 7,
-        opened: false,
-        reward: { gold: 50, exp: 0 },
-      },
-    ],
+    nextExp: levelNeeded(level),
+    // アイテムはコピー (凍結定数を破壊しない)
+    items: INITIAL_ITEMS.map((it) => ({ ...it, reward: { ...it.reward } })),
   };
 }
 
