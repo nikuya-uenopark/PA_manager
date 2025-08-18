@@ -1888,7 +1888,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
     const prev =
       playerSelect.value || localStorage.getItem("gameSelectedStaffId") || "";
     let html =
-      '<option value="">-- プレイヤー選択 (全スタッフ) --</option>' +
+      '<option value="">-- プレイヤー選択 --</option>' +
       staff.map((s) => `<option value="${s.id}">${s.name}</option>`).join("");
     playerSelect.innerHTML = html;
     if (prev && staff.some((s) => String(s.id) === prev)) {
