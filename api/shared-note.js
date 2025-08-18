@@ -22,10 +22,12 @@ module.exports = async function handler(req, res) {
       });
     }
     if (req.method === "POST") {
-      const { content, ops, comm, stoveDate, stoveNumber, opsFont, commFont } = req.body || {};
+      const { content, ops, comm, stoveDate, stoveNumber, opsFont, commFont } =
+        req.body || {};
       const rawOps = (ops !== undefined ? ops : content) || "";
       const rawComm = comm || "";
-      const clip = (s) => (s.length > 15000 ? s.slice(0, 15000) + "\n...[省略]" : s);
+      const clip = (s) =>
+        s.length > 15000 ? s.slice(0, 15000) + "\n...[省略]" : s;
       const sanitizedOps = sanitizeContent(clip(String(rawOps)));
       const sanitizedComm = sanitizeContent(clip(String(rawComm)));
       const saved = await prisma.sharedNote.upsert({
@@ -49,12 +51,18 @@ module.exports = async function handler(req, res) {
         },
         select: { updatedAt: true },
       });
-      try { await addLog("shared-note", "メモ更新"); } catch {}
-      return res.status(200).json({ message: "saved", updatedAt: saved.updatedAt });
+      try {
+        await addLog("shared-note", "メモ更新");
+      } catch {}
+      return res
+        .status(200)
+        .json({ message: "saved", updatedAt: saved.updatedAt });
     }
     return res.status(405).json({ error: "Method Not Allowed" });
   } catch (e) {
     console.error("shared-note api error", e);
-    return res.status(500).json({ error: "shared-note failed", detail: e.message });
+    return res
+      .status(500)
+      .json({ error: "shared-note failed", detail: e.message });
   }
 };
