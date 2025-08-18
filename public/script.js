@@ -2015,11 +2015,25 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
     });
   if (reactionStopBtn)
     reactionStopBtn.addEventListener("click", async () => {
-      if (!reactionState.started || reactionState.reacted) return;
+      if (reactionState.reacted) return; // 二重押下防止
+      // まだ開始前に押した → フライング扱い
+      if (!reactionState.started) {
+        reactionState.reacted = true;
+        if (reactionState.timerId) {
+          clearTimeout(reactionState.timerId);
+          reactionState.timerId = null;
+        }
+        reactionStatus.textContent = "フライング！";
+        reactionStatus.style.color = "#f97316"; // オレンジ系
+        reactionStartBtn.disabled = false;
+        reactionStopBtn.disabled = true;
+        return; // スコア送信なし
+      }
+      // 正常計測
       reactionState.reacted = true;
-  const elapsed = Math.round(performance.now() - reactionState.startTime);
-  const sec = (elapsed / 1000).toFixed(3);
-  reactionStatus.textContent = `結果: ${sec}秒`;
+      const elapsed = Math.round(performance.now() - reactionState.startTime);
+      const sec = (elapsed / 1000).toFixed(3);
+      reactionStatus.textContent = `結果: ${sec}秒`;
       reactionStartBtn.disabled = false;
       reactionStopBtn.disabled = true;
       submitScore("reaction", elapsed, null);
