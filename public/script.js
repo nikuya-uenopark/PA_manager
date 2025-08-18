@@ -182,7 +182,6 @@ class PAManager {
         if (pinError)
           pinError.textContent =
             "コードが一致しません。入力をリセットしました。";
-        // PINをリセット
         this._resetPin();
         const digitsRow = document.getElementById("loginDigitsRow");
         if (digitsRow) {
@@ -1829,9 +1828,10 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
       // 進行中は無視
       if (this.state.timerId || this.state.started) return;
       this.reset();
-      reactionStatus.textContent = "色が変わったらストップ...";
+      reactionStatus.textContent = "ランダム待ち...(早押し=フライング)";
       reactionStatus.style.color = "";
-      reactionStopBtn.disabled = true;
+      // フライング判定のため待機中もSTOPボタン有効
+      reactionStopBtn.disabled = false;
       reactionStartBtn.disabled = true;
       const wait = 800 + Math.random() * 2200;
       this.state.timerId = setTimeout(() => {
