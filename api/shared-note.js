@@ -92,8 +92,8 @@ module.exports = async function handler(req, res) {
       if (Object.keys(metaObj).length)
         metaLine = JSON.stringify(metaObj) + "\n";
       // ログ出力フォーマット
-      const logBody = `${metaLine}[業務]\n${sanitizedOps}\n---\n[連絡]\n${sanitizedComm}`;
-      await addLog("shared-note", `メモ更新\n${logBody}`).catch(() => {});
+  // ログは詳細本文を残さず固定文のみ
+  await addLog("shared-note", "メモ更新").catch(() => {});
       res.status(200).json({ message: "saved" });
     } else {
       res.status(405).json({ error: "Method Not Allowed" });

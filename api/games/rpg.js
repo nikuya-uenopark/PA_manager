@@ -375,9 +375,6 @@ module.exports = async function handler(req, res) {
         meta: state,
       },
     });
-    try {
-      await addLog("rpg", `rpg action ${action} by staff#${staffId}`);
-    } catch {}
     return res.json({ state, result, record });
   } catch (e) {
     console.error(e);

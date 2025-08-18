@@ -47,12 +47,6 @@ module.exports = async function handler(req, res) {
         update: { value, extra, meta },
         create: { game, staffId: Number(staffId), value, extra, meta },
       });
-      try {
-        await addLog(
-          "game_score",
-          `${game} score updated by staff#${staffId} -> ${value}`
-        );
-      } catch {}
       return res.json(saved);
     }
     return res.status(405).json({ error: "Method not allowed" });
