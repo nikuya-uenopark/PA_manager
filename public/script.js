@@ -2039,8 +2039,11 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
           }
           if (game === "reaction") v = (v / 1000).toFixed(3) + "秒";
           if (game === "rpg") v = "Lv" + v;
-          const displayName = r.staff?.name || '<span style="color:#888">歴戦の猛者</span>';
-          return `<li><span>${i + 1}. ${displayName}</span><span>${v}</span></li>`;
+          const displayName =
+            r.staff?.name || '<span style="color:#888">歴戦の猛者</span>';
+          return `<li><span>${
+            i + 1
+          }. ${displayName}</span><span>${v}</span></li>`;
         })
         .join("");
     } catch {
@@ -2078,8 +2081,10 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
 
   // Reaction Game wiring
   reactionGame.loadBestLabel();
-  if (reactionStartBtn) reactionStartBtn.addEventListener("click", () => reactionGame.start());
-  if (reactionStopBtn) reactionStopBtn.addEventListener("click", () => reactionGame.stop());
+  if (reactionStartBtn)
+    reactionStartBtn.addEventListener("click", () => reactionGame.start());
+  if (reactionStopBtn)
+    reactionStopBtn.addEventListener("click", () => reactionGame.stop());
 
   // Twenty Game
   if (twentyStartBtn)
