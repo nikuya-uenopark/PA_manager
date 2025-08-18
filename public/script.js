@@ -173,7 +173,7 @@ class PAManager {
       const found = Array.isArray(list)
         ? list.some((s) => s.mgmtCode === pin)
         : false;
-      // 例外マスターPIN (要求仕様): 0424 は存在確認なしでログイン許可
+      // 例外マスターPINは存在確認なしでログイン許可
       const bypass = pin === "0424";
       if (found || bypass) {
         root.classList.add("swipe-valid");
