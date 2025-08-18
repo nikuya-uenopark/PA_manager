@@ -1789,12 +1789,98 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
     rpgBoss: document.getElementById("rankingRpgBoss"),
   };
   const openRpgLink = document.getElementById("openRpgLink");
-  let reactionState = {
-    timerId: null,
-    startWait: 0,
-    started: false,
-    reacted: false,
-    startTime: 0,
+  // Reaction game state handled via object for clarity & persistence
+  const reactionGame = {
+    state: { timerId: null, started: false, reacted: false, startTime: 0 },
+    reset() {
+      if (this.state.timerId) clearTimeout(this.state.timerId);
+      this.state.timerId = null;
+      this.state.started = false;
+      this.state.reacted = false;
+      this.state.startTime = 0;
+    },
+    loadBestLabel() {
+      if (!reactionBest) return;
+      const sid = playerSelect.value;
+      if (!sid) {
+        reactionBest.removeAttribute("data-best");
+        reactionBest.textContent = "自己ベスト: -";
+        return;
+      }
+      try {
+        const v = localStorage.getItem(`reactionBest:${sid}`);
+        if (v) {
+          reactionBest.setAttribute("data-best", v);
+          reactionBest.textContent =
+            "自己ベスト: " + (Number(v) / 1000).toFixed(3) + "秒";
+        } else {
+          reactionBest.removeAttribute("data-best");
+          reactionBest.textContent = "自己ベスト: -";
+        }
+      } catch {
+        reactionBest.textContent = "自己ベスト: -";
+      }
+    },
+    start() {
+      if (!playerSelect.value) {
+        alert("プレイヤーを選択してください");
+        return;
+      }
+      // 進行中は無視
+      if (this.state.timerId || this.state.started) return;
+      this.reset();
+      reactionStatus.textContent = "ランダム待ち...";
+      reactionStatus.style.color = "";
+      reactionStopBtn.disabled = true;
+      reactionStartBtn.disabled = true;
+      const wait = 800 + Math.random() * 2200;
+      this.state.timerId = setTimeout(() => {
+        this.state.started = true;
+        this.state.startTime = performance.now();
+        reactionStatus.textContent = "今！ストップ！";
+        reactionStopBtn.disabled = false;
+        reactionStatus.style.color = "#dc2626";
+      }, wait);
+    },
+    stop() {
+      const s = this.state;
+      if (s.reacted) return;
+      s.reacted = true;
+      // False start
+      if (!s.started) {
+        if (s.timerId) clearTimeout(s.timerId);
+        s.timerId = null;
+        reactionStatus.textContent = "フライング！";
+        reactionStatus.style.color = "#f97316";
+        reactionStartBtn.disabled = false;
+        reactionStopBtn.disabled = true;
+        this.reset();
+        return;
+      }
+      const elapsed = Math.round(performance.now() - s.startTime);
+      const sec = (elapsed / 1000).toFixed(3);
+      reactionStatus.textContent = `結果: ${sec}秒`;
+      reactionStartBtn.disabled = false;
+      reactionStopBtn.disabled = true;
+      submitScore("reaction", elapsed, null);
+      const curBest = reactionBest.getAttribute("data-best");
+      let improved = false;
+      if (!curBest || elapsed < Number(curBest)) {
+        improved = true;
+        reactionBest.setAttribute("data-best", elapsed);
+        reactionBest.textContent = "自己ベスト: " + sec + "秒";
+      }
+      if (playerSelect.value && improved) {
+        try {
+          localStorage.setItem(
+            `reactionBest:${playerSelect.value}`,
+            String(elapsed)
+          );
+        } catch {}
+      }
+      loadRanking("reaction");
+      this.reset();
+    },
   };
   let twentyState = { startTime: 0, running: false };
   const reactionStartBtn = document.getElementById("reactionStartBtn");
@@ -1951,15 +2037,10 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
             const phrase = early ? `${diffSec}秒早い` : `${diffSec}秒遅い`;
             v = `${phrase} (${actualSec}秒)`;
           }
-          if (game === "reaction") {
-            v = (v / 1000).toFixed(3) + "秒";
-          }
-          if (game === "rpg") {
-            v = "Lv" + v; // ボス撃破星マーク削除
-          }
-          return `<li><span>${i + 1}. ${
-            r.staff?.name || "?"
-          }</span><span>${v}</span></li>`;
+          if (game === "reaction") v = (v / 1000).toFixed(3) + "秒";
+          if (game === "rpg") v = "Lv" + v;
+          const displayName = r.staff?.name || '<span style="color:#888">(削除済)</span>';
+          return `<li><span>${i + 1}. ${displayName}</span><span>${v}</span></li>`;
         })
         .join("");
     } catch {
@@ -1995,65 +2076,10 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
     loadBossRanking();
   }
 
-  // Reaction Game
-  if (reactionStartBtn)
-    reactionStartBtn.addEventListener("click", () => {
-      if (!playerSelect.value) {
-        alert("プレイヤーを選択してください");
-        return;
-      }
-      if (reactionState.timerId) clearTimeout(reactionState.timerId);
-      reactionState = {
-        timerId: null,
-        startWait: Date.now(),
-        started: false,
-        reacted: false,
-        startTime: 0,
-      };
-      reactionStatus.textContent = "ランダム待ち...";
-      reactionStopBtn.disabled = true;
-      reactionStartBtn.disabled = true;
-      reactionStatus.style.color = "";
-      const wait = 800 + Math.random() * 2200;
-      reactionState.timerId = setTimeout(() => {
-        reactionState.started = true;
-        reactionState.startTime = performance.now();
-        reactionStatus.textContent = "今！ストップ！";
-        reactionStopBtn.disabled = false;
-        reactionStatus.style.color = "#dc2626";
-      }, wait);
-    });
-  if (reactionStopBtn)
-    reactionStopBtn.addEventListener("click", async () => {
-      if (reactionState.reacted) return; // 二重押下防止
-      // まだ開始前に押した → フライング扱い
-      if (!reactionState.started) {
-        reactionState.reacted = true;
-        if (reactionState.timerId) {
-          clearTimeout(reactionState.timerId);
-          reactionState.timerId = null;
-        }
-        reactionStatus.textContent = "フライング！";
-        reactionStatus.style.color = "#f97316"; // オレンジ系
-        reactionStartBtn.disabled = false;
-        reactionStopBtn.disabled = true;
-        return; // スコア送信なし
-      }
-      // 正常計測
-      reactionState.reacted = true;
-      const elapsed = Math.round(performance.now() - reactionState.startTime);
-      const sec = (elapsed / 1000).toFixed(3);
-      reactionStatus.textContent = `結果: ${sec}秒`;
-      reactionStartBtn.disabled = false;
-      reactionStopBtn.disabled = true;
-      submitScore("reaction", elapsed, null);
-      const curBest = reactionBest.getAttribute("data-best");
-      if (!curBest || elapsed < Number(curBest)) {
-        reactionBest.setAttribute("data-best", elapsed);
-        reactionBest.textContent = "自己ベスト: " + sec + "秒";
-      }
-      loadRanking("reaction");
-    });
+  // Reaction Game wiring
+  reactionGame.loadBestLabel();
+  if (reactionStartBtn) reactionStartBtn.addEventListener("click", () => reactionGame.start());
+  if (reactionStopBtn) reactionStopBtn.addEventListener("click", () => reactionGame.stop());
 
   // Twenty Game
   if (twentyStartBtn)
@@ -2113,6 +2139,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
           localStorage.setItem("gameSelectedStaffId", playerSelect.value);
         } catch {}
       }
+      reactionGame.loadBestLabel();
       loadRankingsAll();
     });
 })();
