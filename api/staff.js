@@ -138,13 +138,17 @@ module.exports = async function handler(req, res) {
           where: { id: sid },
           select: { name: true, position: true },
         });
-        if (!before) return { before: null, evals: 0 };
+        if (!before) return { before: null, evals: 0, gameScores: 0 };
         // 関連評価を先に削除（外部キー制約回避）
         const delEval = await tx.evaluation.deleteMany({
           where: { staffId: sid },
         });
+        // ゲームスコア(RPG等)削除
+        const delGame = await tx.gameScore.deleteMany({
+          where: { staffId: sid },
+        });
         await tx.staff.delete({ where: { id: sid } });
-        return { before, evals: delEval.count };
+        return { before, evals: delEval.count, gameScores: delGame.count };
       });
       if (result.before) {
         await addLog(
@@ -153,7 +157,8 @@ module.exports = async function handler(req, res) {
 ID：${id}
 名前：${result.before.name}
 役職：${result.before.position || "-"}
-評価削除：${result.evals}件`
+評価削除：${result.evals}件
+ゲームデータ削除：${result.gameScores}件`
         ).catch(() => {});
       } else {
         await addLog(
@@ -165,6 +170,7 @@ ID：${id} (既に存在しない)`
       res.status(200).json({
         message: "スタッフを削除しました",
         deletedEvaluations: result.evals,
+        deletedGameScores: result.gameScores,
       });
     } catch (error) {
       console.error("Staff DELETE error:", error);
