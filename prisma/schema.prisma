@@ -77,3 +77,15 @@ model GameScore {
   @@index([game])
   @@index([staffId])
 }
+
+// 共有メモ専用: 常に1レコード(id=1)を上書き運用
+model SharedNote {
+  id         Int      @id @default(1)
+  ops        String   @db.Text   // 業務連絡 (本文)
+  comm       String   @db.Text   // 連絡事項 (本文)
+  stoveDate  String?  @db.VarChar(32)
+  stoveNumber String? @db.VarChar(32)
+  opsFont    String?  @db.VarChar(64)
+  commFont   String?  @db.VarChar(64)
+  updatedAt  DateTime @updatedAt
+}
