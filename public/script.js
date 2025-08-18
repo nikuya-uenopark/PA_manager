@@ -2039,7 +2039,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
           }
           if (game === "reaction") v = (v / 1000).toFixed(3) + "秒";
           if (game === "rpg") v = "Lv" + v;
-          const displayName = r.staff?.name || '<span style="color:#888">(削除済)</span>';
+          const displayName = r.staff?.name || '<span style="color:#888">歴戦の猛者</span>';
           return `<li><span>${i + 1}. ${displayName}</span><span>${v}</span></li>`;
         })
         .join("");
