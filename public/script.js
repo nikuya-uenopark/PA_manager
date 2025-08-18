@@ -1828,7 +1828,7 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
       // 進行中は無視
       if (this.state.timerId || this.state.started) return;
       this.reset();
-      reactionStatus.textContent = "ランダム待ち...(早押し=フライング)";
+      reactionStatus.textContent = "色が変わったらストップ...";
       reactionStatus.style.color = "";
       // フライング判定のため待機中もSTOPボタン有効
       reactionStopBtn.disabled = false;
