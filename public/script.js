@@ -1948,18 +1948,18 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
             const early = actual < 20000;
             const diffMs = Math.abs(actual - 20000);
             const diffSec = (diffMs / 1000).toFixed(3);
-            const phrase = early
-              ? `${diffSec}秒早い`
-              : `${diffSec}秒遅い`;
+            const phrase = early ? `${diffSec}秒早い` : `${diffSec}秒遅い`;
             v = `${phrase} (${actualSec}秒)`;
           }
           if (game === "reaction") {
             v = (v / 1000).toFixed(3) + "秒";
           }
-            if (game === "rpg") {
+          if (game === "rpg") {
             v = "Lv" + v; // ボス撃破星マーク削除
           }
-          return `<li><span>${i + 1}. ${r.staff?.name || "?"}</span><span>${v}</span></li>`;
+          return `<li><span>${i + 1}. ${
+            r.staff?.name || "?"
+          }</span><span>${v}</span></li>`;
         })
         .join("");
     } catch {
@@ -1971,13 +1971,23 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
     if (!el) return;
     try {
       el.innerHTML = "<li>読み込み中...</li>";
-      const res = await fetch('/api/games/bossKills');
+      const res = await fetch("/api/games/bossKills");
       if (!res.ok) throw 0;
       const data = await res.json();
-      if (!Array.isArray(data) || !data.length) { el.innerHTML = '<li>なし</li>'; return; }
-      el.innerHTML = data.map((r,i)=>`<li><span>${i+1}. ${r.name}</span><span>${r.bossKills}回</span></li>`).join('');
+      if (!Array.isArray(data) || !data.length) {
+        el.innerHTML = "<li>なし</li>";
+        return;
+      }
+      el.innerHTML = data
+        .map(
+          (r, i) =>
+            `<li><span>${i + 1}. ${r.name}</span><span>${
+              r.bossKills
+            }回</span></li>`
+        )
+        .join("");
     } catch {
-      el.innerHTML = '<li>取得失敗</li>';
+      el.innerHTML = "<li>取得失敗</li>";
     }
   }
   function loadRankingsAll() {
@@ -2069,7 +2079,9 @@ PAManager.prototype.renderStaffEvaluations = async function (staffId) {
       const actualSec = (actual / 1000).toFixed(3);
       const diffSec = (diff / 1000).toFixed(3);
       const early = actual < 20000;
-      twentyStatus.textContent = `${diffSec}秒${early ? "早い" : "遅い"}！(${actualSec}秒)`;
+      twentyStatus.textContent = `${diffSec}秒${
+        early ? "早い" : "遅い"
+      }！(${actualSec}秒)`;
       submitScore("twenty", diff, actual);
       const curBest = twentyBest.getAttribute("data-best");
       if (!curBest || diff < Number(curBest)) {
