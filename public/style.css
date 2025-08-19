@@ -539,6 +539,9 @@ body.prelogin #app {
   transition: color 0.12s ease, transform 0.12s ease; /* 短縮で素早い連打対応 */
   position: relative;
   will-change: transform, color; /* GPU ヒント */
+  touch-action: manipulation; /* 300ms遅延抑止 */
+  -webkit-user-select: none;
+  user-select: none;
 }
 .login-digit:before {
   content: "";
