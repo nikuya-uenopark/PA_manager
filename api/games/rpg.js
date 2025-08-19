@@ -225,8 +225,7 @@ module.exports = async function handler(req, res) {
     const key = { game_staffId: { game: "rpg", staffId: Number(staffId) } };
     let record = await prisma.gameScore.findUnique({ where: key });
     let state = record?.meta || null;
-    if (!state) state = newState(staff.name);
-  // 旧: 固定500G宝箱後方互換ロジックは撤去 (procedural で都度 1 個配置する方針)
+    if (!state) state = newState(staff.name);Ï
     // 互換: bossDefeated が未定義なら false に固定
     if (state && typeof state.bossDefeated !== "boolean")
       state.bossDefeated = false;
