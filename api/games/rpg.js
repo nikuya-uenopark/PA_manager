@@ -354,6 +354,32 @@ module.exports = async function handler(req, res) {
       // 階段で呼び出し: フロア +1 をサーバ側で永続化
       state.floorLevel = (state.floorLevel || 1) + 1;
       result = { msg: `Floor ${state.floorLevel} へ進んだ` };
+    } else if (action === "syncChests") {
+      // クライアント側 procedural 生成結果の宝箱を同期
+      // payload.chests: [{type:"chest", x,y, opened, floor, reward?}]
+      const chests = Array.isArray(payload?.chests) ? payload.chests : [];
+      // レガシー chest (floor 無し) を除去しつつ非 chest はそのまま保持
+      const others = (state.items || []).filter((it) => it.type !== "chest");
+      const sanitized = [];
+      const seenPerFloor = new Set();
+      for (const c of chests) {
+        if (c?.type !== "chest") continue;
+        if (typeof c.x !== "number" || typeof c.y !== "number") continue;
+        const fl = typeof c.floor === "number" ? c.floor : state.floorLevel || 1;
+        const key = `${fl}`;
+        if (seenPerFloor.has(key)) continue; // フロア1個制限
+        seenPerFloor.add(key);
+        sanitized.push({
+          type: "chest",
+            x: c.x,
+            y: c.y,
+            opened: !!c.opened,
+            floor: fl,
+            reward: { gold: 500, exp: 0 },
+        });
+      }
+      state.items = [...others, ...sanitized];
+      result = { msg: "chests synced", chestCount: sanitized.length };
     } else if (action === "ranking") {
       // 階層ランキング (上位 50)
       const scores = await prisma.gameScore.findMany({
