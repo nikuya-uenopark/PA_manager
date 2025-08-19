@@ -536,8 +536,9 @@ body.prelogin #app {
   line-height: 1;
   padding: 0.1em 0.15em;
   cursor: pointer;
-  transition: color 0.25s, transform 0.25s;
+  transition: color 0.12s ease, transform 0.12s ease; /* 短縮で素早い連打対応 */
   position: relative;
+  will-change: transform, color; /* GPU ヒント */
 }
 .login-digit:before {
   content: "";
@@ -561,7 +562,7 @@ body.prelogin #app {
   transform: scaleX(1);
 }
 .login-digit:active {
-  transform: translateY(4px) scale(0.92);
+  transform: translateY(2px) scale(0.95); /* 移動量を控えめにして連続押下の視覚遅延低減 */
   color: #a5b4fc;
 }
 .shake {
