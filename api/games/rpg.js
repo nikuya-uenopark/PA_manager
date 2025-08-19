@@ -13,11 +13,8 @@ const BASE_ATK = 5;
 const INT32_MAX = 2147483647; // Postgres Int 上限 (2^31-1)
 
 // 初期配置アイテム (不変) - 新規 state 作成ごとにディープコピー
-const INITIAL_ITEMS = Object.freeze([
-  { type: "chest", x: 7, y: 3, opened: false, reward: { gold: 30, exp: 10 } },
-  { type: "chest", x: 10, y: 7, opened: false, reward: { gold: 50, exp: 0 } },
-  { type: "chest", x: 4, y: 9, opened: false, reward: { gold: 500, exp: 0 } }, // 新規 500G 宝箱
-]);
+// 迷路フロア生成へ完全移行したため初期固定宝箱は廃止 (過去データ互換のため空)
+const INITIAL_ITEMS = Object.freeze([]);
 
 /**
  * 新規プレイヤー state 生成
