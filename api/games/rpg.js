@@ -38,7 +38,7 @@ function newState(name, opts = {}) {
     maxHp: BASE_HP,
     atk: BASE_ATK,
     equips: [],
-  floorLevel: 1, // 新: 現在フロア階層
+    floorLevel: 1, // 新: 現在フロア階層
     // bossDefeated はレガシーデータ互換のため後段の互換処理で付与する (ここでは持たない)
     bossKills: 0, // 連続/累計討伐数
     nextExp: levelNeeded(level),
@@ -149,11 +149,11 @@ function applyBattle(state, enemy) {
       recomputeDerived(state);
     }
     // 敗北ペナルティ: ゴールド半減 (切り捨て) & 装備全ロスト
-  const prevGold = state.gold;
-  // 残すのは floor(prevGold/2) (半減後残額) / 失うのは prevGold - newGold
-  const newGold = Math.floor(prevGold / 2);
-  const lostGold = prevGold - newGold;
-  state.gold = newGold;
+    const prevGold = state.gold;
+    // 残すのは floor(prevGold/2) (半減後残額) / 失うのは prevGold - newGold
+    const newGold = Math.floor(prevGold / 2);
+    const lostGold = prevGold - newGold;
+    state.gold = newGold;
     const lostEquips = [...state.equips];
     state.equips = [];
     recomputeDerived(state); // 装備リセット後再計算
@@ -251,7 +251,7 @@ module.exports = async function handler(req, res) {
     if (state && typeof state.bossDefeated !== "boolean")
       state.bossDefeated = false;
     if (state && typeof state.bossKills !== "number") state.bossKills = 0;
-  if (state && typeof state.floorLevel !== "number") state.floorLevel = 1;
+    if (state && typeof state.floorLevel !== "number") state.floorLevel = 1;
     recomputeDerived(state); // 破損/旧データ対策
 
     let result = null;
@@ -353,15 +353,15 @@ module.exports = async function handler(req, res) {
           if (item.opened) {
             result = { msg: "空の宝箱だ", goldGain: 0, expGain: 0 };
           } else {
-              // 仕様: 宝箱は常に 500G 固定 / EXP なし / メッセージ統一
-              item.opened = true;
-              const GOLD_FIXED = 500;
-              state.gold += GOLD_FIXED;
-              result = {
-                msg: `宝箱を発見した！${GOLD_FIXED}G入っていた！`,
-                goldGain: GOLD_FIXED,
-                expGain: 0,
-              };
+            // 仕様: 宝箱は常に 500G 固定 / EXP なし / メッセージ統一
+            item.opened = true;
+            const GOLD_FIXED = 500;
+            state.gold += GOLD_FIXED;
+            result = {
+              msg: `宝箱を発見した！${GOLD_FIXED}G入っていた！`,
+              goldGain: GOLD_FIXED,
+              expGain: 0,
+            };
           }
         } else {
           result = { msg: "何もない", goldGain: 0, expGain: 0 };

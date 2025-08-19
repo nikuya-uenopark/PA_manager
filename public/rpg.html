@@ -519,9 +519,9 @@
         draw();
       }
       window.addEventListener("resize", resizeCanvasScale);
-  // 0 floor,1 wall,4 chestClosed,5 chestOpen,6 boss,7 stairs
-  let world = Array.from({ length: mapH }, () => Array(mapW).fill(1));
-  let bossPos = { x: mapW - 7, y: mapH - 6 }; // 後で再配置
+      // 0 floor,1 wall,4 chestClosed,5 chestOpen,6 boss,7 stairs
+      let world = Array.from({ length: mapH }, () => Array(mapW).fill(1));
+      let bossPos = { x: mapW - 7, y: mapH - 6 }; // 後で再配置
       // タイル & プレイヤースプライト (配置はユーザーが public/assets/rpg/ に配置)
       // ===== アセット読み込み =====
       const tilesImg = new Image();
@@ -597,7 +597,7 @@
         const stack = [start];
         function shuffle(a) {
           for (let i = a.length - 1; i > 0; i--) {
-            const j = Math.random() * (i + 1) | 0;
+            const j = (Math.random() * (i + 1)) | 0;
             [a[i], a[j]] = [a[j], a[i]];
           }
           return a;
@@ -638,26 +638,38 @@
             if (open === 1) deadEnds.push({ x, y });
           }
         }
-        function md(a, b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); }
+        function md(a, b) {
+          return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+        }
         function farthest(from, pool) {
           if (!pool.length) return from;
-            let best = pool[0], bd = md(from, best);
-          for (const p of pool) { const d = md(from, p); if (d > bd) { bd = d; best = p; } }
+          let best = pool[0],
+            bd = md(from, best);
+          for (const p of pool) {
+            const d = md(from, p);
+            if (d > bd) {
+              bd = d;
+              best = p;
+            }
+          }
           return best;
         }
         const stairsCell = farthest(start, deadEnds);
         deadEnds.splice(deadEnds.indexOf(stairsCell), 1);
         const bossCell = farthest(stairsCell, deadEnds);
-        if (deadEnds.includes(bossCell)) deadEnds.splice(deadEnds.indexOf(bossCell), 1);
+        if (deadEnds.includes(bossCell))
+          deadEnds.splice(deadEnds.indexOf(bossCell), 1);
         const chestCell = farthest(start, deadEnds);
         bossPos = { x: bossCell.x, y: bossCell.y };
         world[bossPos.y][bossPos.x] = 6;
         world[stairsCell.y][stairsCell.x] = 7;
         if (!Array.isArray(state.items)) state.items = [];
         // 同フロア chest 削除
-        state.items = state.items.filter(it => !(it.type === 'chest' && (it.floor||1) === fl));
+        state.items = state.items.filter(
+          (it) => !(it.type === "chest" && (it.floor || 1) === fl)
+        );
         state.items.push({
-          type: 'chest',
+          type: "chest",
           x: chestCell.x,
           y: chestCell.y,
           opened: false,
@@ -674,8 +686,8 @@
         running: false,
       };
       // ボス設定(サーバー init 取得前は null) ※ 先に宣言して loadBossSprite から参照可能に
-  let bossConfig = null;
-  let generatedFloor = null; // 生成済みフロア番号
+      let bossConfig = null;
+      let generatedFloor = null; // 生成済みフロア番号
       // ===== ユーティリティ =====
       function log(msg) {
         /* ログUI削除済み -> no-op (必要なら console) */
@@ -957,12 +969,16 @@
         if (state && Array.isArray(state.items)) {
           chestMap = new Map();
           const fl = state.floorLevel || 1;
-            for (const it of state.items) {
-              if (it && it.type === "chest" && (it.floor == null || it.floor === fl)) {
-                // 常に1種類の宝箱スプライト (コード4) を使用
-                chestMap.set(`${it.x},${it.y}`, 4);
-              }
+          for (const it of state.items) {
+            if (
+              it &&
+              it.type === "chest" &&
+              (it.floor == null || it.floor === fl)
+            ) {
+              // 常に1種類の宝箱スプライト (コード4) を使用
+              chestMap.set(`${it.x},${it.y}`, 4);
             }
+          }
         }
         for (let y = 0; y < mapH; y++) {
           for (let x = 0; x < mapW; x++) {
@@ -1089,14 +1105,14 @@
           dx = 1;
           player.dir = 2;
         }
-            state.items.push({
-              type: 'chest',
-              x: chestCell.x,
-              y: chestCell.y,
-              opened: false,
-              reward: { gold: 500, exp: 0 }, // 固定 500G
-              floor: fl,
-            });
+        state.items.push({
+          type: "chest",
+          x: chestCell.x,
+          y: chestCell.y,
+          opened: false,
+          reward: { gold: 500, exp: 0 }, // 固定 500G
+          floor: fl,
+        });
         player.lastMoveTs = performance.now();
         walking = true;
         encounterStep = (encounterStep + 1) % 4;
@@ -1752,7 +1768,7 @@
       // ===== 初期化 =====
       initPlayer();
       resizeCanvasScale();
-  // 初回描画で generateFloor が呼ばれる (ensureFloorGenerated 内)
+      // 初回描画で generateFloor が呼ばれる (ensureFloorGenerated 内)
     </script>
   </body>
 </html>
