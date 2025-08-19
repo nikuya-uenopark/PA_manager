@@ -519,26 +519,9 @@
         draw();
       }
       window.addEventListener("resize", resizeCanvasScale);
-      // 0 floor,1 wall,4 chestClosed,5 chestOpen,6 boss,7 stairs
-      const world = Array.from({ length: mapH }, (_, y) =>
-        Array.from({ length: mapW }, (_, x) =>
-          x === 0 || y === 0 || x === mapW - 1 || y === mapH - 1 ? 1 : 0
-        )
-      );
-      // 階段配置 (単一)
-      const stairsPos = { x: 32, y: 16 };
-      if (
-        stairsPos.x > 0 &&
-        stairsPos.x < mapW - 1 &&
-        stairsPos.y > 0 &&
-        stairsPos.y < mapH - 1
-      ) {
-        world[stairsPos.y][stairsPos.x] = 7; // stairs tile
-      }
-      // ラスボス位置 (画面右下付近) ※右下UI(バーチャルボタン)と重ならないよう更に内側へ調整
-      // 以前: {x: mapW-3, y: mapH-3} -> コントローラに隠れるケースがあったため -6/-5 付近に再配置
-      const bossPos = { x: mapW - 7, y: mapH - 6 }; // 端から複数マス内側
-      world[bossPos.y][bossPos.x] = 6; // boss tile code
+  // 0 floor,1 wall,4 chestClosed,5 chestOpen,6 boss,7 stairs
+  let world = Array.from({ length: mapH }, () => Array(mapW).fill(1));
+  let bossPos = { x: mapW - 7, y: mapH - 6 }; // 後で再配置
       // タイル & プレイヤースプライト (配置はユーザーが public/assets/rpg/ に配置)
       // ===== アセット読み込み =====
       const tilesImg = new Image();
@@ -605,6 +588,83 @@
         6: [7, 6], // boss tile (altar-ish)
         7: [5, 12], // stairs (floor_stairs) TODO: 正確なシート座標に調整
       };
+      // 迷路フロア生成
+      function generateFloor(fl) {
+        // 全壁
+        world = Array.from({ length: mapH }, () => Array(mapW).fill(1));
+        const start = { x: 2, y: 2 };
+        world[start.y][start.x] = 0;
+        const stack = [start];
+        function shuffle(a) {
+          for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.random() * (i + 1) | 0;
+            [a[i], a[j]] = [a[j], a[i]];
+          }
+          return a;
+        }
+        while (stack.length) {
+          const cur = stack[stack.length - 1];
+          const dirs = shuffle([
+            { dx: 2, dy: 0 },
+            { dx: -2, dy: 0 },
+            { dx: 0, dy: 2 },
+            { dx: 0, dy: -2 },
+          ]);
+          let progressed = false;
+          for (const { dx, dy } of dirs) {
+            const nx = cur.x + dx;
+            const ny = cur.y + dy;
+            if (nx < 2 || ny < 2 || nx >= mapW - 2 || ny >= mapH - 2) continue;
+            if (world[ny][nx] === 1) {
+              world[cur.y + dy / 2][cur.x + dx / 2] = 0;
+              world[ny][nx] = 0;
+              stack.push({ x: nx, y: ny });
+              progressed = true;
+              break;
+            }
+          }
+          if (!progressed) stack.pop();
+        }
+        // dead end 抽出
+        const deadEnds = [];
+        for (let y = 1; y < mapH - 1; y++) {
+          for (let x = 1; x < mapW - 1; x++) {
+            if (world[y][x] !== 0) continue;
+            let open = 0;
+            if (world[y - 1][x] === 0) open++;
+            if (world[y + 1][x] === 0) open++;
+            if (world[y][x - 1] === 0) open++;
+            if (world[y][x + 1] === 0) open++;
+            if (open === 1) deadEnds.push({ x, y });
+          }
+        }
+        function md(a, b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); }
+        function farthest(from, pool) {
+          if (!pool.length) return from;
+            let best = pool[0], bd = md(from, best);
+          for (const p of pool) { const d = md(from, p); if (d > bd) { bd = d; best = p; } }
+          return best;
+        }
+        const stairsCell = farthest(start, deadEnds);
+        deadEnds.splice(deadEnds.indexOf(stairsCell), 1);
+        const bossCell = farthest(stairsCell, deadEnds);
+        if (deadEnds.includes(bossCell)) deadEnds.splice(deadEnds.indexOf(bossCell), 1);
+        const chestCell = farthest(start, deadEnds);
+        bossPos = { x: bossCell.x, y: bossCell.y };
+        world[bossPos.y][bossPos.x] = 6;
+        world[stairsCell.y][stairsCell.x] = 7;
+        if (!Array.isArray(state.items)) state.items = [];
+        // 同フロア chest 削除
+        state.items = state.items.filter(it => !(it.type === 'chest' && (it.floor||1) === fl));
+        state.items.push({
+          type: 'chest',
+          x: chestCell.x,
+          y: chestCell.y,
+          opened: false,
+          reward: { gold: 50 + fl * 10, exp: 5 * fl },
+          floor: fl,
+        });
+      }
       let player = {
         x: 2,
         y: 2,
@@ -614,7 +674,8 @@
         running: false,
       };
       // ボス設定(サーバー init 取得前は null) ※ 先に宣言して loadBossSprite から参照可能に
-      let bossConfig = null;
+  let bossConfig = null;
+  let generatedFloor = null; // 生成済みフロア番号
       // ===== ユーティリティ =====
       function log(msg) {
         /* ログUI削除済み -> no-op (必要なら console) */
@@ -855,6 +916,14 @@
         );
       }
       function draw() {
+        // フロア生成(必要なら)
+        if (state) {
+          const fl = state.floorLevel || 1;
+          if (generatedFloor !== fl) {
+            generateFloor(fl);
+            generatedFloor = fl;
+          }
+        }
         ctx.imageSmoothingEnabled = false;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         // Floor ラベル (初回生成)
@@ -1038,14 +1107,11 @@
         // 階段: タイルコード7
         const tile = world[player.y]?.[player.x];
         if (tile === 7 && state) {
-          // 次階層へ
           state.floorLevel = (state.floorLevel || 1) + 1;
           fadeMessage(`Floor ${state.floorLevel} に進んだ`);
-          // 新フロア宝箱生成 (1個のみ)
-          generateSingleChestForCurrentFloor();
-          // プレイヤー開始位置
           player.x = 2;
           player.y = 2;
+          generatedFloor = null; // 次 draw で再生成
           api("save");
         }
         draw();
@@ -1689,65 +1755,7 @@
       // ===== 初期化 =====
       initPlayer();
       resizeCanvasScale();
-      // 単一宝箱生成ユーティリティ
-      function generateSingleChestForCurrentFloor() {
-        if (!state) return;
-        const fl = state.floorLevel || 1;
-        // 既に現在フロアの宝箱があり未開封/開封済みならそのまま (1個制約)
-        if (Array.isArray(state.items)) {
-          const existing = state.items.find(
-            (it) => it.type === "chest" && (it.floor || 1) === fl
-          );
-          if (existing) return;
-        } else {
-          state.items = [];
-        }
-        // ランダム座標選択 (壁/境界/階段/開始位置/ボス近接除外)
-        let attempt = 0;
-        let cx = 5,
-          cy = 5;
-        while (attempt < 200) {
-          cx = 1 + Math.floor(Math.random() * (mapW - 2));
-          cy = 1 + Math.floor(Math.random() * (mapH - 2));
-          if (world[cy][cx] === 1) {
-            attempt++;
-            continue;
-          }
-          if (world[cy][cx] === 7) {
-            attempt++;
-            continue; // 階段と重複不可
-          }
-          if (cx === 2 && cy === 2) {
-            attempt++;
-            continue; // 開始位置避け
-          }
-          // ボス付近 (±1) を避ける
-          if (Math.abs(cx - bossPos.x) <= 1 && Math.abs(cy - bossPos.y) <= 1) {
-            attempt++;
-            continue;
-          }
-          break;
-        }
-        state.items.push({
-          type: "chest",
-          x: cx,
-          y: cy,
-          opened: false,
-          reward: { gold: 50, exp: 0 },
-          floor: fl,
-        });
-      }
-      // 初期フロア用宝箱 (既存セーブに複数ある場合は現行フロア分だけ残す)
-      if (state) {
-        if (Array.isArray(state.items)) {
-          const fl = state.floorLevel || 1;
-          // フィルタ: 現在フロア以外の宝箱は保持するが描画されない / もしくは削除 (簡潔のため削除)
-          state.items = state.items.filter(
-            (it) => it.type !== "chest" || (it.floor || 1) === fl
-          );
-        }
-        generateSingleChestForCurrentFloor();
-      }
+  // 初回描画で generateFloor が呼ばれる (ensureFloorGenerated 内)
     </script>
   </body>
 </html>
