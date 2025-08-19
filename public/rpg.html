@@ -989,6 +989,14 @@
               if (code === 4 || code === 5) t = code;
             }
             drawTile(t, x, y);
+            // チェスト強調: スプライトが存在しない場合でも上からマーカー描画
+            if (chestMap && chestMap.get(`${x},${y}`) === 4) {
+              ctx.fillStyle = "#e2b714";
+              ctx.fillRect(x * TILE + 4, y * TILE + 4, TILE - 8, TILE - 8);
+              ctx.strokeStyle = "#7a5600";
+              ctx.lineWidth = 2;
+              ctx.strokeRect(x * TILE + 4, y * TILE + 4, TILE - 8, TILE - 8);
+            }
           }
         }
         drawBossField();
@@ -1044,20 +1052,22 @@
         }
       }
       function drawPlayer() {
+        // まず視認性のため下地 (常に描画)
+        ctx.fillStyle = "rgba(255,193,7,0.6)"; // 半透明黄
+        ctx.fillRect(
+          player.x * TILE + 2,
+          player.y * TILE + 2,
+          TILE - 4,
+          TILE - 4
+        );
         const frames = player.running ? playerImgsRun : playerImgsIdle;
-        if (!frames.length || !frames[0].complete) {
-          ctx.fillStyle = "#ffb703";
-          ctx.fillRect(
-            player.x * TILE + 2,
-            player.y * TILE + 2,
-            TILE - 4,
-            TILE - 4
-          );
-          return;
+        if (frames.length && frames[0].complete) {
+          const idx = Math.floor(player.animTime / 250) % frames.length; // 250ms per frame
+          const img = frames[idx];
+          try {
+            ctx.drawImage(img, player.x * TILE, player.y * TILE, TILE, TILE);
+          } catch (_) {}
         }
-        const idx = Math.floor(player.animTime / 250) % frames.length; // 250ms per frame
-        const img = frames[idx];
-        ctx.drawImage(img, player.x * TILE, player.y * TILE, TILE, TILE);
       }
       // 近接インジケータ (遅延生成: 初期 draw() 以前の参照で落ちないように)
       let proxEl = null;
