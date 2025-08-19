@@ -695,20 +695,18 @@
         world[stairsCell.y][stairsCell.x] = 7;
         if (!Array.isArray(state.items)) state.items = [];
         // 同フロア chest 削除
-        // 既存未開封(または開封済み)宝箱があれば位置を保持し再生成しない
-        const existingChest = state.items.find(
-          (it) => it.type === "chest" && (it.floor || 1) === fl
+        // 同フロアの宝箱は 1 個に制限: 現在フロアの宝箱を全削除して新規 1 個追加
+        state.items = state.items.filter(
+          (it) => !(it.type === 'chest' && (it.floor == null || (it.floor || 1) === fl))
         );
-        if (!existingChest) {
-          state.items.push({
-            type: "chest",
-            x: chestCell.x,
-            y: chestCell.y,
-            opened: false,
-            reward: { gold: 500, exp: 0 }, // 固定 500G / EXPなし
-            floor: fl,
-          });
-        }
+        state.items.push({
+          type: 'chest',
+          x: chestCell.x,
+          y: chestCell.y,
+          opened: false,
+          reward: { gold: 500, exp: 0 },
+          floor: fl,
+        });
       }
       let player = {
         x: 2,
@@ -1000,18 +998,11 @@
         // サーバ側で追加した (例: x:4,y:9 の 500G 宝箱) をクライアント world 配列を改変せず表示するための動的オーバーレイ
         let chestMap = null;
         if (state && Array.isArray(state.items)) {
-          chestMap = new Map();
           const fl = state.floorLevel || 1;
-          for (const it of state.items) {
-            if (
-              it &&
-              it.type === "chest" &&
-              (it.floor == null || it.floor === fl)
-            ) {
-              // 常に1種類の宝箱スプライト (コード4) を使用
-              chestMap.set(`${it.x},${it.y}`, 4);
-            }
-          }
+          chestMap = new Map(state.items
+            .filter(it => it && it.type === 'chest' && (it.floor == null || it.floor === fl))
+            .map(it => [`${it.x},${it.y}`, 4])
+          );
         }
         for (let y = 0; y < mapH; y++) {
           for (let x = 0; x < mapW; x++) {
