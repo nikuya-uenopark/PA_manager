@@ -225,7 +225,7 @@ module.exports = async function handler(req, res) {
     const key = { game_staffId: { game: "rpg", staffId: Number(staffId) } };
     let record = await prisma.gameScore.findUnique({ where: key });
     let state = record?.meta || null;
-    if (!state) state = newState(staff.name);Ï
+    if (!state) state = newState(staff.name);
     // 互換: bossDefeated が未定義なら false に固定
     if (state && typeof state.bossDefeated !== "boolean")
       state.bossDefeated = false;
@@ -365,17 +365,18 @@ module.exports = async function handler(req, res) {
       for (const c of chests) {
         if (c?.type !== "chest") continue;
         if (typeof c.x !== "number" || typeof c.y !== "number") continue;
-        const fl = typeof c.floor === "number" ? c.floor : state.floorLevel || 1;
+        const fl =
+          typeof c.floor === "number" ? c.floor : state.floorLevel || 1;
         const key = `${fl}`;
         if (seenPerFloor.has(key)) continue; // フロア1個制限
         seenPerFloor.add(key);
         sanitized.push({
           type: "chest",
-            x: c.x,
-            y: c.y,
-            opened: !!c.opened,
-            floor: fl,
-            reward: { gold: 500, exp: 0 },
+          x: c.x,
+          y: c.y,
+          opened: !!c.opened,
+          floor: fl,
+          reward: { gold: 500, exp: 0 },
         });
       }
       state.items = [...others, ...sanitized];
