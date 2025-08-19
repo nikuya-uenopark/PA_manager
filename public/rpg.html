@@ -1086,14 +1086,6 @@
         }
       }
       function drawPlayer() {
-        // まず視認性のため下地 (常に描画)
-        ctx.fillStyle = "rgba(255,193,7,0.6)"; // 半透明黄
-        ctx.fillRect(
-          player.x * TILE + 2,
-          player.y * TILE + 2,
-          TILE - 4,
-          TILE - 4
-        );
         const frames = player.running ? playerImgsRun : playerImgsIdle;
         if (frames.length && frames[0].complete) {
           const idx = Math.floor(player.animTime / 250) % frames.length; // 250ms per frame
@@ -1415,12 +1407,17 @@
         return new Promise((r) => setTimeout(r, ms));
       }
       function actionInspect() {
-        // フィールド: 宝箱/ボスのみ
-        const chest = (state?.items || []).find(
-          (it) => it.type === "chest" && it.x === player.x && it.y === player.y
+        // 周囲1マス (8方向含む) に宝箱 / ボス
+        const items = state?.items || [];
+        const chest = items.find(
+          (it) =>
+            it.type === "chest" &&
+            !it.opened &&
+            Math.abs(it.x - player.x) <= 1 &&
+            Math.abs(it.y - player.y) <= 1
         );
-        if (chest && !chest.opened) {
-          doAction("pickup", { x: player.x, y: player.y });
+        if (chest) {
+          doAction("pickup", { x: chest.x, y: chest.y });
           return;
         }
         if (
