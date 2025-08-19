@@ -695,17 +695,20 @@
         world[stairsCell.y][stairsCell.x] = 7;
         if (!Array.isArray(state.items)) state.items = [];
         // 同フロア chest 削除
-        state.items = state.items.filter(
-          (it) => !(it.type === "chest" && (it.floor || 1) === fl)
+        // 既存未開封(または開封済み)宝箱があれば位置を保持し再生成しない
+        const existingChest = state.items.find(
+          (it) => it.type === "chest" && (it.floor || 1) === fl
         );
-        state.items.push({
-          type: "chest",
-          x: chestCell.x,
-          y: chestCell.y,
-          opened: false,
-          reward: { gold: 50 + fl * 10, exp: 5 * fl },
-          floor: fl,
-        });
+        if (!existingChest) {
+          state.items.push({
+            type: "chest",
+            x: chestCell.x,
+            y: chestCell.y,
+            opened: false,
+            reward: { gold: 50 + fl * 10, exp: 5 * fl },
+            floor: fl,
+          });
+        }
       }
       let player = {
         x: 2,
