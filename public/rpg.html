@@ -356,12 +356,67 @@
           pointer-events: none;
         "
       >
-  <!-- 右側 5 ボタン: 調べる / 走る / 武器 / 回復 / 設定 (右→左 順) -->
-  <button data-btn="inspect" class="btn-round btn-inspect" style="position:absolute;right:16px;bottom:24px;pointer-events:auto;">調</button>
-  <button data-btn="dash" class="btn-round btn-dash" style="position:absolute;right:96px;bottom:24px;pointer-events:auto;">走</button>
-  <button data-btn="weapon" class="btn-round btn-weapon" style="position:absolute;right:176px;bottom:24px;pointer-events:auto;">武</button>
-  <button data-btn="heal" class="btn-round btn-heal" style="position:absolute;right:256px;bottom:24px;pointer-events:auto;">回</button>
-  <button data-btn="settings" class="btn-round btn-settings" style="position:absolute;right:336px;bottom:24px;pointer-events:auto;">設</button>
+        <!-- 右側 5 ボタン: 調べる / 走る / 武器 / 回復 / 設定 (右→左 順) -->
+        <button
+          data-btn="inspect"
+          class="btn-round btn-inspect"
+          style="
+            position: absolute;
+            right: 16px;
+            bottom: 24px;
+            pointer-events: auto;
+          "
+        >
+          調
+        </button>
+        <button
+          data-btn="dash"
+          class="btn-round btn-dash"
+          style="
+            position: absolute;
+            right: 96px;
+            bottom: 24px;
+            pointer-events: auto;
+          "
+        >
+          走
+        </button>
+        <button
+          data-btn="weapon"
+          class="btn-round btn-weapon"
+          style="
+            position: absolute;
+            right: 176px;
+            bottom: 24px;
+            pointer-events: auto;
+          "
+        >
+          武
+        </button>
+        <button
+          data-btn="heal"
+          class="btn-round btn-heal"
+          style="
+            position: absolute;
+            right: 256px;
+            bottom: 24px;
+            pointer-events: auto;
+          "
+        >
+          回
+        </button>
+        <button
+          data-btn="settings"
+          class="btn-round btn-settings"
+          style="
+            position: absolute;
+            right: 336px;
+            bottom: 24px;
+            pointer-events: auto;
+          "
+        >
+          設
+        </button>
       </div>
       <!-- Modal Overlay -->
       <div
@@ -521,13 +576,13 @@
         im.src = src;
         playerImgsRun.push(im);
       });
-      // 敵スプライト候補 (レベル帯で切替) 追加5種
+      // 敵スプライト
       const enemySets = [
-        { min: 1, max: 5, key: "chort", label: "インプ" },
-        { min: 6, max: 15, key: "big_zombie", label: "ゾンビ" },
-        { min: 16, max: 30, key: "doc", label: "狂賢者" },
-        { min: 31, max: 60, key: "big_demon", label: "デーモン" },
-        { min: 61, max: 999999, key: "angel", label: "堕天使" },
+        { key: "chort", label: "インプ" },
+        { key: "big_zombie", label: "ゾンビ" },
+        { key: "doc", label: "狂賢者" },
+        { key: "big_demon", label: "デーモン" },
+        { key: "angel", label: "堕天使" },
       ];
       function enemyIdleFrames(key) {
         return [0, 1, 2, 3].map(
@@ -1362,11 +1417,11 @@
       document.querySelectorAll(".dpad-btn").forEach(bindHold);
       // ダッシュ トグル (dashOn=true=高速, false=低速)
       let dashOn = true;
-  const btnInspect = document.querySelector('[data-btn="inspect"]');
-  const btnDash = document.querySelector('[data-btn="dash"]');
-  const btnWeapon = document.querySelector('[data-btn="weapon"]');
-  const btnHeal = document.querySelector('[data-btn="heal"]');
-  const btnSettings = document.querySelector('[data-btn="settings"]');
+      const btnInspect = document.querySelector('[data-btn="inspect"]');
+      const btnDash = document.querySelector('[data-btn="dash"]');
+      const btnWeapon = document.querySelector('[data-btn="weapon"]');
+      const btnHeal = document.querySelector('[data-btn="heal"]');
+      const btnSettings = document.querySelector('[data-btn="settings"]');
       // 設定ボタン: フィールドでは設定モーダルを開く / モーダル表示中は閉じる専用 (キャンセル役)
       btnSettings.addEventListener("click", () => {
         if (currentModal) {
@@ -1610,14 +1665,14 @@
         const tmp = [];
         for (const k of Object.keys(cfg)) {
           const it = cfg[k];
-            tmp.push({
-              type: k,
-              label: map[k] || k,
-              atk: it.atk,
-              hp: it.hp,
-              cost: it.cost,
-              id: k,
-            });
+          tmp.push({
+            type: k,
+            label: map[k] || k,
+            atk: it.atk,
+            hp: it.hp,
+            cost: it.cost,
+            id: k,
+          });
         }
         tmp.sort((a, b) => a.cost - b.cost);
         shopCatalog.splice(0, shopCatalog.length, ...tmp);
