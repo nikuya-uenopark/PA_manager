@@ -519,16 +519,12 @@
         draw();
       }
       window.addEventListener("resize", resizeCanvasScale);
-      // 0 floor,1 wall,2 inn,3 shop,4 chestClosed,5 chestOpen
+  // 0 floor,1 wall,4 chestClosed,5 chestOpen,6 boss,7 stairs
       const world = Array.from({ length: mapH }, (_, y) =>
         Array.from({ length: mapW }, (_, x) =>
           x === 0 || y === 0 || x === mapW - 1 || y === mapH - 1 ? 1 : 0
         )
       );
-      const innPos = { x: 6, y: 6 };
-      const shopPos = { x: 10, y: 6 };
-      world[innPos.y][innPos.x] = 2;
-      world[shopPos.y][shopPos.x] = 3;
       const chestSeeds = [
         { x: 14, y: 5 },
         { x: 20, y: 10 },
@@ -602,8 +598,6 @@
       const tileMap = {
         0: [0, 0], // floor
         1: [1, 1], // wall (wall_center)
-        2: [4, 5], // inn (custom decorative tile)
-        3: [5, 5], // shop
         4: [0, 8], // chest closed
         5: [1, 8], // chest open
         6: [7, 6], // boss tile (altar-ish)
@@ -978,7 +972,7 @@
       }
       // 近接インジケータ (遅延生成: 初期 draw() 以前の参照で落ちないように)
       let proxEl = null;
-      function updateProximityUI() {
+  function updateProximityUI() { // 宿/店は削除済み → ボスのみ表示
         if (!proxEl) {
           proxEl = document.getElementById("proxUI");
           if (!proxEl) {
@@ -997,28 +991,12 @@
           proxEl.innerHTML = "";
           return;
         }
-        const nearInn =
-          Math.abs(player.x - innPos.x) <= 1 &&
-          Math.abs(player.y - innPos.y) <= 1;
-        const nearShop =
-          Math.abs(player.x - shopPos.x) <= 1 &&
-          Math.abs(player.y - shopPos.y) <= 1;
         const nearBoss =
           Math.abs(player.x - bossPos.x) <= 1 &&
           Math.abs(player.y - bossPos.y) <= 1;
-        proxEl.innerHTML = [
-          nearInn
-            ? '<span class="badge" style="background:#2a9d8f">宿屋</span>'
-            : "",
-          nearShop
-            ? '<span class="badge" style="background:#a44f9d">店</span>'
-            : "",
-          nearBoss
-            ? '<span class="badge" style="background:#e63946">ボス</span>'
-            : "",
-        ]
-          .filter(Boolean)
-          .join("");
+        proxEl.innerHTML = nearBoss
+          ? '<span class="badge" style="background:#e63946">ボス</span>'
+          : "";
       }
       // ===== 移動/操作 =====
       function movePlayerDir(dir) {
@@ -1303,8 +1281,7 @@
       function waitMs(ms) {
         return new Promise((r) => setTimeout(r, ms));
       }
-      function actionInspect() {
-        // 宝箱
+      function actionInspect() { // フィールド: 宝箱/ボスのみ
         const chest = (state?.items || []).find(
           (it) => it.type === "chest" && it.x === player.x && it.y === player.y
         );
@@ -1312,26 +1289,11 @@
           doAction("pickup", { x: player.x, y: player.y });
           return;
         }
-        // ボス
         if (
           Math.abs(player.x - bossPos.x) <= 1 &&
           Math.abs(player.y - bossPos.y) <= 1
         ) {
           openModal("bossConfirm");
-          return;
-        }
-        const nearInn =
-          Math.abs(player.x - innPos.x) <= 1 &&
-          Math.abs(player.y - innPos.y) <= 1;
-        if (nearInn) {
-          openModal("inn");
-          return;
-        }
-        const nearShop =
-          Math.abs(player.x - shopPos.x) <= 1 &&
-          Math.abs(player.y - shopPos.y) <= 1;
-        if (nearShop) {
-          openModal("shop");
           return;
         }
         fadeMessage("何もない");
