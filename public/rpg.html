@@ -538,6 +538,11 @@
         draw();
       };
       tilesImg.src = "/assets/rpg/0x72_DungeonTilesetII_v1.7.png"; // 16x16 tiles
+  // 宝箱専用スプライト (ユーザー提供) /assets/rpg/chest.png を配置してください
+  const chestImg = new Image();
+  chestImg.onload = () => draw();
+  chestImg.onerror = () => console.warn('[RPG] chest.png load failed, fallback box used');
+  chestImg.src = '/assets/rpg/chest.png';
       // プレイヤー: dwarf_m (idle/run 4枚)
       const playerIdleFrames = [0, 1, 2, 3].map(
         (i) => `/assets/rpg/dwarf_m_idle_anim_f${i}.png`
@@ -1015,11 +1020,15 @@
             drawTile(t, x, y);
             // チェスト強調: スプライトが存在しない場合でも上からマーカー描画
             if (chestMap && chestMap.get(`${x},${y}`) === 4) {
-              ctx.fillStyle = "#e2b714";
-              ctx.fillRect(x * TILE + 4, y * TILE + 4, TILE - 8, TILE - 8);
-              ctx.strokeStyle = "#7a5600";
-              ctx.lineWidth = 2;
-              ctx.strokeRect(x * TILE + 4, y * TILE + 4, TILE - 8, TILE - 8);
+              if (chestImg.complete && chestImg.naturalWidth) {
+                ctx.drawImage(chestImg, x * TILE, y * TILE, TILE, TILE);
+              } else {
+                ctx.fillStyle = "#e2b714";
+                ctx.fillRect(x * TILE + 4, y * TILE + 4, TILE - 8, TILE - 8);
+                ctx.strokeStyle = "#7a5600";
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x * TILE + 4, y * TILE + 4, TILE - 8, TILE - 8);
+              }
             }
           }
         }
