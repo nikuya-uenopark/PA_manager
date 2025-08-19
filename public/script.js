@@ -114,17 +114,6 @@ class PAManager {
       },
       { passive: true }
     );
-    // 一部古い端末(iOS Safari古)向け fallback
-    area.addEventListener(
-      "touchstart",
-      (e) => {
-        const t = e.target.closest(".login-digit");
-        if (!t) return;
-        const val = t.getAttribute("data-val");
-        onDigitInput(val);
-      },
-      { passive: true }
-    );
     // スワイプ判定 (4桁入力後のみ)
     let startX = null,
       startY = null,
