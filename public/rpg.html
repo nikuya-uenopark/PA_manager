@@ -585,15 +585,6 @@
           enemySets[0]
         );
       }
-      // タイルマップ: (x,y) は元シート16x16グリッド座標
-      const tileMap = {
-        0: [0, 0], // floor
-        1: [1, 1], // wall (wall_center)
-        4: [0, 8], // chest closed (dynamic overlay only)
-        5: [1, 8], // chest open   (dynamic overlay only)
-        6: [7, 6], // boss tile (altar-ish)
-        7: [5, 12], // stairs (floor_stairs) TODO: 正確なシート座標に調整
-      };
       // 迷路フロア生成
       function generateFloor(fl) {
         // 全壁
