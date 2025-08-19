@@ -353,26 +353,15 @@ module.exports = async function handler(req, res) {
           if (item.opened) {
             result = { msg: "空の宝箱だ", goldGain: 0, expGain: 0 };
           } else {
-            item.opened = true;
-            const rw = item.reward || {};
-            if (rw.gold) state.gold += rw.gold;
-            if (rw.exp) {
-              state.exp += rw.exp;
-              // レベルアップ判定再利用
-              while (state.exp >= levelNeeded(state.level)) {
-                state.exp -= levelNeeded(state.level);
-                state.level += 1;
-                recomputeDerived(state);
-                state.hp = state.maxHp;
-              }
-            }
-            result = {
-              msg: `宝箱を開けた! +${rw.gold || 0}G ${
-                rw.exp ? "+EXP" + rw.exp : ""
-              }`,
-              goldGain: rw.gold || 0,
-              expGain: rw.exp || 0,
-            };
+              // 仕様: 宝箱は常に 500G 固定 / EXP なし / メッセージ統一
+              item.opened = true;
+              const GOLD_FIXED = 500;
+              state.gold += GOLD_FIXED;
+              result = {
+                msg: `宝箱を発見した！${GOLD_FIXED}G入っていた！`,
+                goldGain: GOLD_FIXED,
+                expGain: 0,
+              };
           }
         } else {
           result = { msg: "何もない", goldGain: 0, expGain: 0 };
