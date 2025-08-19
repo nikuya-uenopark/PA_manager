@@ -835,14 +835,24 @@
       function draw() {
         ctx.imageSmoothingEnabled = false;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // chest 表示: world 上の静的タイル(コード4/5)だけでなく、state.items に存在する chest も動的にタイル化
+        // サーバ側で追加した (例: x:4,y:9 の 500G 宝箱) をクライアント world 配列を改変せず表示するための動的オーバーレイ
+        let chestMap = null;
+        if (state && Array.isArray(state.items)) {
+          chestMap = new Map();
+          for (const it of state.items) {
+            if (it && it.type === "chest") {
+              chestMap.set(`${it.x},${it.y}`, it.opened ? 5 : 4); // 5=open,4=closed
+            }
+          }
+        }
         for (let y = 0; y < mapH; y++) {
           for (let x = 0; x < mapW; x++) {
             let t = world[y][x];
-            if (t === 4 || t === 5) {
-              const chest = (state?.items || []).find(
-                (it) => it.type === "chest" && it.x === x && it.y === y
-              );
-              if (chest) t = chest.opened ? 5 : 4;
+            // 動的 chest オーバーレイ (world が floor でも chest を表示)
+            if (chestMap) {
+              const code = chestMap.get(`${x},${y}`);
+              if (code === 4 || code === 5) t = code;
             }
             drawTile(t, x, y);
           }
