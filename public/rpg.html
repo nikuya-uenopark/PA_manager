@@ -1119,7 +1119,7 @@
           : "";
       }
       // ===== 移動/操作 =====
-      function movePlayerDir(dir) {
+  async function movePlayerDir(dir) {
         let dx = 0,
           dy = 0;
         if (dir === "up") {
@@ -1150,12 +1150,12 @@
         // 階段: タイルコード7
         const curTile = world[player.y]?.[player.x];
         if (curTile === 7 && state) {
-          state.floorLevel = (state.floorLevel || 1) + 1;
-          fadeMessage(`Floor ${state.floorLevel} に進んだ`);
+          const r = await api('floorUp');
+          if (r?.state) state = r.state;
+          fadeMessage(`Floor ${(state.floorLevel || 1)} に進んだ`);
           player.x = 2;
           player.y = 2;
           generatedFloor = null; // 次 draw で再生成
-          api("save");
         }
         draw();
       }
@@ -1443,6 +1443,8 @@
         } else if (e.key === "a") {
           if (currentModal) modalConfirm();
           else actionInspect();
+        } else if (e.key === 'r' || e.key === 'R') {
+          if (!currentModal) openModal('ranking');
         } else if (e.key === "b") {
           // B でトグル
           dashOn = !dashOn;
@@ -1581,19 +1583,12 @@
         overlay.style.display = "none";
       }
       function modalItems() {
-        if (currentModal === "settings") {
-          return [];
-        }
+        if (currentModal === "settings") return [];
         if (currentModal === "battle") return [];
-        if (currentModal === "inn") {
-          return ["はい", "いいえ"];
-        }
-        if (currentModal === "bossConfirm") {
-          return ["戦う", "やめる"];
-        }
-        if (currentModal === "shop") {
-          return shopCatalog.map((i) => i.id);
-        }
+        if (currentModal === "ranking") return [];
+        if (currentModal === "inn") return ["はい", "いいえ"];
+        if (currentModal === "bossConfirm") return ["戦う", "やめる"];
+        if (currentModal === "shop") return shopCatalog.map((i) => i.id);
         return [];
       }
       function modalNavigate(dir) {
@@ -1665,6 +1660,24 @@
           modalBody.innerHTML = `<p style='margin:0 0 6px;font-size:12px;'>全回復しますか？ (10%/最低1G)</p>${menuListHtml(
             ["はい", "いいえ"]
           )}`;
+        } else if (currentModal === "ranking") {
+          modalTitle.textContent = "階層ランキング";
+          modalBody.innerHTML = '<div style="font-size:11px;">読み込み中...</div>';
+          (async () => {
+            const r = await api('ranking');
+            const rows = r?.result?.ranking || [];
+            if (!rows.length) {
+              modalBody.innerHTML = '<div style="font-size:11px;">データなし</div>';
+              return;
+            }
+            const html = ['<table style="width:100%;font-size:11px;border-collapse:collapse;">',
+              '<tr><th style="text-align:left;padding:2px 4px;border-bottom:1px solid #334155;">#</th><th style="text-align:left;padding:2px 4px;border-bottom:1px solid #334155;">名前</th><th style="text-align:right;padding:2px 4px;border-bottom:1px solid #334155;">階層</th><th style="text-align:right;padding:2px 4px;border-bottom:1px solid #334155;">Lv</th></tr>' ];
+            rows.forEach((row,i)=>{
+              html.push(`<tr><td style='padding:2px 4px;'>${i+1}</td><td style='padding:2px 4px;'>${row.name}</td><td style='padding:2px 4px;text-align:right;'>${row.floor}</td><td style='padding:2px 4px;text-align:right;'>${row.level}</td></tr>`);
+            });
+            html.push('</table>');
+            modalBody.innerHTML = html.join('');
+          })();
         } else if (currentModal === "bossConfirm") {
           modalTitle.textContent = "ボス";
           const lv = bossConfig?.level || 0;

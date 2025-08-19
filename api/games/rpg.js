@@ -371,6 +371,27 @@ module.exports = async function handler(req, res) {
       }
     } else if (action === "save") {
       /* explicit save only */
+    } else if (action === "floorUp") {
+      // 階段で呼び出し: フロア +1 をサーバ側で永続化
+      state.floorLevel = (state.floorLevel || 1) + 1;
+      result = { msg: `Floor ${state.floorLevel} へ進んだ` };
+    } else if (action === "ranking") {
+      // 階層ランキング (上位 50)
+      const scores = await prisma.gameScore.findMany({
+        where: { game: "rpg" },
+        include: { staff: true },
+      });
+      const rows = scores
+        .map((r) => ({
+          staffId: r.staffId,
+          name: r.staff?.name || `#${r.staffId}`,
+          floor: (r.meta && r.meta.floorLevel) || 1,
+          level: r.value,
+          gold: r.extra || 0,
+        }))
+        .sort((a, b) => b.floor - a.floor || b.level - a.level)
+        .slice(0, 50);
+      result = { ranking: rows };
     } else {
       return res.status(400).json({ error: "unknown action" });
     }
