@@ -660,20 +660,30 @@
         // 残り deadEnds からランダム抽出 (不足時フォールバック)
         function pickRandom(list) {
           if (!list.length) return stairsCell;
-            return list[(Math.random() * list.length) | 0];
+          return list[(Math.random() * list.length) | 0];
         }
         // chest と boss の順序はランダム性確保のため独立抽選し、重複したら再抽選/フォールバック
         let chestCell = pickRandom(deadEnds);
         let bossCell = pickRandom(deadEnds);
         if (deadEnds.length > 1) {
           let safety = 10;
-          while (safety-- && bossCell.x === chestCell.x && bossCell.y === chestCell.y) {
+          while (
+            safety-- &&
+            bossCell.x === chestCell.x &&
+            bossCell.y === chestCell.y
+          ) {
             bossCell = pickRandom(deadEnds);
           }
         }
         // 使用済み除去 (重複があっても一度だけ除外安全)
-        deadEnds.splice(deadEnds.findIndex(p=>p.x===chestCell.x && p.y===chestCell.y),1);
-        deadEnds.splice(deadEnds.findIndex(p=>p.x===bossCell.x && p.y===bossCell.y),1);
+        deadEnds.splice(
+          deadEnds.findIndex((p) => p.x === chestCell.x && p.y === chestCell.y),
+          1
+        );
+        deadEnds.splice(
+          deadEnds.findIndex((p) => p.x === bossCell.x && p.y === bossCell.y),
+          1
+        );
         bossPos = { x: bossCell.x, y: bossCell.y };
         world[bossPos.y][bossPos.x] = 6;
         world[stairsCell.y][stairsCell.x] = 7;
@@ -1129,21 +1139,21 @@
           dx = 1;
           player.dir = 2;
         }
-        state.items.push({
-          type: "chest",
-          x: chestCell.x,
-          y: chestCell.y,
-          opened: false,
-          reward: { gold: 500, exp: 0 }, // 固定 500G
-          floor: fl,
-        });
+        if (!world) return;
+        const nx = player.x + dx;
+        const ny = player.y + dy;
+        if (nx < 0 || ny < 0 || ny >= mapH || nx >= mapW) return; // out of bounds
+        const tile = world[ny][nx];
+        if (tile === 1) return; // wall collision
+        player.x = nx;
+        player.y = ny;
         player.lastMoveTs = performance.now();
         walking = true;
         encounterStep = (encounterStep + 1) % 4;
         if (encounterStep === 0) attemptEncounter();
         // 階段: タイルコード7
-        const tile = world[player.y]?.[player.x];
-        if (tile === 7 && state) {
+        const curTile = world[player.y]?.[player.x];
+        if (curTile === 7 && state) {
           state.floorLevel = (state.floorLevel || 1) + 1;
           fadeMessage(`Floor ${state.floorLevel} に進んだ`);
           player.x = 2;
