@@ -10,13 +10,18 @@ module.exports = {
     EXP_QUAD: 0.04, // 二次係数 (緩やかな二次: lv^2 * 0.04)
   },
   ENEMIES: [
-    { key: "chort", name: "インプ", min: 1, max: 5 },
-    { key: "big_zombie", name: "ゾンビ", min: 6, max: 15 },
-    { key: "doc", name: "災厄のタバコ男 ムコサン", min: 16, max: 30 },
-    { key: "big_demon", name: "悪の根源 ケイ", min: 31, max: 60 },
-    { key: "angel", name: "堕天使 アキヤマーン", min: 61, max: 999999999 },
+    { key: "chort", name: "インプ" },
+    { key: "big_zombie", name: "ゾンビ" },
+    { key: "doc", name: "タバコ男ムコサン" },
+    { key: "big_demon", name: "悪の根源ケイ" },
+    { key: "angel", name: "堕天使アキヤマーン" },
   ],
-  BOSS_NAME: "ベトナムより来訪せし暴虐の魔王 コン",
+    // クリティカル設定 (プレイヤーのみ適用)
+    CRIT: {
+      RATE: 0.1, // 10% 発生率
+      MULT: 2.0, // 倍率 (与ダメージに乗算)
+    },
+  BOSS_NAME: "暴虐の魔王 コン",
   // フィールド/戦闘で使うボススプライトキー (assets/rpg/<key>_idle_anim_f0.png 形式)
   BOSS_SPRITE_KEY: "big_demon", // 強そうな見た目に変更（例: angel, big_demon など）
   WEAPON_BONUS: {
@@ -31,7 +36,7 @@ module.exports = {
     greatsword: 1500000,
   },
   SHOP_ITEMS: {
-    dagger: { cost: 500, msg: "短剣を購入 (+ATK5)", atk: 5 },
+    dagger: { cost: 100, msg: "短剣を購入 (+ATK5)", atk: 5 },
     sword: { cost: 1000, msg: "剣を購入 (+ATK10)", atk: 10 },
     staff: { cost: 5000, msg: "杖を購入 (+ATK50)", atk: 50 },
     axe: { cost: 10000, msg: "戦斧を購入 (+ATK100)", atk: 100 },
@@ -52,7 +57,7 @@ module.exports = {
       msg: "グレートソードを購入 (+ATK1500000)",
       atk: 1500000,
     },
-    armor: { cost: 114514, msg: "防具を購入 (+HP114514)", hp: 114514 },
+    armor: { cost: 500, msg: "防具を購入 (+HP500)", hp: 500 },
     plate_armor: {
       cost: 37564000,
       msg: "プレートアーマーを購入 (+HP37564000)",

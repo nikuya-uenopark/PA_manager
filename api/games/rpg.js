@@ -16,6 +16,7 @@ const INT32_MAX = 2147483647; // Postgres Int 上限 (2^31-1)
 const INITIAL_ITEMS = Object.freeze([
   { type: "chest", x: 7, y: 3, opened: false, reward: { gold: 30, exp: 10 } },
   { type: "chest", x: 10, y: 7, opened: false, reward: { gold: 50, exp: 0 } },
+  { type: "chest", x: 4, y: 9, opened: false, reward: { gold: 500, exp: 0 } }, // 新規 500G 宝箱
 ]);
 
 /**
@@ -109,13 +110,21 @@ function applyBattle(state, enemy) {
   // ターン制: 先手プレイヤー。イベント列を生成してフロントでアニメ再生可能にする
   const log = [];
   const events = []; // {type:'player'|'enemy', dmg, enemyHp, playerHp}
+  const CRIT = CFG.CRIT || { RATE: 0, MULT: 1 };
   while (state.hp > 0 && enemy.hp > 0) {
-    // プレイヤー攻撃
-    enemy.hp -= state.atk;
-    log.push(`あなたの攻撃! ${state.atk} ダメージ`);
+    // プレイヤー攻撃 (クリティカル判定)
+    let dmg = state.atk;
+    let crit = false;
+    if (CRIT.RATE > 0 && Math.random() < CRIT.RATE) {
+      crit = true;
+      dmg = Math.round(dmg * (CRIT.MULT || 1.5));
+    }
+    enemy.hp -= dmg;
+    log.push(`あなたの攻撃${crit ? "(CRIT!)" : ""}! ${dmg} ダメージ`);
     events.push({
       type: "player",
-      dmg: state.atk,
+      dmg,
+      crit: crit ? 1 : 0,
       enemyHp: Math.max(0, enemy.hp),
       playerHp: state.hp,
     });
@@ -219,6 +228,24 @@ module.exports = async function handler(req, res) {
     let record = await prisma.gameScore.findUnique({ where: key });
     let state = record?.meta || null;
     if (!state) state = newState(staff.name);
+    // 既存プレイヤーへの 500G 宝箱追加 (後方互換)。同座標や既に500G宝箱があればスキップ
+    if (state && Array.isArray(state.items)) {
+      const has500 = state.items.some(
+        (it) => it.type === "chest" && it.reward && it.reward.gold === 500
+      );
+      if (!has500) {
+        const occupied = state.items.some((it) => it.x === 4 && it.y === 9);
+        if (!occupied) {
+          state.items.push({
+            type: "chest",
+            x: 4,
+            y: 9,
+            opened: false,
+            reward: { gold: 500, exp: 0 },
+          });
+        }
+      }
+    }
     // 互換: bossDefeated が未定義なら false に固定
     if (state && typeof state.bossDefeated !== "boolean")
       state.bossDefeated = false;
@@ -252,7 +279,7 @@ module.exports = async function handler(req, res) {
         result = { msg: "ゴールド不足" };
       }
     } else if (action === "battle") {
-      // プレイヤー±10 で敵レベル決定し、敵種はコンフィグ ENEMIES からランダム
+      // プレイヤー±10 で敵レベル決定。敵種は ENEMIES から等確率 (min/max 制限撤廃)
       const enemyDefs = CFG.ENEMIES || [];
       const chosen = enemyDefs.length
         ? enemyDefs[Math.floor(Math.random() * enemyDefs.length)]
