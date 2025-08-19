@@ -226,24 +226,7 @@ module.exports = async function handler(req, res) {
     let record = await prisma.gameScore.findUnique({ where: key });
     let state = record?.meta || null;
     if (!state) state = newState(staff.name);
-    // 既存プレイヤーへの 500G 宝箱追加 (後方互換)。同座標や既に500G宝箱があればスキップ
-    if (state && Array.isArray(state.items)) {
-      const has500 = state.items.some(
-        (it) => it.type === "chest" && it.reward && it.reward.gold === 500
-      );
-      if (!has500) {
-        const occupied = state.items.some((it) => it.x === 4 && it.y === 9);
-        if (!occupied) {
-          state.items.push({
-            type: "chest",
-            x: 4,
-            y: 9,
-            opened: false,
-            reward: { gold: 500, exp: 0 },
-          });
-        }
-      }
-    }
+  // 旧: 固定500G宝箱後方互換ロジックは撤去 (procedural で都度 1 個配置する方針)
     // 互換: bossDefeated が未定義なら false に固定
     if (state && typeof state.bossDefeated !== "boolean")
       state.bossDefeated = false;
