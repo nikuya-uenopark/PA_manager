@@ -1030,24 +1030,19 @@
         updateProximityUI();
       }
       function drawTile(t, x, y) {
+        // 最小タイルマップ (0:床 1:壁 6:ボス 7:階段)
+        const tileMap = {
+          0: [0, 0],
+          1: [1, 1],
+          6: [7, 6],
+          7: [5, 12],
+        };
         const uv = tileMap[t] || tileMap[0];
         // 画像未ロード or ロード失敗時(naturalWidth=0) は色分けフォールバック
         if (!tilesImg.complete || !tilesImg.naturalWidth) {
           switch (t) {
             case 1:
               ctx.fillStyle = "#1e293b"; // wall
-              break;
-            case 2:
-              ctx.fillStyle = "#2a9d8f"; // inn
-              break;
-            case 3:
-              ctx.fillStyle = "#a44f9d"; // shop
-              break;
-            case 4:
-              ctx.fillStyle = "#b7791f"; // chest closed
-              break;
-            case 5:
-              ctx.fillStyle = "#d6a34f"; // chest open
               break;
             case 6:
               ctx.fillStyle = "#e63946"; // boss
