@@ -1016,13 +1016,9 @@
         }
         for (let y = 0; y < mapH; y++) {
           for (let x = 0; x < mapW; x++) {
-            let t = world[y][x];
-            // 動的 chest オーバーレイ (world が floor でも chest を表示)
-            if (chestMap) {
-              const code = chestMap.get(`${x},${y}`);
-              if (code === 4 || code === 5) t = code;
-            }
-            drawTile(t, x, y);
+            // まず元の地形タイルを描画
+            const baseTile = world[y][x];
+            drawTile(baseTile, x, y);
             // チェスト強調: スプライトが存在しない場合でも上からマーカー描画
             if (chestMap && chestMap.get(`${x},${y}`) === 4) {
               if (chestImg.complete && chestImg.naturalWidth) {
