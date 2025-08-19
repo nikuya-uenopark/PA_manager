@@ -989,8 +989,7 @@
         if (window._floorLabel && state) {
           window._floorLabel.textContent = `Floor ${state.floorLevel || 1}`;
         }
-        // chest 表示: world 上の静的タイル(コード4/5)だけでなく、state.items に存在する chest も動的にタイル化
-        // サーバ側で追加した (例: x:4,y:9 の 500G 宝箱) をクライアント world 配列を改変せず表示するための動的オーバーレイ
+        // chest 表示: world 配列は床/壁/階段/ボスのみ。state.items の宝箱を動的オーバーレイ。
         let chestMap = null;
         if (state && Array.isArray(state.items)) {
           const fl = state.floorLevel || 1;
@@ -1000,9 +999,10 @@
                 (it) =>
                   it &&
                   it.type === "chest" &&
+                  !it.opened &&
                   (it.floor == null || it.floor === fl)
               )
-              .map((it) => [`${it.x},${it.y}`, 4])
+              .map((it) => [`${it.x},${it.y}`, true])
           );
         }
         for (let y = 0; y < mapH; y++) {
@@ -1011,7 +1011,7 @@
             const baseTile = world[y][x];
             drawTile(baseTile, x, y);
             // チェスト強調: スプライトが存在しない場合でも上からマーカー描画
-            if (chestMap && chestMap.get(`${x},${y}`) === 4) {
+            if (chestMap && chestMap.get(`${x},${y}`) === true) {
               if (chestImg.complete && chestImg.naturalWidth) {
                 ctx.drawImage(chestImg, x * TILE, y * TILE, TILE, TILE);
               } else {
