@@ -697,10 +697,14 @@
         // 同フロア chest 削除
         // 同フロアの宝箱は 1 個に制限: 現在フロアの宝箱を全削除して新規 1 個追加
         state.items = state.items.filter(
-          (it) => !(it.type === 'chest' && (it.floor == null || (it.floor || 1) === fl))
+          (it) =>
+            !(
+              it.type === "chest" &&
+              (it.floor == null || (it.floor || 1) === fl)
+            )
         );
         state.items.push({
-          type: 'chest',
+          type: "chest",
           x: chestCell.x,
           y: chestCell.y,
           opened: false,
@@ -999,9 +1003,15 @@
         let chestMap = null;
         if (state && Array.isArray(state.items)) {
           const fl = state.floorLevel || 1;
-          chestMap = new Map(state.items
-            .filter(it => it && it.type === 'chest' && (it.floor == null || it.floor === fl))
-            .map(it => [`${it.x},${it.y}`, 4])
+          chestMap = new Map(
+            state.items
+              .filter(
+                (it) =>
+                  it &&
+                  it.type === "chest" &&
+                  (it.floor == null || it.floor === fl)
+              )
+              .map((it) => [`${it.x},${it.y}`, 4])
           );
         }
         for (let y = 0; y < mapH; y++) {
@@ -1119,7 +1129,7 @@
           : "";
       }
       // ===== 移動/操作 =====
-  async function movePlayerDir(dir) {
+      async function movePlayerDir(dir) {
         let dx = 0,
           dy = 0;
         if (dir === "up") {
@@ -1150,9 +1160,9 @@
         // 階段: タイルコード7
         const curTile = world[player.y]?.[player.x];
         if (curTile === 7 && state) {
-          const r = await api('floorUp');
+          const r = await api("floorUp");
           if (r?.state) state = r.state;
-          fadeMessage(`Floor ${(state.floorLevel || 1)} に進んだ`);
+          fadeMessage(`Floor ${state.floorLevel || 1} に進んだ`);
           player.x = 2;
           player.y = 2;
           generatedFloor = null; // 次 draw で再生成
@@ -1443,8 +1453,8 @@
         } else if (e.key === "a") {
           if (currentModal) modalConfirm();
           else actionInspect();
-        } else if (e.key === 'r' || e.key === 'R') {
-          if (!currentModal) openModal('ranking');
+        } else if (e.key === "r" || e.key === "R") {
+          if (!currentModal) openModal("ranking");
         } else if (e.key === "b") {
           // B でトグル
           dashOn = !dashOn;
@@ -1662,21 +1672,35 @@
           )}`;
         } else if (currentModal === "ranking") {
           modalTitle.textContent = "階層ランキング";
-          modalBody.innerHTML = '<div style="font-size:11px;">読み込み中...</div>';
+          modalBody.innerHTML =
+            '<div style="font-size:11px;">読み込み中...</div>';
           (async () => {
-            const r = await api('ranking');
+            const r = await api("ranking");
             const rows = r?.result?.ranking || [];
             if (!rows.length) {
-              modalBody.innerHTML = '<div style="font-size:11px;">データなし</div>';
+              modalBody.innerHTML =
+                '<div style="font-size:11px;">データなし</div>';
               return;
             }
-            const html = ['<table style="width:100%;font-size:11px;border-collapse:collapse;">',
-              '<tr><th style="text-align:left;padding:2px 4px;border-bottom:1px solid #334155;">#</th><th style="text-align:left;padding:2px 4px;border-bottom:1px solid #334155;">名前</th><th style="text-align:right;padding:2px 4px;border-bottom:1px solid #334155;">階層</th><th style="text-align:right;padding:2px 4px;border-bottom:1px solid #334155;">Lv</th></tr>' ];
-            rows.forEach((row,i)=>{
-              html.push(`<tr><td style='padding:2px 4px;'>${i+1}</td><td style='padding:2px 4px;'>${row.name}</td><td style='padding:2px 4px;text-align:right;'>${row.floor}</td><td style='padding:2px 4px;text-align:right;'>${row.level}</td></tr>`);
+            const html = [
+              '<table style="width:100%;font-size:11px;border-collapse:collapse;">',
+              '<tr><th style="text-align:left;padding:2px 4px;border-bottom:1px solid #334155;">#</th><th style="text-align:left;padding:2px 4px;border-bottom:1px solid #334155;">名前</th><th style="text-align:right;padding:2px 4px;border-bottom:1px solid #334155;">階層</th><th style="text-align:right;padding:2px 4px;border-bottom:1px solid #334155;">Lv</th></tr>',
+            ];
+            rows.forEach((row, i) => {
+              html.push(
+                `<tr><td style='padding:2px 4px;'>${
+                  i + 1
+                }</td><td style='padding:2px 4px;'>${
+                  row.name
+                }</td><td style='padding:2px 4px;text-align:right;'>${
+                  row.floor
+                }</td><td style='padding:2px 4px;text-align:right;'>${
+                  row.level
+                }</td></tr>`
+              );
             });
-            html.push('</table>');
-            modalBody.innerHTML = html.join('');
+            html.push("</table>");
+            modalBody.innerHTML = html.join("");
           })();
         } else if (currentModal === "bossConfirm") {
           modalTitle.textContent = "ボス";
