@@ -356,42 +356,12 @@
           pointer-events: none;
         "
       >
-        <button
-          data-btn="settings"
-          class="btn-round btn-settings"
-          style="
-            position: absolute;
-            right: 176px;
-            bottom: 24px;
-            pointer-events: auto;
-          "
-        >
-          設定
-        </button>
-        <button
-          data-btn="dash"
-          class="btn-round btn-dash"
-          style="
-            position: absolute;
-            right: 96px;
-            bottom: 24px;
-            pointer-events: auto;
-          "
-        >
-          走
-        </button>
-        <button
-          data-btn="inspect"
-          class="btn-round btn-inspect"
-          style="
-            position: absolute;
-            right: 16px;
-            bottom: 24px;
-            pointer-events: auto;
-          "
-        >
-          調
-        </button>
+  <!-- 右側 5 ボタン: 調べる / 走る / 武器 / 回復 / 設定 (右→左 順) -->
+  <button data-btn="inspect" class="btn-round btn-inspect" style="position:absolute;right:16px;bottom:24px;pointer-events:auto;">調</button>
+  <button data-btn="dash" class="btn-round btn-dash" style="position:absolute;right:96px;bottom:24px;pointer-events:auto;">走</button>
+  <button data-btn="weapon" class="btn-round btn-weapon" style="position:absolute;right:176px;bottom:24px;pointer-events:auto;">武</button>
+  <button data-btn="heal" class="btn-round btn-heal" style="position:absolute;right:256px;bottom:24px;pointer-events:auto;">回</button>
+  <button data-btn="settings" class="btn-round btn-settings" style="position:absolute;right:336px;bottom:24px;pointer-events:auto;">設</button>
       </div>
       <!-- Modal Overlay -->
       <div
@@ -582,6 +552,7 @@
         4: [0, 8], // chest closed
         5: [1, 8], // chest open
         6: [7, 6], // boss tile (altar-ish)
+        7: [5, 12], // stairs (floor_stairs) TODO: 正確なシート座標に調整
       };
       let player = {
         x: 2,
@@ -835,6 +806,31 @@
       function draw() {
         ctx.imageSmoothingEnabled = false;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Floor ラベル (初回生成)
+        if (!window._floorLabel) {
+          const lbl = document.createElement("div");
+          lbl.id = "floorLabel";
+          Object.assign(lbl.style, {
+            position: "fixed",
+            top: "4px",
+            right: "8px",
+            zIndex: 120,
+            fontSize: "12px",
+            fontFamily: "monospace",
+            padding: "2px 6px",
+            background: "rgba(0,0,0,0.5)",
+            border: "1px solid #334155",
+            borderRadius: "6px",
+            color: "#fff",
+            letterSpacing: "0.5px",
+          });
+          lbl.textContent = "Floor 1";
+          document.body.appendChild(lbl);
+          window._floorLabel = lbl;
+        }
+        if (window._floorLabel && state) {
+          window._floorLabel.textContent = `Floor ${state.floorLevel || 1}`;
+        }
         // chest 表示: world 上の静的タイル(コード4/5)だけでなく、state.items に存在する chest も動的にタイル化
         // サーバ側で追加した (例: x:4,y:9 の 500G 宝箱) をクライアント world 配列を改変せず表示するための動的オーバーレイ
         let chestMap = null;
@@ -998,6 +994,17 @@
         walking = true;
         encounterStep = (encounterStep + 1) % 4;
         if (encounterStep === 0) attemptEncounter();
+        // 階段: タイルコード7
+        const tile = world[player.y]?.[player.x];
+        if (tile === 7 && state) {
+          state.floorLevel = (state.floorLevel || 1) + 1;
+          fadeMessage(`Floor ${state.floorLevel} に進んだ`);
+          // 初期位置へリセット
+          player.x = 2;
+          player.y = 2;
+          // 自動セーブ
+          api("save");
+        }
         draw();
       }
       // アニメーションタイマー
@@ -1355,9 +1362,11 @@
       document.querySelectorAll(".dpad-btn").forEach(bindHold);
       // ダッシュ トグル (dashOn=true=高速, false=低速)
       let dashOn = true;
-      const btnSettings = document.querySelector('[data-btn="settings"]');
-      const btnDash = document.querySelector('[data-btn="dash"]');
-      const btnInspect = document.querySelector('[data-btn="inspect"]');
+  const btnInspect = document.querySelector('[data-btn="inspect"]');
+  const btnDash = document.querySelector('[data-btn="dash"]');
+  const btnWeapon = document.querySelector('[data-btn="weapon"]');
+  const btnHeal = document.querySelector('[data-btn="heal"]');
+  const btnSettings = document.querySelector('[data-btn="settings"]');
       // 設定ボタン: フィールドでは設定モーダルを開く / モーダル表示中は閉じる専用 (キャンセル役)
       btnSettings.addEventListener("click", () => {
         if (currentModal) {
@@ -1378,13 +1387,20 @@
         updateDashBtn();
       });
       updateDashBtn();
-      // 調べるボタン: フィールドでは調べる(Action) / モーダル中は決定のみ
+      // 調べるボタン: フィールド→ actionInspect / モーダル中→ modalConfirm
       btnInspect.addEventListener("click", () => {
-        if (currentModal) {
-          modalConfirm();
-        } else {
-          actionInspect();
-        }
+        if (currentModal) modalConfirm();
+        else actionInspect();
+      });
+      // 武器(ショップ)ボタン: 直接モーダル表示 (位置無関係)
+      btnWeapon.addEventListener("click", () => {
+        if (currentModal) return; // 他モーダル開いていたら無視 (設定閉じたい場合は設定ボタン使用)
+        openModal("shop");
+      });
+      // 回復(宿屋)ボタン: 宿屋モーダル
+      btnHeal.addEventListener("click", () => {
+        if (currentModal) return;
+        openModal("inn");
       });
       const heldDirs = new Set();
       const MOVE_INTERVAL = 180; // ms 基本移動間隔
@@ -1594,16 +1610,15 @@
         const tmp = [];
         for (const k of Object.keys(cfg)) {
           const it = cfg[k];
-          tmp.push({
-            type: k,
-            label: map[k] || k,
-            atk: it.atk,
-            hp: it.hp,
-            cost: it.cost,
-            id: k,
-          });
+            tmp.push({
+              type: k,
+              label: map[k] || k,
+              atk: it.atk,
+              hp: it.hp,
+              cost: it.cost,
+              id: k,
+            });
         }
-        // ソート: atk/hp 高い順 or cost昇順? とりあえず cost 昇順
         tmp.sort((a, b) => a.cost - b.cost);
         shopCatalog.splice(0, shopCatalog.length, ...tmp);
       }
