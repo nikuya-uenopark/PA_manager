@@ -702,6 +702,20 @@
           reward: { gold: 500, exp: 0 },
           floor: fl,
         });
+        // サーバへ宝箱位置を同期 (フロア毎1個) → バトル等で state 再取得しても消えないように
+        if (typeof api === "function") {
+          api("syncChests", {
+            chests: [
+              {
+                type: "chest",
+                x: chestCell.x,
+                y: chestCell.y,
+                opened: false,
+                floor: fl,
+              },
+            ],
+          }).catch((e) => console.warn("syncChests failed", e));
+        }
       }
       let player = {
         x: 2,
