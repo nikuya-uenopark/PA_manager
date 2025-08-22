@@ -7,6 +7,18 @@ yarn-error.log*
 # Environment variables
 .env
 
+# DB, Prisma, secrets, private
+*.sqlite3
+*.db
+prisma/.env
+prisma/dev.db
+prisma/test.db
+prisma/seed.js
+prisma/manual_sharednote_create.sql
+prisma/migrations/*/migration.sql
+secrets*
+private*
+
 # OS generated files
 .DS_Store
 .DS_Store?
